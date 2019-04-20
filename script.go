@@ -18,16 +18,21 @@ import (
 // Pipe represents a pipe, which allows various operations to be chained
 // together. Most operations either return a pipe, or are methods on a pipe, or
 // both, so we can chain calls like this:
+//
 //      result := Cat("foo").CountLines().String()
+//
+// If `close` is true, the pipe needs to be closed after reading (for example, a
+// file).
 type Pipe struct {
 	Reader io.Reader
+	close  bool
 }
 
 // Echo returns a pipe full of the specified string. This is useful for starting
 // pipelines.
 func Echo(s string) Pipe {
 	reader := bytes.NewReader([]byte(s))
-	return Pipe{reader}
+	return Pipe{reader, false}
 }
 
 // String returns the contents of the pipe as a string.
@@ -35,6 +40,9 @@ func (p Pipe) String() string {
 	res, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
 		log.Fatal(err)
+	}
+	if p.close {
+		p.Reader.(io.Closer).Close()
 	}
 	return string(res)
 }
@@ -60,7 +68,7 @@ func Cat(name string) Pipe {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return Pipe{out}
+	return Pipe{out, true}
 }
 
 // CountLines counts lines in the specified file and returns a pipe full of the
