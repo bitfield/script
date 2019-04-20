@@ -16,23 +16,48 @@ import (
 )
 
 // Pipe represents a pipe, which allows various operations to be chained
-// together. Most operations either return a pipe, or are methods on a pipe, or
-// both, so we can chain calls like this:
+// together, like Unix pipes. Most operations either return a pipe, or are
+// methods on a pipe, or both, so we can chain calls like this:
 //
 //      result := Cat("foo").CountLines().String()
 //
-// If `close` is true, the pipe needs to be closed after reading (for example, a
-// file).
+// `Reader` represents the data source that the pipe reads from. `close`
+// indicates that the Reader is of a kind that needs to be closed after reading
+// (for example, a file). All functions that read the contents of a pipe
+// completely should call CloseIfNecessary() afterwards, to avoid leaking file
+// handles. This will close the Reader if `close` is true.
 type Pipe struct {
 	Reader io.Reader
 	close  bool
 }
 
+// UnclosablePipe takes an io.Reader and returns a pipe associated with that
+// reader, and its `close` flag set to false, to indicate that the pipe does not
+// need closing after reading.
+func UnclosablePipe(r io.Reader) Pipe {
+	return Pipe{r, false}
+}
+
+// ClosablePipe takes an io.Reader and returns a pipe associated with that
+// reader, and its `close` flag set to true, to indicate that the pipe needs to
+// be closed after reading.
+func ClosablePipe(r io.Reader) Pipe {
+	return Pipe{r, true}
+}
+
 // Echo returns a pipe full of the specified string. This is useful for starting
 // pipelines.
 func Echo(s string) Pipe {
-	reader := bytes.NewReader([]byte(s))
-	return Pipe{reader, false}
+	r := bytes.NewReader([]byte(s))
+	return UnclosablePipe(r)
+}
+
+// CloseIfNecessary will close the reader associated with the pipe, if it needs
+// closing.
+func (p Pipe) CloseIfNecessary() {
+	if p.close {
+		p.Reader.(io.Closer).Close()
+	}
 }
 
 // String returns the contents of the pipe as a string.
@@ -41,9 +66,7 @@ func (p Pipe) String() string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if p.close {
-		p.Reader.(io.Closer).Close()
-	}
+	p.CloseIfNecessary()
 	return string(res)
 }
 
@@ -53,7 +76,7 @@ func (p Pipe) Int() int {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return (res)
+	return res
 }
 
 // Cat on a pipe is a no-op, returning a pipe full of the contents of the pipe.
@@ -64,11 +87,11 @@ func (p Pipe) Cat() Pipe {
 // Cat returns a pipe full of the contents of the specified file. This is useful
 // for starting pipelines.
 func Cat(name string) Pipe {
-	out, err := os.Open(name)
+	r, err := os.Open(name)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return Pipe{out, true}
+	return ClosablePipe(r)
 }
 
 // CountLines counts lines in the specified file and returns a pipe full of the
@@ -88,5 +111,6 @@ func (p Pipe) CountLines() Pipe {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+	p.CloseIfNecessary()
 	return Echo(fmt.Sprintf("%d", lines))
 }
