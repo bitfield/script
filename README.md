@@ -5,7 +5,7 @@
 Just as the shell allows you to chain operations together into a pipeline, `script` does the same:
 
 ```go
-numLines := File("test.txt").CountLines()
+numLines := script.File("test.txt").CountLines()
 ```
 
 This works because File returns a Pipe object. Most `script` operations can be methods on a pipe, and will return another pipe, so that you can chain operations indefinitely.
@@ -15,7 +15,7 @@ Ultimately, you'll want to read the results from the pipe, and you can do that u
 If any pipe operation results in an error, the pipe's `Error()` method will return that error, and all pipe operations will henceforth be no-ops. Thus you can safely chain a whole series of operations without having to check the error status at each stage:
 
 ```go
-p := File("doesnt_exist.txt")
+p := script.File("doesnt_exist.txt")
 out := p.String() // succeeds, with empty result
 res := p.CountLines() // succeeds, with zero result
 fmt.Println(p.Error())
