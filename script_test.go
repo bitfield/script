@@ -14,11 +14,11 @@ func TestEcho(t *testing.T) {
 		t.Fatalf("want %q, got %q", want, got)
 	}
 }
-func TestCat(t *testing.T) {
+func TestFile(t *testing.T) {
 	t.Parallel()
 	wantRaw, _ := ioutil.ReadFile("testdata/test.txt") // ignoring error
 	want := string(wantRaw)
-	p := Cat("testdata/test.txt").Cat()
+	p := File("testdata/test.txt")
 	gotRaw, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
 		t.Fatal("failed to read file")
@@ -33,7 +33,7 @@ func TestString(t *testing.T) {
 	t.Parallel()
 	wantRaw, _ := ioutil.ReadFile("testdata/test.txt") // ignoring error
 	want := string(wantRaw)
-	p := Cat("testdata/test.txt")
+	p := File("testdata/test.txt")
 	got := p.String()
 	if got != want {
 		t.Fatalf("want %q, got %q", want, got)
@@ -57,7 +57,7 @@ func TestCountLines(t *testing.T) {
 		t.Fatalf("failed counting empty file: want %d, got %d", want, got)
 	}
 	want = 3
-	p := Cat("testdata/test.txt")
+	p := File("testdata/test.txt")
 	got = p.CountLines().Int()
 	if got != want {
 		t.Fatalf("failed counting lines from a non-empty pipe: want %d, got %d", want, got)
@@ -68,7 +68,7 @@ func TestCountLines(t *testing.T) {
 		t.Fatal("failed to close file after reading")
 	}
 	want = 1
-	got = Cat("testdata/test.txt").CountLines().CountLines().Int()
+	got = File("testdata/test.txt").CountLines().CountLines().Int()
 	if got != want {
 		t.Fatalf("failed to count lines in its own output: want %d, got %d", want, got)
 	}

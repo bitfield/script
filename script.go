@@ -79,14 +79,9 @@ func (p Pipe) Int() int {
 	return res
 }
 
-// Cat on a pipe is a no-op, returning a pipe full of the contents of the pipe.
-func (p Pipe) Cat() Pipe {
-	return p
-}
-
-// Cat returns a pipe full of the contents of the specified file. This is useful
+// File returns a pipe full of the contents of the specified file. This is useful
 // for starting pipelines.
-func Cat(name string) Pipe {
+func File(name string) Pipe {
 	r, err := os.Open(name)
 	if err != nil {
 		log.Fatal(err)
@@ -97,7 +92,7 @@ func Cat(name string) Pipe {
 // CountLines counts lines in the specified file and returns a pipe full of the
 // integer result.
 func CountLines(name string) Pipe {
-	return Cat(name).CountLines()
+	return File(name).CountLines()
 }
 
 // CountLines counts lines in its input and returns a pipe full of the integer
