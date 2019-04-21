@@ -3,15 +3,25 @@ package script
 import (
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"testing"
 )
 
+func TestWithReader(t *testing.T) {
+	t.Parallel()
+	want := "Hello, world."
+	p := Pipe{}.WithReader(strings.NewReader(want))
+	got := p.String()
+	if got != want {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+}
 func TestFile(t *testing.T) {
 	t.Parallel()
 	wantRaw, _ := ioutil.ReadFile("testdata/test.txt") // ignoring error
 	want := string(wantRaw)
 	p := File("testdata/test.txt")
-	gotRaw, err := ioutil.ReadAll(p.reader)
+	gotRaw, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
 		t.Fatal("failed to read file")
 	}
@@ -30,7 +40,7 @@ func TestString(t *testing.T) {
 	if got != want {
 		t.Fatalf("want %q, got %q", want, got)
 	}
-	_, err := ioutil.ReadAll(p.reader)
+	_, err := ioutil.ReadAll(p.Reader)
 	if err == nil {
 		t.Fatal("failed to close file after reading")
 	}
@@ -54,7 +64,7 @@ func TestCountLines(t *testing.T) {
 	if got != want {
 		t.Fatalf("failed counting lines from a non-empty pipe: want %d, got %d", want, got)
 	}
-	res, err := ioutil.ReadAll(p.reader)
+	res, err := ioutil.ReadAll(p.Reader)
 	if err == nil {
 		fmt.Println(res)
 		t.Fatal("failed to close file after reading")

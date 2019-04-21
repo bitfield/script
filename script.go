@@ -1,6 +1,6 @@
 // Package script is a collection of utilities for doing the kind of tasks that
 // shell scripts are good at. It provides equivalent for Unix `cat`, `wc`, and
-// so on. It also provides a 'pipeline' construct which allows you to chain all
+// so on. It also provides a 'Pipe' construct which allows you to chain all
 // these operations together, just like shells do.
 package script
 
@@ -10,68 +10,48 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
 )
 
-type pipe struct {
-	reader io.Reader
-	close  bool
+// Pipe represents a pipe object with an associated reader.
+type Pipe struct {
+	Reader io.ReadCloser
 }
 
-// Pipe returns a new Pipe with no associated reader.
-func Pipe() pipe {
-	return pipe{nil, false}
+// Close closes the pipe's associated reader.
+func (p Pipe) Close() error {
+	return p.Reader.Close()
 }
 
-// WithReader takes an io.Reader and returns a pipe associated with that reader,
-// and its `close` flag set to false, to indicate that the pipe does not need
-// closing after reading.
-func (p pipe) WithReader(r io.Reader) pipe {
-	return pipe{r, false}
+// WithReader takes an io.Reader which does not need to be closed after reading,
+// and returns a new Pipe associated with that reader.
+func (Pipe) WithReader(r io.Reader) Pipe {
+	return Pipe{ioutil.NopCloser(r)}
 }
 
-// WithCloser takes an io.ReadCloser and returns a pipe associated with that
-// source, and its `close` flag set to true, to indicate that the pipe needs to
-// be closed after reading.
-func (p pipe) WithCloser(r io.ReadCloser) pipe {
-	return pipe{r.(io.Reader), true}
+// WithCloser takes an io.ReadCloser and returns a Pipe associated with that
+// source.
+func (Pipe) WithCloser(r io.ReadCloser) Pipe {
+	return Pipe{r}
 }
 
-// CloseIfNecessary will close the reader associated with the pipe, if it needs
-// closing.
-func (p pipe) CloseIfNecessary() {
-	if p.close {
-		p.reader.(io.Closer).Close()
-	}
-}
-
-// String returns the contents of the pipe as a string.
-func (p pipe) String() string {
-	res, err := ioutil.ReadAll(p.reader)
+// String returns the contents of the Pipe as a string.
+func (p Pipe) String() string {
+	res, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
 		log.Fatal(err)
 	}
-	p.CloseIfNecessary()
+	p.Close()
 	return string(res)
 }
 
-// Int returns the contents of the pipe as an integer.
-func (p pipe) Int() int {
-	res, err := strconv.Atoi(p.String())
-	if err != nil {
-		log.Fatal(err)
-	}
-	return res
-}
-
-// File returns a pipe full of the contents of the specified file. This is useful
-// for starting pipelines.
-func File(name string) pipe {
+// File returns a Pipe full of the contents of the specified file. This is useful
+// for starting Pipelines.
+func File(name string) Pipe {
 	r, err := os.Open(name)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return Pipe().WithCloser(r)
+	return Pipe{}.WithCloser(r)
 }
 
 // CountLines counts lines in the specified file and returns the integer result.
@@ -80,8 +60,8 @@ func CountLines(name string) int {
 }
 
 // CountLines counts lines in its input and returns the integer result.
-func (p pipe) CountLines() int {
-	scanner := bufio.NewScanner(p.reader)
+func (p Pipe) CountLines() int {
+	scanner := bufio.NewScanner(p.Reader)
 	var lines int
 	for scanner.Scan() {
 		lines++
@@ -89,6 +69,6 @@ func (p pipe) CountLines() int {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-	p.CloseIfNecessary()
+	p.Close()
 	return lines
 }
