@@ -6,8 +6,6 @@ package script
 
 import (
 	"bufio"
-	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -43,13 +41,6 @@ func UnclosablePipe(r io.Reader) Pipe {
 // be closed after reading.
 func ClosablePipe(r io.Reader) Pipe {
 	return Pipe{r, true}
-}
-
-// Echo returns a pipe full of the specified string. This is useful for starting
-// pipelines.
-func Echo(s string) Pipe {
-	r := bytes.NewReader([]byte(s))
-	return UnclosablePipe(r)
 }
 
 // CloseIfNecessary will close the reader associated with the pipe, if it needs
@@ -89,15 +80,13 @@ func File(name string) Pipe {
 	return ClosablePipe(r)
 }
 
-// CountLines counts lines in the specified file and returns a pipe full of the
-// integer result.
-func CountLines(name string) Pipe {
+// CountLines counts lines in the specified file and returns the integer result.
+func CountLines(name string) int {
 	return File(name).CountLines()
 }
 
-// CountLines counts lines in its input and returns a pipe full of the integer
-// result.
-func (p Pipe) CountLines() Pipe {
+// CountLines counts lines in its input and returns the integer result.
+func (p Pipe) CountLines() int {
 	scanner := bufio.NewScanner(p.Reader)
 	var lines int
 	for scanner.Scan() {
@@ -107,5 +96,5 @@ func (p Pipe) CountLines() Pipe {
 		log.Fatal(err)
 	}
 	p.CloseIfNecessary()
-	return Echo(fmt.Sprintf("%d", lines))
+	return lines
 }
