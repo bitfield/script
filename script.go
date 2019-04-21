@@ -1,22 +1,4 @@
-// Package script is a collection of utilities for doing the kind of tasks that
-// shell scripts are good at: reading files, counting lines, matching strings,
-// and so on.
-//
-// Most operations return a Pipe object, so that operations can be chained:
-//
-//      res := File("test.txt").CountLines()
-//
-// If any pipe operation results in an error, the pipe's Error() method will
-// return that error, and all pipe operations will be no-ops. Thus you can
-// safely chain a whole series of operations without having to check the error
-// status at each stage:
-//
-//      p := File("doesnt_exist.txt")
-//      out := p.String() // succeeds, with empty result
-//      res := p.CountLines() // succeeds, with zero result
-//      fmt.Println(p.Error())
-//
-// Output: open doesnt_exist.txt: no such file or directory
+// Package script aims to make it easy to write shell-type scripts in Go, for general system administration purposes: reading files, counting lines, matching strings, and so on.
 package script
 
 import (
@@ -26,7 +8,7 @@ import (
 	"os"
 )
 
-// Pipe represents a pipe object with an associated reader.
+// Pipe represents a pipe object with an associated Reader.
 type Pipe struct {
 	Reader io.ReadCloser
 	err    error
@@ -84,7 +66,7 @@ func (p *Pipe) String() string {
 	return string(res)
 }
 
-// File returns a Pipe associated with the specified file. This is useful for
+// File returns a *Pipe associated with the specified file. This is useful for
 // starting pipelines. If there is an error opening the file, the pipe's error
 // status will be set.
 func File(name string) *Pipe {
