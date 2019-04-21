@@ -10,7 +10,7 @@ import (
 func TestWithReader(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world."
-	p := Pipe{}.WithReader(strings.NewReader(want))
+	p := NewPipe().WithReader(strings.NewReader(want))
 	got := p.String()
 	if got != want {
 		t.Fatalf("want %q, got %q", want, got)
@@ -31,6 +31,21 @@ func TestFile(t *testing.T) {
 	}
 }
 
+func TestError(t *testing.T) {
+	t.Parallel()
+	p := File("testdata/nonexistent.txt")
+	if p.Error() == nil {
+		t.Fatalf("reading nonexistent file: pipe error status should be non-nil")
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("reading pipe with non-nil error status should succeed, but got: %v", r)
+		}
+	}()
+	_ = p.String()     // not interested in result
+	_ = p.CountLines() // not interested in result
+}
+
 func TestString(t *testing.T) {
 	t.Parallel()
 	wantRaw, _ := ioutil.ReadFile("testdata/test.txt") // ignoring error
@@ -39,6 +54,10 @@ func TestString(t *testing.T) {
 	got := p.String()
 	if got != want {
 		t.Fatalf("want %q, got %q", want, got)
+	}
+	_ = p.String() // result should be empty
+	if p.Error() == nil {
+		t.Fatalf("reading closed pipe: want error, got nil")
 	}
 	_, err := ioutil.ReadAll(p.Reader)
 	if err == nil {
@@ -51,22 +70,26 @@ func TestCountLines(t *testing.T) {
 	want := 3
 	got := CountLines("testdata/test.txt")
 	if got != want {
-		t.Fatalf("failed counting non-empty file: want %d, got %d", want, got)
+		t.Fatalf("counting non-empty file: want %d, got %d", want, got)
 	}
 	want = 0
 	got = CountLines("testdata/empty.txt")
 	if got != want {
-		t.Fatalf("failed counting empty file: want %d, got %d", want, got)
+		t.Fatalf("counting empty file: want %d, got %d", want, got)
 	}
 	want = 3
 	p := File("testdata/test.txt")
 	got = p.CountLines()
 	if got != want {
-		t.Fatalf("failed counting lines from a non-empty pipe: want %d, got %d", want, got)
+		t.Fatalf("counting lines from pipe: want %d, got %d", want, got)
 	}
 	res, err := ioutil.ReadAll(p.Reader)
 	if err == nil {
 		fmt.Println(res)
 		t.Fatal("failed to close file after reading")
+	}
+	_ = p.CountLines() // result should be zero
+	if p.Error() == nil {
+		t.Fatalf("reading closed pipe: want error, got nil")
 	}
 }
