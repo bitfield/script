@@ -13,47 +13,41 @@ import (
 	"strconv"
 )
 
-// Pipe represents a pipe, which allows various operations to be chained
-// together, like Unix pipes. Most operations either return a pipe, or are
-// methods on a pipe, or both, so we can chain calls like this:
-//
-//      result := Cat("foo").CountLines().String()
-//
-// `Reader` represents the data source that the pipe reads from. `close`
-// indicates that the Reader is of a kind that needs to be closed after reading
-// (for example, a file). All functions that read the contents of a pipe
-// completely should call CloseIfNecessary() afterwards, to avoid leaking file
-// handles. This will close the Reader if `close` is true.
-type Pipe struct {
-	Reader io.Reader
+type pipe struct {
+	reader io.Reader
 	close  bool
 }
 
-// UnclosablePipe takes an io.Reader and returns a pipe associated with that
-// reader, and its `close` flag set to false, to indicate that the pipe does not
-// need closing after reading.
-func UnclosablePipe(r io.Reader) Pipe {
-	return Pipe{r, false}
+// Pipe returns a new Pipe with no associated reader.
+func Pipe() pipe {
+	return pipe{nil, false}
 }
 
-// ClosablePipe takes an io.Reader and returns a pipe associated with that
-// reader, and its `close` flag set to true, to indicate that the pipe needs to
+// WithReader takes an io.Reader and returns a pipe associated with that reader,
+// and its `close` flag set to false, to indicate that the pipe does not need
+// closing after reading.
+func (p pipe) WithReader(r io.Reader) pipe {
+	return pipe{r, false}
+}
+
+// WithCloser takes an io.ReadCloser and returns a pipe associated with that
+// source, and its `close` flag set to true, to indicate that the pipe needs to
 // be closed after reading.
-func ClosablePipe(r io.Reader) Pipe {
-	return Pipe{r, true}
+func (p pipe) WithCloser(r io.ReadCloser) pipe {
+	return pipe{r.(io.Reader), true}
 }
 
 // CloseIfNecessary will close the reader associated with the pipe, if it needs
 // closing.
-func (p Pipe) CloseIfNecessary() {
+func (p pipe) CloseIfNecessary() {
 	if p.close {
-		p.Reader.(io.Closer).Close()
+		p.reader.(io.Closer).Close()
 	}
 }
 
 // String returns the contents of the pipe as a string.
-func (p Pipe) String() string {
-	res, err := ioutil.ReadAll(p.Reader)
+func (p pipe) String() string {
+	res, err := ioutil.ReadAll(p.reader)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -62,7 +56,7 @@ func (p Pipe) String() string {
 }
 
 // Int returns the contents of the pipe as an integer.
-func (p Pipe) Int() int {
+func (p pipe) Int() int {
 	res, err := strconv.Atoi(p.String())
 	if err != nil {
 		log.Fatal(err)
@@ -72,12 +66,12 @@ func (p Pipe) Int() int {
 
 // File returns a pipe full of the contents of the specified file. This is useful
 // for starting pipelines.
-func File(name string) Pipe {
+func File(name string) pipe {
 	r, err := os.Open(name)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return ClosablePipe(r)
+	return Pipe().WithCloser(r)
 }
 
 // CountLines counts lines in the specified file and returns the integer result.
@@ -86,8 +80,8 @@ func CountLines(name string) int {
 }
 
 // CountLines counts lines in its input and returns the integer result.
-func (p Pipe) CountLines() int {
-	scanner := bufio.NewScanner(p.Reader)
+func (p pipe) CountLines() int {
+	scanner := bufio.NewScanner(p.reader)
 	var lines int
 	for scanner.Scan() {
 		lines++

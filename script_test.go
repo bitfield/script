@@ -11,7 +11,7 @@ func TestFile(t *testing.T) {
 	wantRaw, _ := ioutil.ReadFile("testdata/test.txt") // ignoring error
 	want := string(wantRaw)
 	p := File("testdata/test.txt")
-	gotRaw, err := ioutil.ReadAll(p.Reader)
+	gotRaw, err := ioutil.ReadAll(p.reader)
 	if err != nil {
 		t.Fatal("failed to read file")
 	}
@@ -30,7 +30,7 @@ func TestString(t *testing.T) {
 	if got != want {
 		t.Fatalf("want %q, got %q", want, got)
 	}
-	_, err := ioutil.ReadAll(p.Reader)
+	_, err := ioutil.ReadAll(p.reader)
 	if err == nil {
 		t.Fatal("failed to close file after reading")
 	}
@@ -54,7 +54,7 @@ func TestCountLines(t *testing.T) {
 	if got != want {
 		t.Fatalf("failed counting lines from a non-empty pipe: want %d, got %d", want, got)
 	}
-	res, err := ioutil.ReadAll(p.Reader)
+	res, err := ioutil.ReadAll(p.reader)
 	if err == nil {
 		fmt.Println(res)
 		t.Fatal("failed to close file after reading")
