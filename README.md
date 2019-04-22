@@ -5,7 +5,7 @@
 Just as the shell allows you to chain operations together into a pipeline, `script` does the same:
 
 ```go
-numLines := script.File("test.txt").CountLines()
+numLines, err := script.File("test.txt").CountLines()
 ```
 
 This works because File returns a Pipe object. Most `script` operations can be methods on a pipe, and will return another pipe, so that you can chain operations indefinitely.
