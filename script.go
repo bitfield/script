@@ -43,27 +43,31 @@ func (p *Pipe) WithCloser(r io.ReadCloser) *Pipe {
 	return p
 }
 
-// WithError sets the pipe's error status to the specified error.
-func (p *Pipe) WithError(err error) *Pipe {
+// SetError sets the pipe's error status to the specified error.
+func (p *Pipe) SetError(err error) {
 	p.err = err
+}
+
+// WithError sets the pipe's error status to the specified error and returns the
+// modified pipe.
+func (p *Pipe) WithError(err error) *Pipe {
+	p.SetError(err)
 	return p
 }
 
-// String returns the contents of the Pipe as a string. As with all pipe-reading
-// operations, this returns the zero value if the pipe has a non-nil error
-// status, and closes the pipe after reading. If there is an error reading, the
-// pipe's error status will be set.
-func (p *Pipe) String() string {
+// String returns the contents of the Pipe as a string, or an error, and closes the pipe after reading. If there is an error reading, the
+// pipe's error status is also set.
+func (p *Pipe) String() (string, error) {
 	if p.Error() != nil {
-		return ""
+		return "", p.Error()
 	}
 	res, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
-		p.err = err
-		return ""
+		p.SetError(err)
+		return "", err
 	}
 	p.Close()
-	return string(res)
+	return string(res), nil
 }
 
 // File returns a *Pipe associated with the specified file. This is useful for
@@ -77,29 +81,29 @@ func File(name string) *Pipe {
 	return NewPipe().WithCloser(r)
 }
 
-// CountLines counts lines in the specified file and returns the integer result.
-// As with all pipe-reading operations, this returns the zero value if the pipe
-// has a non-nil error status, and closes the pipe after reading.
-func CountLines(name string) int {
+// CountLines counts lines in the specified file and returns the integer result,
+// or an error, and closes the pipe after reading. If there is an error reading
+// the pipe, the pipe's error status is also set.
+func CountLines(name string) (int, error) {
 	return File(name).CountLines()
 }
 
 // CountLines counts lines from the pipe's reader, and returns the integer
-// result. As with all pipe-reading operations, this returns the zero value if
-// the pipe has a non-nil error status, and closes the pipe after reading. If
-// there is an error reading the pipe, the pipe's error status is set.
-func (p *Pipe) CountLines() int {
+// result, or an error. If there is an error reading the pipe, the pipe's error
+// status is also set.
+func (p *Pipe) CountLines() (int, error) {
 	if p.Error() != nil {
-		return 0
+		return 0, p.Error()
 	}
 	scanner := bufio.NewScanner(p.Reader)
 	var lines int
 	for scanner.Scan() {
 		lines++
 	}
-	if err := scanner.Err(); err != nil {
-		p.err = err
+	err := scanner.Err()
+	if err != nil {
+		p.SetError(err)
 	}
 	p.Close()
-	return lines
+	return lines, err
 }
