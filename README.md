@@ -12,12 +12,14 @@ This works because File returns a Pipe object. Most `script` operations can be m
 
 Ultimately, you'll want to read the results from the pipe, and you can do that using the `String()` method, for example. If the pipe's original data source was something that needs closing, like a file, it will be automatically closed once all the data has been read. `script` programs will not leak file handles.
 
-If any pipe operation results in an error, the pipe's `Error()` method will return that error, and all pipe operations will henceforth be no-ops. Thus you can safely chain a whole series of operations without having to check the error status at each stage:
+If any pipe operation results in an error, the pipe's `Error()` method will return that error, and all pipe operations will henceforth be no-ops. Thus you can safely chain a whole series of operations without having to check the error status at each stage.
+
+When you eventually read the pipe, for convenience, you will also get the pipe's error status as an extra return value:
 
 ```go
 p := script.File("doesnt_exist.txt")
-out := p.String() // succeeds, with empty result
-res := p.CountLines() // succeeds, with zero result
+out, err := p.String() // err is non-nil
+res, err := p.CountLines() // err is non-nil
 fmt.Println(p.Error())
 // Output: open doesnt_exist.txt: no such file or directory
 ```
