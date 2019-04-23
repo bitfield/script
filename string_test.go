@@ -31,6 +31,7 @@ func TestString(t *testing.T) {
 }
 
 func TestEcho(t *testing.T) {
+	t.Parallel()
 	want := "Hello, world."
 	p := Echo(want)
 	got, err := p.String()
