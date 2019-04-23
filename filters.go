@@ -50,3 +50,21 @@ func (p *Pipe) Reject(s string) *Pipe {
 	p.Close()
 	return Echo(output.String())
 }
+
+// EachLine calls the specified function once for each line of the input. Anything the function returns
+func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
+	if p.Error() != nil {
+		return p
+	}
+	scanner := bufio.NewScanner(p.Reader)
+	output := strings.Builder{}
+	for scanner.Scan() {
+		process(scanner.Text(), &output)
+	}
+	err := scanner.Err()
+	if err != nil {
+		p.SetError(err)
+	}
+	p.Close()
+	return Echo(output.String())
+}
