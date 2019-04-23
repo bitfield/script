@@ -19,3 +19,16 @@ func TestFile(t *testing.T) {
 		t.Fatalf("want %q, got %q", want, got)
 	}
 }
+
+func TestEcho(t *testing.T) {
+	t.Parallel()
+	want := "Hello, world."
+	p := Echo(want)
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+}

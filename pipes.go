@@ -24,7 +24,7 @@ func (p *Pipe) Close() error {
 }
 
 // Error returns the last error returned by any pipe operation, or nil otherwise.
-func (p Pipe) Error() error {
+func (p *Pipe) Error() error {
 	return p.err
 }
 

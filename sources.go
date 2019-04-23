@@ -2,6 +2,7 @@ package script
 
 import (
 	"os"
+	"strings"
 )
 
 // File returns a *Pipe associated with the specified file. This is useful for
@@ -13,4 +14,9 @@ func File(name string) *Pipe {
 		return NewPipe().WithError(err)
 	}
 	return NewPipe().WithCloser(r)
+}
+
+// Echo returns a pipe containing the supplied string.
+func Echo(s string) *Pipe {
+	return NewPipe().WithReader(strings.NewReader(s))
 }
