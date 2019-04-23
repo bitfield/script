@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 // Pipe represents a pipe object with an associated Reader.
@@ -106,4 +107,32 @@ func (p *Pipe) CountLines() (int, error) {
 	}
 	p.Close()
 	return lines, err
+}
+
+// Match reads from the pipe, and returns a new pipe containing only lines which
+// contain the specified string. If there is an error reading the pipe, the
+// pipe's error status is also set.
+func (p Pipe) Match(s string) *Pipe {
+	if p.Error() != nil {
+		return &p
+	}
+	scanner := bufio.NewScanner(p.Reader)
+	output := strings.Builder{}
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), s) {
+			output.WriteString(scanner.Text())
+			output.WriteByte('\n')
+		}
+	}
+	err := scanner.Err()
+	if err != nil {
+		p.SetError(err)
+	}
+	p.Close()
+	return NewPipe().Echo(output.String())
+}
+
+// Echo returns a pipe containing the supplied string.
+func (p Pipe) Echo(s string) *Pipe {
+	return NewPipe().WithReader(strings.NewReader(s))
 }

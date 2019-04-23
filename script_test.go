@@ -86,7 +86,6 @@ func TestString(t *testing.T) {
 	if err == nil {
 		t.Fatal("failed to close file after reading")
 	}
-
 }
 
 func TestCountLines(t *testing.T) {
@@ -127,5 +126,40 @@ func TestCountLines(t *testing.T) {
 	}
 	if err != p.Error() {
 		t.Fatalf("returned %v but pipe error status was %v", err, p.Error())
+	}
+}
+
+func TestMatch(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		testFileName string
+		match        string
+		want         int
+	}{
+		{"testdata/test.txt", "line", 2},
+		{"testdata/test.txt", "another", 1},
+		{"testdata/test.txt", "rhymenocerous", 0},
+		{"testdata/empty.txt", "line", 0},
+	}
+	for _, tc := range testCases {
+		got, err := File(tc.testFileName).Match(tc.match).CountLines()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.want {
+			t.Fatalf("%q in %q: want %d, got %d", tc.match, tc.testFileName, tc.want, got)
+		}
+	}
+}
+
+func TestEcho(t *testing.T) {
+	want := "Hello, world."
+	p := NewPipe().Echo(want)
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("want %q, got %q", want, got)
 	}
 }
