@@ -152,6 +152,29 @@ func TestMatch(t *testing.T) {
 	}
 }
 
+func TestReject(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		testFileName string
+		reject       string
+		want         int
+	}{
+		{"testdata/test.txt", "line", 1},
+		{"testdata/test.txt", "another", 2},
+		{"testdata/test.txt", "rhymenocerous", 3},
+		{"testdata/empty.txt", "line", 0},
+	}
+	for _, tc := range testCases {
+		got, err := File(tc.testFileName).Reject(tc.reject).CountLines()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.want {
+			t.Fatalf("%q in %q: want %d, got %d", tc.reject, tc.testFileName, tc.want, got)
+		}
+	}
+}
+
 func TestEcho(t *testing.T) {
 	want := "Hello, world."
 	p := NewPipe().Echo(want)
