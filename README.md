@@ -167,6 +167,18 @@ p := File("test.txt").Match("Error")
 p := File("test.txt").Match("Error").Reject("false alarm")
 ```
 
+### EachLine
+
+`EachLine()` lets you create custom filters. You provide a function, and it will be called once for each line of input. If you want to produce output, your function can write to a supplied `strings.Builder`. The return value from EachLine is a pipe containing your output.
+
+```go
+p := File("test.txt")
+q := p.EachLine(func(line string, out *strings.Builder) {
+	out.WriteString("> " + line + "\n")
+})
+fmt.Println(q.String())
+```
+
 ## Sinks
 
 Sinks are operations which return some data from a pipe, ending the pipeline.
@@ -301,6 +313,11 @@ These are some ideas I'm playing with for additional features. If you feel like 
 ### Filters
 
 * `MatchRegex` / `RejectRegex`. You can probably guess what these do.
+
+### Sinks
+
+* `WriteFile` writes the contents of the pipe to a file.
+* `AppendFile`... well, you get the idea.
 
 ### Examples
 
