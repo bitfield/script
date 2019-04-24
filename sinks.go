@@ -1,8 +1,8 @@
 package script
 
 import (
-	"bufio"
 	"io/ioutil"
+	"strings"
 )
 
 // String returns the contents of the Pipe as a string, or an error, and closes the pipe after reading. If there is an error reading, the
@@ -24,18 +24,9 @@ func (p *Pipe) String() (string, error) {
 // result, or an error. If there is an error reading the pipe, the pipe's error
 // status is also set.
 func (p *Pipe) CountLines() (int, error) {
-	if p.Error() != nil {
-		return 0, p.Error()
-	}
-	scanner := bufio.NewScanner(p.Reader)
 	var lines int
-	for scanner.Scan() {
+	p.EachLine(func(line string, out *strings.Builder) {
 		lines++
-	}
-	err := scanner.Err()
-	if err != nil {
-		p.SetError(err)
-	}
-	p.Close()
-	return lines, err
+	})
+	return lines, p.Error()
 }
