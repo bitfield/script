@@ -159,12 +159,28 @@ Filters are operations on an existing pipe that also return a pipe, allowing you
 p := File("test.txt").Match("Error")
 ```
 
+### MatchRegexp
+
+`MatchRegexp()` is like `Match()`, but takes a compiled regular expression instead of a string.
+
+```go
+p := File("test.txt").MatchRegexp(regexp.MustCompile(`E.*r`))
+```
+
 ### Reject
 
 `Reject()` is the inverse of `Match()`. Its pipe produces only lines which _don't_ contain the given string:
 
 ```go
 p := File("test.txt").Match("Error").Reject("false alarm")
+```
+
+### RejectRegexp
+
+`RejectRegexp()` is like `Reject()`, but takes a compiled regular expression instead of a string.
+
+```go
+p := File("test.txt").Match("Error").RejectRegexp(regexp.MustCompile(`false|bogus`))
 ```
 
 ### EachLine

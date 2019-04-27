@@ -1,7 +1,6 @@
 package script
 
 import (
-	"fmt"
 	"io/ioutil"
 	"testing"
 )
@@ -58,9 +57,8 @@ func TestCountLines(t *testing.T) {
 	if got != want {
 		t.Fatalf("counting lines from pipe: want %d, got %d", want, got)
 	}
-	res, err := ioutil.ReadAll(p.Reader)
+	_, err = ioutil.ReadAll(p.Reader)
 	if err == nil {
-		fmt.Println(res)
 		t.Fatal("failed to close file after reading")
 	}
 	_, err = p.CountLines() // result should be zero

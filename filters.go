@@ -2,6 +2,7 @@ package script
 
 import (
 	"bufio"
+	"regexp"
 	"strings"
 )
 
@@ -17,12 +18,36 @@ func (p *Pipe) Match(s string) *Pipe {
 	})
 }
 
+// MatchRegexp reads from the pipe, and returns a new pipe containing only lines
+// which match the specified compiled regular expression. If there is an error
+// reading the pipe, the pipe's error status is also set.
+func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
+	return p.EachLine(func(line string, out *strings.Builder) {
+		if re.MatchString(line) {
+			out.WriteString(line)
+			out.WriteByte('\n')
+		}
+	})
+}
+
 // Reject reads from the pipe, and returns a new pipe containing only lines
 // which do not contain the specified string. If there is an error reading the
 // pipe, the pipe's error status is also set.
 func (p *Pipe) Reject(s string) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		if !strings.Contains(line, s) {
+			out.WriteString(line)
+			out.WriteByte('\n')
+		}
+	})
+}
+
+// RejectRegexp reads from the pipe, and returns a new pipe containing only
+// lines which don't match the specified compiled regular expression. If there
+// is an error reading the pipe, the pipe's error status is also set.
+func (p *Pipe) RejectRegexp(re *regexp.Regexp) *Pipe {
+	return p.EachLine(func(line string, out *strings.Builder) {
+		if !re.MatchString(line) {
 			out.WriteString(line)
 			out.WriteByte('\n')
 		}
