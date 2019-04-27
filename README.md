@@ -46,7 +46,7 @@ The `script` library allows us to do this because everything is a pipe (specific
 
 ```go
 var p script.Pipe
-p = File("test.txt")
+p = script.File("test.txt")
 ```
 
 You might expect `File()` to return an error if there is a problem opening the file, but it doesn't. We will want to call a chain of methods on the result of `File()`, and it's inconvenient to do that if it also returns an error.
@@ -54,7 +54,7 @@ You might expect `File()` to return an error if there is a problem opening the f
 Instead, you can check the error status of the pipe at any time by calling its `Error()` method:
 
 ```go
-p = File("test.txt")
+p = script.File("test.txt")
 if p.Error() != nil {
     log.Fatalf("oh no: %v", p.Error())
 }
@@ -73,7 +73,7 @@ Note that the result of calling a method on a pipe is another pipe. You can do t
 
 ```go
 var q script.Pipe
-q = File("test.txt").Match("Error")
+q = script.File("test.txt").Match("Error")
 ```
 
 ## Handling errors
@@ -99,7 +99,7 @@ fmt.Println(result)
 Note that sinks return an error value in addition to the data. This is the same value you would get by calling `p.Error()`. If the pipe had an error in any operation along the pipeline, the pipe's error status will be set, and a sink operation which gets output will return the zero value, plus the error.
 
 ```go
-result, _ := File("doesnt_exist.txt").CountLines()
+result, _ := script.File("doesnt_exist.txt").CountLines()
 // Output: 0
 ```
 
@@ -134,7 +134,7 @@ These are operations which create a pipe.
 `File()` creates a pipe that reads from a file.
 
 ```go
-p = File("test.txt")
+p = script.File("test.txt")
 ```
 
 ### Echo
@@ -156,7 +156,7 @@ Filters are operations on an existing pipe that also return a pipe, allowing you
 `Match()` returns a pipe containing only the input lines which match the supplied string:
 
 ```go
-p := File("test.txt").Match("Error")
+p := script.File("test.txt").Match("Error")
 ```
 
 ### MatchRegexp
@@ -164,7 +164,7 @@ p := File("test.txt").Match("Error")
 `MatchRegexp()` is like `Match()`, but takes a compiled regular expression instead of a string.
 
 ```go
-p := File("test.txt").MatchRegexp(regexp.MustCompile(`E.*r`))
+p := script.File("test.txt").MatchRegexp(regexp.MustCompile(`E.*r`))
 ```
 
 ### Reject
@@ -172,7 +172,7 @@ p := File("test.txt").MatchRegexp(regexp.MustCompile(`E.*r`))
 `Reject()` is the inverse of `Match()`. Its pipe produces only lines which _don't_ contain the given string:
 
 ```go
-p := File("test.txt").Match("Error").Reject("false alarm")
+p := script.File("test.txt").Match("Error").Reject("false alarm")
 ```
 
 ### RejectRegexp
@@ -180,7 +180,7 @@ p := File("test.txt").Match("Error").Reject("false alarm")
 `RejectRegexp()` is like `Reject()`, but takes a compiled regular expression instead of a string.
 
 ```go
-p := File("test.txt").Match("Error").RejectRegexp(regexp.MustCompile(`false|bogus`))
+p := script.File("test.txt").Match("Error").RejectRegexp(regexp.MustCompile(`false|bogus`))
 ```
 
 ### EachLine
@@ -188,7 +188,7 @@ p := File("test.txt").Match("Error").RejectRegexp(regexp.MustCompile(`false|bogu
 `EachLine()` lets you create custom filters. You provide a function, and it will be called once for each line of input. If you want to produce output, your function can write to a supplied `strings.Builder`. The return value from EachLine is a pipe containing your output.
 
 ```go
-p := File("test.txt")
+p := script.File("test.txt")
 q := p.EachLine(func(line string, out *strings.Builder) {
 	out.WriteString("> " + line + "\n")
 })
@@ -226,8 +226,8 @@ All a pipe source has to do is return a pointer to a `script.Pipe`. To be useful
 `Echo()` is a simple example, which just creates a pipe containing a string:
 
 ```go
-func Echo(s string) *Pipe {
-	return NewPipe().WithReader(strings.NewReader(s))
+func Echo(s string) *script.Pipe {
+	return script.NewPipe().WithReader(strings.NewReader(s))
 }
 ```
 
@@ -239,22 +239,22 @@ Let's break this down:
 
 Simple, right? One more thing: when you create a pipe from a data source that needs to be closed after reading (such as a file), use `WithCloser()` instead of `WithReader()`.
 
-Here's the implementation of `File()`, for example:
+Here's an implementation of `File()`, for example:
 
 ```go
-func File(name string) *Pipe {
+func File(name string) *script.Pipe {
 	r, err := os.Open(name)
 	if err != nil {
-		return NewPipe().WithError(err)
+		return script.NewPipe().WithError(err)
 	}
-	return NewPipe().WithCloser(r)
+	return script.NewPipe().WithCloser(r)
 }
 ```
 
 You can also see from this example how to create a pipe with error status:
 
 ```go
-return NewPipe().WithError(err)
+return script.NewPipe().WithError(err)
 ```
 
 ### Writing a filter
@@ -262,7 +262,7 @@ return NewPipe().WithError(err)
 Filters are methods on pipes, that return pipes. For example, here's a simple filter which just reads and rejects all input, returning an empty pipe:
 
 ```go
-func (p *Pipe) RejectEverything() *Pipe {
+func (p *script.Pipe) RejectEverything() *script.Pipe {
 	if p.Error() != nil {
 		return &p
 	}
@@ -272,7 +272,7 @@ func (p *Pipe) RejectEverything() *Pipe {
 		p.SetError(err)
 		return &p
 	}
-	return Echo("")
+	return script.Echo("")
 }
 ```
 
@@ -282,7 +282,7 @@ Important things to note here:
 * We close the source pipe once we successfully read all data from it.
 * If an error occurs, we set the pipe's error status, using `p.SetError()`, and return the pipe.
 
-Filters must not log anything, terminate the program, or return anything but `*Pipe`.
+Filters must not log anything, terminate the program, or return anything but `*script.Pipe`.
 
 As you can see from the example, the pipe's reader is available to you as `p.Reader`. You can do anything with that that you can with an `io.Reader`.
 
@@ -293,7 +293,7 @@ If your method modifies the pipe (for example if it can set an error on the pipe
 Any method on a pipe which returns something other than a pipe is a sink. For example, here's an implementation of `String()`:
 
 ```go
-func (p *Pipe) String() (string, error) {
+func (p *script.Pipe) String() (string, error) {
 	if p.Error() != nil {
 		return "", p.Error()
 	}
@@ -328,7 +328,7 @@ These are some ideas I'm playing with for additional features. If you feel like 
 
 ### Filters
 
-* `MatchRegex` / `RejectRegex`. You can probably guess what these do.
+* Ideas welcome!
 
 ### Sinks
 
