@@ -319,7 +319,8 @@ These are some ideas I'm playing with for additional features. If you feel like 
 
 ### Sources
 
-* `OpenURL()` makes a web request, like `curl`, and pipes the result
+* `Get()` makes a web request, like `curl`, and pipes the result
+* `Net()` makes a network connection to a specified address and port, and reads the connection until it's closed
 * `Exec()` runs an external program, and pipes its output
 * `Stdin()` pipes the program's standard input
 * `ListFiles()` takes a filesystem path or glob, and pipes the list of matching files
@@ -334,6 +335,7 @@ These are some ideas I'm playing with for additional features. If you feel like 
 
 * `WriteFile` writes the contents of the pipe to a file.
 * `AppendFile`... well, you get the idea.
+* `JSON` returns the pipe contents as a JSON object
 
 ### Examples
 
