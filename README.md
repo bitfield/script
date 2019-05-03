@@ -215,6 +215,22 @@ contents, err := script.File("test.txt").String()
 numLines, err := script.File("test.txt").CountLines()
 ```
 
+### WriteFile
+
+`WriteFile` writes the contents of the pipe to a named file. It returns the number of bytes written, or an error:
+
+```go
+wrote, err := script.File("source.txt").WriteFile("destination.txt")
+```
+
+### AppendFile
+
+`AppendFile` is like `WriteFile`, but appends to the destination file instead of overwriting it. It returns the number of bytes written, or an error:
+
+```go
+wrote, err := script.Echo("Got this far!").AppendFile("logfile.txt")
+```
+
 ## Writing your own pipe operations
 
 There's nothing to stop you writing your own sources, sinks, or filters (in fact, that would be excellent. Please submit a pull request if you want to add them to the standard operations supplied with `script`.)
@@ -333,8 +349,6 @@ These are some ideas I'm playing with for additional features. If you feel like 
 
 ### Sinks
 
-* `WriteFile` writes the contents of the pipe to a file.
-* `AppendFile`... well, you get the idea.
 * `JSON` returns the pipe contents as a JSON object
 
 ### Examples

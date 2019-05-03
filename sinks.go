@@ -1,7 +1,9 @@
 package script
 
 import (
+	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -29,4 +31,39 @@ func (p *Pipe) CountLines() (int, error) {
 		lines++
 	})
 	return lines, p.Error()
+}
+
+// WriteFile writes the contents of the Pipe to the specified file, and closes
+// the pipe after reading. It returns the number of bytes successfully written,
+// or an error. If there is an error reading or writing, the pipe's error status
+// is also set.
+func (p *Pipe) WriteFile(fileName string) (int64, error) {
+	return p.writeOrAppendFile(fileName, os.O_RDWR|os.O_CREATE)
+}
+
+// AppendFile appends the contents of the Pipe to the specified file, and closes
+// the pipe after reading. It returns the number of bytes successfully written,
+// or an error. If there is an error reading or writing, the pipe's error status
+// is also set.
+func (p *Pipe) AppendFile(fileName string) (int64, error) {
+	return p.writeOrAppendFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY)
+}
+
+func (p *Pipe) writeOrAppendFile(fileName string, mode int) (int64, error) {
+	if p.Error() != nil {
+		return 0, p.Error()
+	}
+	defer p.Close()
+	out, err := os.OpenFile(fileName, mode, 0644)
+	if err != nil {
+		p.SetError(err)
+		return 0, err
+	}
+	defer out.Close()
+	wrote, err := io.Copy(out, p.Reader)
+	if err != nil {
+		p.SetError(err)
+		return 0, err
+	}
+	return wrote, nil
 }
