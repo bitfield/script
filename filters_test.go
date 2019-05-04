@@ -99,6 +99,7 @@ func TestRejectRegexp(t *testing.T) {
 }
 
 func TestEachLine(t *testing.T) {
+	t.Parallel()
 	p := Echo("Hello\nGoodbye")
 	q := p.EachLine(func(line string, out *strings.Builder) {
 		out.WriteString(line + " world\n")
@@ -111,4 +112,24 @@ func TestEachLine(t *testing.T) {
 	if got != want {
 		t.Fatalf("want %q, got %q", want, got)
 	}
+}
+
+func TestExecFilter(t *testing.T) {
+	t.Parallel()
+	want := "hello world"
+	p := File("testdata/hello.txt")
+	q := p.Exec("cat")
+	got, err := q.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+	// This should fail because p is now closed.
+	_, err = p.String()
+	if err == nil {
+		t.Fatal("input reader not closed")
+	}
+
 }

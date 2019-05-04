@@ -169,6 +169,8 @@ fmt.Println(output)
 // Output: hello
 ```
 
+Note that `Exec()` can also be used as a filter, in which case the given command will read from the pipe as its standard input.
+
 #### Exit status
 
 If the command returns a non-zero exit status, the pipe's error status will be set to the string "exit status X", where X is the integer exit status.
@@ -251,6 +253,20 @@ q := p.EachLine(func(line string, out *strings.Builder) {
 })
 output, err := q.String()
 fmt.Println(output)
+```
+
+### Exec
+
+`Exec()` runs a given command, which will read from the pipe as its standard input, and returns a pipe containing the command's combined output (`stdout` and `stderr`). If there was an error running the command, the pipe's error status will be set.
+
+Apart from connecting the pipe to the command's standard input, the behaviour of an `Exec()` filter is the same as that of an `Exec()` source.
+
+```go
+// `cat` copies its standard input to its standard output.
+p := script.Echo("hello world").Exec("cat")
+output, err := p.String()
+fmt.Println(output)
+// Output: hello world
 ```
 
 ## Sinks

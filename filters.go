@@ -2,6 +2,8 @@ package script
 
 import (
 	"bufio"
+	"bytes"
+	"os/exec"
 	"regexp"
 	"strings"
 )
@@ -72,4 +74,20 @@ func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 	}
 	p.Close()
 	return Echo(output.String())
+}
+
+// Exec runs an external command and returns a pipe containing the output. If
+// the command had a non-zero exit status, the pipe's error status will also be
+// set to the string "exit status X", where X is the integer exit status.
+func (p *Pipe) Exec(s string) *Pipe {
+	q := NewPipe()
+	args := strings.Fields(s)
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Stdin = p.Reader
+	defer p.Close()
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		q.SetError(err)
+	}
+	return q.WithReader(bytes.NewReader(output))
 }
