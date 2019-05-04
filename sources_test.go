@@ -74,3 +74,18 @@ func TestExec(t *testing.T) {
 		t.Fatalf("expected no error running 'go help', but got %v", r.Error())
 	}
 }
+
+func TestStdin(t *testing.T) {
+	t.Parallel()
+	// To test this properly, we should re-exec the test binary and pipe
+	// something to it, using a GO_WANT_HELPER_PROCESS pattern:
+	// https://golang.org/src/os/exec/exec_test.go
+	p := Stdin()
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "" {
+		t.Fatalf("expected nothing on stdin, got %q", got)
+	}
+}

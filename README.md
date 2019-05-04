@@ -206,6 +206,17 @@ fmt.Println(output)
 // Output: No manual entry for bogus
 ```
 
+### Stdin
+
+`Stdin()` creates a pipe which reads from the program's standard input.
+
+```go
+p := script.Stdin()
+output, err := p.String()
+fmt.Println(output)
+// Output: [contents of standard input]
+```
+
 ## Filters
 
 Filters are operations on an existing pipe that also return a pipe, allowing you to chain filters indefinitely.
@@ -421,7 +432,6 @@ These are some ideas I'm playing with for additional features. If you feel like 
 
 * `Get()` makes a web request, like `curl`, and pipes the result
 * `Net()` makes a network connection to a specified address and port, and reads the connection until it's closed
-* `Stdin()` pipes the program's standard input
 * `ListFiles()` takes a filesystem path or glob, and pipes the list of matching files
 * `Find()` pipes a list of files matching various criteria (name, modified time, and so on)
 * `Processes()` pipes the list of running processes, like `ps`.

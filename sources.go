@@ -36,3 +36,8 @@ func Exec(s string) *Pipe {
 	}
 	return p.WithReader(bytes.NewReader(output))
 }
+
+// Stdin returns a pipe which reads from the program's standard input.
+func Stdin() *Pipe {
+	return NewPipe().WithReader(os.Stdin)
+}
