@@ -304,7 +304,7 @@ fmt.Println(err)
 
 ### CountLines
 
-`CountLines`, as the name suggests, counts lines in its input, and returns the number of lines as an integer, plus an error:
+`CountLines()`, as the name suggests, counts lines in its input, and returns the number of lines as an integer, plus an error:
 
 ```go
 numLines, err := script.File("test.txt").CountLines()
@@ -312,7 +312,7 @@ numLines, err := script.File("test.txt").CountLines()
 
 ### WriteFile
 
-`WriteFile` writes the contents of the pipe to a named file. It returns the number of bytes written, or an error:
+`WriteFile()` writes the contents of the pipe to a named file. It returns the number of bytes written, or an error:
 
 ```go
 wrote, err := script.File("source.txt").WriteFile("destination.txt")
@@ -320,10 +320,31 @@ wrote, err := script.File("source.txt").WriteFile("destination.txt")
 
 ### AppendFile
 
-`AppendFile` is like `WriteFile`, but appends to the destination file instead of overwriting it. It returns the number of bytes written, or an error:
+`AppendFile()` is like `WriteFile()`, but appends to the destination file instead of overwriting it. It returns the number of bytes written, or an error:
 
 ```go
 wrote, err := script.Echo("Got this far!").AppendFile("logfile.txt")
+```
+
+### Stdout
+
+`Stdout()` writes the contents of the pipe to the program's standard output. It returns the number of bytes written, or an error:
+
+```go
+p := Echo("hello world")
+wrote, err := p.Stdout()
+```
+
+In conjunction with `Stdin()`, `Stdout()` is useful for writing programs which filter input. For example, here is a simple implementation of the Unix `cat` utility (which just copies its input to its output):
+
+```go
+package main
+
+import "github.com/bitfield/script"
+
+func main() {
+	script.Stdin().Stdout()
+}
 ```
 
 ## Writing your own pipe operations

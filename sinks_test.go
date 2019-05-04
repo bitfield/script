@@ -20,14 +20,14 @@ func TestString(t *testing.T) {
 	}
 	_, err = p.String() // result should be empty
 	if p.Error() == nil {
-		t.Fatalf("reading closed pipe: want error, got nil")
+		t.Fatalf("expected error status after read from closed pipe, got nil")
 	}
 	if err != p.Error() {
 		t.Fatalf("returned %v but pipe error status was %v", err, p.Error())
 	}
-	_, err = ioutil.ReadAll(p.Reader)
+	_, err = p.String()
 	if err == nil {
-		t.Fatal("failed to close file after reading")
+		t.Fatal("input reader not closed")
 	}
 }
 
@@ -115,5 +115,43 @@ func TestAppendFile(t *testing.T) {
 	}
 	if got != orig+extra {
 		t.Fatalf("want %q, got %q", orig+extra, got)
+	}
+}
+
+func TestStdout(t *testing.T) {
+	t.Parallel()
+	// Temporarily point os.Stdout to a file so that we can capture it for
+	// testing purposes. This is not concurrency-safe (but this is the only
+	// test that does it).
+	realStdout := os.Stdout
+	fake, err := ioutil.TempFile("testdata", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(fake.Name())
+	defer fake.Close()
+	os.Stdout = fake
+	defer func() {
+		os.Stdout = realStdout
+	}()
+	want := "hello world"
+	p := File("testdata/hello.txt")
+	wrote, err := p.Stdout()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if wrote != len(want) {
+		t.Fatalf("want %d bytes written, got %d", len(want), wrote)
+	}
+	got, err := ioutil.ReadFile(fake.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != want {
+		t.Fatalf("want %q, got %q", want, string(got))
+	}
+	_, err = p.String()
+	if err == nil {
+		t.Fatal("input reader not closed")
 	}
 }

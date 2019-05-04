@@ -1,6 +1,7 @@
 package script
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -66,4 +67,20 @@ func (p *Pipe) writeOrAppendFile(fileName string, mode int) (int64, error) {
 		return 0, err
 	}
 	return wrote, nil
+}
+
+// Stdout writes the contents of the pipe to the program's standard output. It
+// returns the number of bytes successfully written, plus a non-nil error if the
+// write failed or if there was an error reading from the pipe. If the pipe has
+// error status, Stdout returns zero plus the existing error.
+func (p *Pipe) Stdout() (int, error) {
+	if p.Error() != nil {
+		return 0, p.Error()
+	}
+	defer p.Close()
+	output, err := p.String()
+	if err != nil {
+		return 0, err
+	}
+	return fmt.Print(output)
 }
