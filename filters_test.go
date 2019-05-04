@@ -1,6 +1,7 @@
 package script
 
 import (
+	"errors"
 	"regexp"
 	"strings"
 	"testing"
@@ -131,5 +132,11 @@ func TestExecFilter(t *testing.T) {
 	if err == nil {
 		t.Fatal("input reader not closed")
 	}
-
+	p = Echo("hello world")
+	p.SetError(errors.New("oh no"))
+	// This should be a no-op because the pipe has error status.
+	out, _ := p.Exec("cat").String()
+	if out != "" {
+		t.Fatal("expected exec on erroneous pipe to be a no-op, but it wasn't")
+	}
 }

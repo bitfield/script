@@ -80,11 +80,14 @@ func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 // the command had a non-zero exit status, the pipe's error status will also be
 // set to the string "exit status X", where X is the integer exit status.
 func (p *Pipe) Exec(s string) *Pipe {
-	q := NewPipe()
+	if p.Error() != nil {
+		return p
+	}
 	args := strings.Fields(s)
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdin = p.Reader
 	defer p.Close()
+	q := NewPipe()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		q.SetError(err)
