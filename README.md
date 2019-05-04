@@ -467,7 +467,12 @@ These are some ideas I'm playing with for additional features. If you feel like 
 
 ### Examples
 
-Since `script` is designed to help you write system administration programs, it would be great to have some examples of such programs. We could implement familiar utilities like `cat`, `grep`, and `wc`.
+Since `script` is designed to help you write system administration programs, a few simple examples of such programs are included in the [examples](examples/) directory:
+
+* [cat](examples/cat/main.go)
+* [grep](examples/grep/main.go)
+
+More examples would be welcome!
 
 ### Use cases
 
