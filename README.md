@@ -96,11 +96,18 @@ if err != nil {
 fmt.Println(result)
 ```
 
+## Errors
+
 Note that sinks return an error value in addition to the data. This is the same value you would get by calling `p.Error()`. If the pipe had an error in any operation along the pipeline, the pipe's error status will be set, and a sink operation which gets output will return the zero value, plus the error.
 
 ```go
-result, _ := script.File("doesnt_exist.txt").CountLines()
+numLines, err := script.File("doesnt_exist.txt").CountLines()
+fmt.Println(numLines)
 // Output: 0
+if err != nil {
+	    log.Fatal(err)
+}
+// Output: open doesnt_exist.txt: no such file or directory
 ```
 
 `CountLines()` is another useful sink, which simply returns the number of lines read from the pipe.
@@ -135,6 +142,9 @@ These are operations which create a pipe.
 
 ```go
 p = script.File("test.txt")
+output, err := p.String()
+fmt.Println(output)
+// Output: contents of file
 ```
 
 ### Echo
@@ -143,8 +153,55 @@ p = script.File("test.txt")
 
 ```go
 p := script.Echo("Hello, world!")
-fmt.Println(p.String())
+output, err := p.String()
+fmt.Println(output)
 // Output: Hello, world!
+```
+
+### Exec
+
+`Exec()` runs a given command and creates a pipe containing its combined output (`stdout` and `stderr`). If there was an error running the command, the pipe's error status will be set.
+
+```go
+p := script.Exec("echo hello")
+output, err := p.String()
+fmt.Println(output)
+// Output: hello
+```
+
+#### Exit status
+
+If the command returns a non-zero exit status, the pipe's error status will be set to the string "exit status X", where X is the integer exit status.
+
+```go
+p := script.Exec("ls doesntexist")
+output, err := p.String()
+fmt.Println(err)
+// Output: exit status 1
+```
+
+For convenience, you can get this value directly as an integer by calling `ExitStatus()` on the pipe:
+
+```go
+
+p := script.Exec("ls doesntexist")
+var exit int = p.ExitStatus()
+fmt.Println(exit)
+// Output: 1
+```
+
+The value of `ExitStatus()` will be zero unless the pipe's error status matches the string "exit status X", where X is a non-zero integer.
+
+#### Error output
+
+Even in the event of a non-zero exit status, the command's output will still be available in the pipe. This is often helpful for debugging. However, because `String()` is a no-op if the pipe's error status is set, if you want output you will need to reset the error status before calling `String()`:
+
+```go
+p := Exec("man bogus")
+p.SetError(nil)
+output, err := p.String()
+fmt.Println(output)
+// Output: No manual entry for bogus
 ```
 
 ## Filters
@@ -192,7 +249,8 @@ p := script.File("test.txt")
 q := p.EachLine(func(line string, out *strings.Builder) {
 	out.WriteString("> " + line + "\n")
 })
-fmt.Println(q.String())
+output, err := q.String()
+fmt.Println(output)
 ```
 
 ## Sinks
@@ -205,6 +263,16 @@ The simplest sink is `String()`, which just returns the contents of the pipe as 
 
 ```go
 contents, err := script.File("test.txt").String()
+```
+
+Note that `String()`, like all sinks, consumes the complete output of the pipe, closing the input reader if appropriate. Therefore, calling `String()` (or any other sink method) again on the same pipe will return an error:
+
+```go
+p := script.File("test.txt")
+_, _ = p.String()
+_, err := p.String()
+fmt.Println(err)
+// Output: read test.txt: file already closed
 ```
 
 ### CountLines
@@ -337,7 +405,6 @@ These are some ideas I'm playing with for additional features. If you feel like 
 
 * `Get()` makes a web request, like `curl`, and pipes the result
 * `Net()` makes a network connection to a specified address and port, and reads the connection until it's closed
-* `Exec()` runs an external program, and pipes its output
 * `Stdin()` pipes the program's standard input
 * `ListFiles()` takes a filesystem path or glob, and pipes the list of matching files
 * `Find()` pipes a list of files matching various criteria (name, modified time, and so on)
@@ -349,8 +416,12 @@ These are some ideas I'm playing with for additional features. If you feel like 
 
 ### Sinks
 
-* `JSON` returns the pipe contents as a JSON object
+* Ideas equally welcome!
 
 ### Examples
 
 Since `script` is designed to help you write system administration programs, it would be great to have some examples of such programs. We could implement familiar utilities like `cat`, `grep`, and `wc`.
+
+### Use cases
+
+The best libraries are designed to satisfy real use cases. If you have a sysadmin task which you'd like to implement with `script`, let me know by opening an issue.
