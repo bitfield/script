@@ -2,6 +2,7 @@ package script
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -43,5 +44,29 @@ func TestError(t *testing.T) {
 	p.SetError(e)
 	if p.Error() != e {
 		t.Fatalf("setting pipe error: want %v, got %v", e, p.Error())
+	}
+}
+
+func TestExitStatus(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		input string
+		want  int
+	}{
+		{"", 0},
+		{"bogus", 0},
+		{"exit status bogus", 0},
+		{"exit status 127", 127},
+		{"exit status 1", 1},
+		{"exit status 0", 0},
+		{"exit status 1 followed by junk", 0},
+	}
+	for _, tc := range tcs {
+		p := NewPipe()
+		p.SetError(fmt.Errorf(tc.input))
+		got := p.ExitStatus()
+		if got != tc.want {
+			t.Fatalf("input %q: want exit status %d, got %d", tc.input, tc.want, got)
+		}
 	}
 }

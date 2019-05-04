@@ -3,6 +3,8 @@ package script
 import (
 	"io"
 	"io/ioutil"
+	"regexp"
+	"strconv"
 )
 
 // Pipe represents a pipe object with an associated Reader.
@@ -26,6 +28,27 @@ func (p *Pipe) Close() error {
 // Error returns the last error returned by any pipe operation, or nil otherwise.
 func (p *Pipe) Error() error {
 	return p.err
+}
+
+var exitStatusPattern = regexp.MustCompile(`exit status (\d+)$`)
+
+// ExitStatus returns the integer exit status of a previous command, if the
+// pipe's error status is set, and if the error matches the pattern "exit status
+// %d". Otherwise, it returns zero.
+func (p *Pipe) ExitStatus() int {
+	if p.Error() == nil {
+		return 0
+	}
+	match := exitStatusPattern.FindStringSubmatch(p.Error().Error())
+	if len(match) < 2 {
+		return 0
+	}
+	status, err := strconv.Atoi(match[1])
+	if err != nil {
+		// This seems unlikely, but...
+		return 0
+	}
+	return status
 }
 
 // WithReader takes an io.Reader which does not need to be closed after reading,
