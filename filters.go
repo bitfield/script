@@ -60,7 +60,7 @@ func (p *Pipe) RejectRegexp(re *regexp.Regexp) *Pipe {
 // line as a string, and a *strings.Builder to write its output to. The return
 // value from EachLine is a pipe containing the contents of the strings.Builder.
 func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
-	if p.Error() != nil {
+	if p == nil || p.Reader == nil || p.Error() != nil {
 		return p
 	}
 	scanner := bufio.NewScanner(p.Reader)
@@ -80,7 +80,7 @@ func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 // the command had a non-zero exit status, the pipe's error status will also be
 // set to the string "exit status X", where X is the integer exit status.
 func (p *Pipe) Exec(s string) *Pipe {
-	if p.Error() != nil {
+	if p == nil || p.Reader == nil || p.Error() != nil {
 		return p
 	}
 	args := strings.Fields(s)

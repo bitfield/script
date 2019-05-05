@@ -3,6 +3,7 @@ package script
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"testing"
 )
@@ -66,7 +67,51 @@ func TestExitStatus(t *testing.T) {
 		p.SetError(fmt.Errorf(tc.input))
 		got := p.ExitStatus()
 		if got != tc.want {
-			t.Fatalf("input %q: want exit status %d, got %d", tc.input, tc.want, got)
+			t.Fatalf("input %q: want %d, got %d", tc.input, tc.want, got)
 		}
 	}
+	got := NewPipe().ExitStatus()
+	if got != 0 {
+		t.Fatalf("want 0, got %d", got)
+	}
+}
+
+// doMethodsOnPipe calls every kind of method on the supplied pipe and
+// tries to trigger a panic.
+func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
+	var action string
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("panic: %s on %s pipe", action, kind)
+		}
+	}()
+	action = "Close()"
+	p.Close()
+	action = "Error()"
+	p.Error()
+	action = "ExitStatus()"
+	p.ExitStatus()
+	action = "SetError()"
+	p.SetError(nil)
+	action = "WithReader()"
+	p.WithReader(strings.NewReader(""))
+	action = "WithCloser()"
+	p.WithCloser(ioutil.NopCloser(strings.NewReader("")))
+	action = "WithError()"
+	p.WithError(nil)
+}
+
+func TestNilPipes(t *testing.T) {
+	t.Parallel()
+	doMethodsOnPipe(t, nil, "nil")
+}
+
+func TestZeroPipes(t *testing.T) {
+	t.Parallel()
+	doMethodsOnPipe(t, &Pipe{}, "zero")
+}
+
+func TestNewPipes(t *testing.T) {
+	t.Parallel()
+	doMethodsOnPipe(t, NewPipe(), "new")
 }

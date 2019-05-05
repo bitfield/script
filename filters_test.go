@@ -7,6 +7,37 @@ import (
 	"testing"
 )
 
+// doFiltersOnPipe calls every kind of filter method on the supplied pipe and
+// tries to trigger a panic.
+func doFiltersOnPipe(t *testing.T, p *Pipe, kind string) {
+	var action string
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("panic: %s on %s pipe", action, kind)
+		}
+	}()
+	// also tests methods that wrap EachLine, such as Match*/Reject*
+	action = "EachLine()"
+	q := p.EachLine(func(string, *strings.Builder) {})
+	if q != p {
+		t.Fatalf("no-op expected from %s on %s pipe", action, kind)
+	}
+	action = "Exec()"
+	q = p.Exec("bogus")
+	if q != p {
+		t.Fatalf("no-op expected from %s on %s pipe", action, kind)
+	}
+}
+func TestNilPipeFilters(t *testing.T) {
+	t.Parallel()
+	doFiltersOnPipe(t, nil, "nil")
+}
+
+func TestZeroPipeFilters(t *testing.T) {
+	t.Parallel()
+	doFiltersOnPipe(t, &Pipe{}, "zero")
+}
+
 func TestMatch(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {

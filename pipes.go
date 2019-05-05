@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 // Pipe represents a pipe object with an associated Reader.
@@ -15,18 +16,24 @@ type Pipe struct {
 
 // NewPipe returns a pointer to a new empty pipe.
 func NewPipe() *Pipe {
-	return &Pipe{nil, nil}
+	return &Pipe{ioutil.NopCloser(strings.NewReader("")), nil}
 }
 
 // Close closes the pipe's associated reader. This is always safe to do, because
 // pipes created from a non-closable source will have an `ioutil.NopCloser` to
 // call.
 func (p *Pipe) Close() error {
+	if p == nil || p.Reader == nil {
+		return nil
+	}
 	return p.Reader.Close()
 }
 
 // Error returns the last error returned by any pipe operation, or nil otherwise.
 func (p *Pipe) Error() error {
+	if p == nil {
+		return nil
+	}
 	return p.err
 }
 
@@ -59,13 +66,18 @@ func (p *Pipe) WithReader(r io.Reader) *Pipe {
 
 // WithCloser takes an io.ReadCloser and associates the pipe with that source.
 func (p *Pipe) WithCloser(r io.ReadCloser) *Pipe {
+	if p == nil || p.Reader == nil {
+		return nil
+	}
 	p.Reader = r
 	return p
 }
 
 // SetError sets the pipe's error status to the specified error.
 func (p *Pipe) SetError(err error) {
-	p.err = err
+	if p != nil {
+		p.err = err
+	}
 }
 
 // WithError sets the pipe's error status to the specified error and returns the

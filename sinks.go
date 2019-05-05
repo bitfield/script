@@ -11,7 +11,7 @@ import (
 // String returns the contents of the Pipe as a string, or an error, and closes the pipe after reading. If there is an error reading, the
 // pipe's error status is also set.
 func (p *Pipe) String() (string, error) {
-	if p.Error() != nil {
+	if p == nil || p.Reader == nil || p.Error() != nil {
 		return "", p.Error()
 	}
 	defer p.Close()
@@ -27,6 +27,9 @@ func (p *Pipe) String() (string, error) {
 // result, or an error. If there is an error reading the pipe, the pipe's error
 // status is also set.
 func (p *Pipe) CountLines() (int, error) {
+	if p == nil || p.Reader == nil || p.Error() != nil {
+		return 0, p.Error()
+	}
 	var lines int
 	p.EachLine(func(line string, out *strings.Builder) {
 		lines++
@@ -51,7 +54,7 @@ func (p *Pipe) AppendFile(fileName string) (int64, error) {
 }
 
 func (p *Pipe) writeOrAppendFile(fileName string, mode int) (int64, error) {
-	if p.Error() != nil {
+	if p == nil || p.Reader == nil || p.Error() != nil {
 		return 0, p.Error()
 	}
 	defer p.Close()
@@ -74,7 +77,7 @@ func (p *Pipe) writeOrAppendFile(fileName string, mode int) (int64, error) {
 // write failed or if there was an error reading from the pipe. If the pipe has
 // error status, Stdout returns zero plus the existing error.
 func (p *Pipe) Stdout() (int, error) {
-	if p.Error() != nil {
+	if p == nil || p.Reader == nil || p.Error() != nil {
 		return 0, p.Error()
 	}
 	defer p.Close()

@@ -31,6 +31,51 @@ func TestString(t *testing.T) {
 	}
 }
 
+// doSinksOnPipe calls every kind of sink method on the supplied pipe and
+// tries to trigger a panic.
+func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
+	var action string
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("panic: %s on %s pipe", action, kind)
+		}
+	}()
+	action = "String()"
+	_, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	action = "CountLines()"
+	_, err = p.CountLines()
+	if err != nil {
+		t.Fatal(err)
+	}
+	action = "WriteFile()"
+	_, err = p.WriteFile("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	action = "AppendFile()"
+	_, err = p.AppendFile("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	action = "Stdout()"
+	_, err = p.Stdout()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+func TestNilPipeSinks(t *testing.T) {
+	t.Parallel()
+	doSinksOnPipe(t, nil, "nil")
+}
+
+func TestZeroPipeSinks(t *testing.T) {
+	t.Parallel()
+	doSinksOnPipe(t, &Pipe{}, "zero")
+}
+
 func TestCountLines(t *testing.T) {
 	t.Parallel()
 	want := 3
@@ -76,11 +121,11 @@ func TestWriteFile(t *testing.T) {
 	// create file with contents
 	want := "Hello, world"
 	testFile := "testdata/writefile.txt"
+	defer os.Remove(testFile)
 	wrote, err := Echo(want).WriteFile(testFile)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(testFile)
 	if int(wrote) != len(want) {
 		t.Fatalf("want %d bytes written, got %d", len(want), int(wrote))
 	}
@@ -99,9 +144,9 @@ func TestAppendFile(t *testing.T) {
 	// create test file with some contents
 	orig := "Hello, world"
 	testFile := "testdata/appendfile.txt"
+	defer os.Remove(testFile)
 	// don't care about results; we're testing AppendFile, not WriteFile
 	_, _ = Echo(orig).WriteFile(testFile)
-	defer os.Remove(testFile)
 	// append some more contents
 	extra := " and goodbye"
 	wrote, err := Echo(extra).AppendFile(testFile)
