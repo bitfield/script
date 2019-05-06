@@ -94,3 +94,23 @@ func (p *Pipe) Exec(s string) *Pipe {
 	}
 	return q.WithReader(bytes.NewReader(output))
 }
+
+// Join reads the contents of the pipe, line by line, and joins them into a
+// single space-separated string. It returns a pipe containing this string. Any
+// terminating newline is preserved.
+func (p *Pipe) Join() *Pipe {
+	if p == nil || p.Reader == nil || p.Error() != nil {
+		return p
+	}
+	result, err := p.String()
+	if err != nil {
+		return p
+	}
+	var terminator string
+	if strings.HasSuffix(result, "\n") {
+		terminator = "\n"
+		result = result[:len(result)-1]
+	}
+	output := strings.ReplaceAll(result, "\n", " ")
+	return Echo(output + terminator)
+}

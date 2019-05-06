@@ -291,6 +291,17 @@ fmt.Println(output)
 // Output: hello world
 ```
 
+### Join
+
+`Join()` reads its input and replaces newlines with spaces, preserving a terminating newline if there is one.
+
+```go
+p := script.Echo("hello\nworld\n")
+output, err := p.String()
+fmt.Println(output)
+// Output: hello world\n
+```
+
 ## Sinks
 
 Sinks are operations which return some data from a pipe, ending the pipeline.

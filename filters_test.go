@@ -171,3 +171,25 @@ func TestExecFilter(t *testing.T) {
 		t.Fatal("expected exec on erroneous pipe to be a no-op, but it wasn't")
 	}
 }
+
+func TestJoin(t *testing.T) {
+	t.Parallel()
+	input := "hello\nfrom\nthe\njoin\ntest\n"
+	want := "hello from the join test\n"
+	got, err := Echo(input).Join().String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+	input = "hello\nworld"
+	want = "hello world"
+	got, err = Echo(input).Join().String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+}
