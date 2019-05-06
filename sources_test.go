@@ -79,16 +79,16 @@ func TestExec(t *testing.T) {
 
 func TestStdin(t *testing.T) {
 	t.Parallel()
-	// To test this properly, we should re-exec the test binary and pipe
-	// something to it, using a GO_WANT_HELPER_PROCESS pattern:
-	// https://golang.org/src/os/exec/exec_test.go
-	p := Stdin()
-	got, err := p.String()
+	want := "hello world"
+	cmd := exec.Command(os.Args[0])
+	cmd.Env = append(os.Environ(), "SCRIPT_TEST=stdin")
+	cmd.Stdin = Echo(want).Reader
+	got, err := cmd.Output()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != "" {
-		t.Fatalf("expected nothing on stdin, got %q", got)
+	if string(got) != want {
+		t.Fatalf("want %q, got %q", want, string(got))
 	}
 }
 

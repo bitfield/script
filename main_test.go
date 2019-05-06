@@ -10,6 +10,9 @@ func TestMain(m *testing.M) {
 	case "args":
 		// Print out command-line arguments
 		Args().Stdout()
+	case "stdin":
+		// Echo input to output
+		Stdin().Stdout()
 	default:
 		os.Exit(m.Run())
 	}
