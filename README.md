@@ -217,6 +217,17 @@ fmt.Println(output)
 // Output: [contents of standard input]
 ```
 
+### Args
+
+`Args()` creates a pipe containing the program's command-line arguments, one per line.
+
+```go
+p := script.Args()
+output, err := p.String()
+fmt.Println(output)
+// Output: command-line arguments
+```
+
 ## Filters
 
 Filters are operations on an existing pipe that also return a pipe, allowing you to chain filters indefinitely.
