@@ -493,6 +493,7 @@ Since `script` is designed to help you write system administration programs, a f
 
 * [cat](examples/cat/main.go)
 * [grep](examples/grep/main.go)
+* [echo](examples/echo/main.go)
 
 More examples would be welcome!
 
