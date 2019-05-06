@@ -296,7 +296,7 @@ fmt.Println(output)
 `Join()` reads its input and replaces newlines with spaces, preserving a terminating newline if there is one.
 
 ```go
-p := script.Echo("hello\nworld\n")
+p := script.Echo("hello\nworld\n").Join()
 output, err := p.String()
 fmt.Println(output)
 // Output: hello world\n
