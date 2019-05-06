@@ -2,6 +2,8 @@ package script
 
 import (
 	"io/ioutil"
+	"os"
+	"os/exec"
 	"testing"
 )
 
@@ -88,4 +90,19 @@ func TestStdin(t *testing.T) {
 	if got != "" {
 		t.Fatalf("expected nothing on stdin, got %q", got)
 	}
+}
+
+func TestArgs(t *testing.T) {
+	t.Parallel()
+	cmd := exec.Command(os.Args[0], "hello", "world")
+	cmd.Env = append(os.Environ(), "SCRIPT_TEST=args")
+	got, err := cmd.Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "hello\nworld\n"
+	if string(got) != want {
+		t.Fatalf("want %q, got %q", want, string(got))
+	}
+
 }

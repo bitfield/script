@@ -41,3 +41,13 @@ func Exec(s string) *Pipe {
 func Stdin() *Pipe {
 	return NewPipe().WithReader(os.Stdin)
 }
+
+// Args creates a pipe containing the program's command-line arguments, one per
+// line.
+func Args() *Pipe {
+	var s strings.Builder
+	for _, a := range os.Args[1:] {
+		s.WriteString(a + "\n")
+	}
+	return Echo(s.String())
+}
