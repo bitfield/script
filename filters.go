@@ -3,6 +3,8 @@ package script
 import (
 	"bufio"
 	"bytes"
+	"io"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -113,4 +115,27 @@ func (p *Pipe) Join() *Pipe {
 	}
 	output := strings.ReplaceAll(result, "\n", " ")
 	return Echo(output + terminator)
+}
+
+// ConcatFiles reads a list of filenames from the pipe, one per line, and
+// returns a pipe which reads all those files in sequence. If there are any
+// errors (for example, non-existent files), the pipe's error status will be set
+// to the first error encountered.
+func (p *Pipe) ConcatFiles() *Pipe {
+	if p == nil || p.Reader == nil || p.Error() != nil {
+		return p
+	}
+	var readers []io.Reader
+	p.EachLine(func(line string, out *strings.Builder) {
+		if p.Error() != nil {
+			return
+		}
+		input, err := os.Open(line)
+		if err != nil {
+			p.SetError(err)
+			return
+		}
+		readers = append(readers, input)
+	})
+	return NewPipe().WithReader(io.MultiReader(readers...))
 }

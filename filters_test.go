@@ -1,7 +1,9 @@
 package script
 
 import (
+	"bytes"
 	"errors"
+	"io/ioutil"
 	"regexp"
 	"strings"
 	"testing"
@@ -192,4 +194,17 @@ func TestJoin(t *testing.T) {
 	if got != want {
 		t.Fatalf("want %q, got %q", want, got)
 	}
+}
+
+func TestConcatFiles(t *testing.T) {
+	t.Parallel()
+	want, _ := ioutil.ReadFile("testdata/concatfiles.golden.txt")
+	got, err := Echo("testdata/test.txt\ntestdata/hello.txt").ConcatFiles().Bytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+	t.Fatal("files not closed after reading")
 }
