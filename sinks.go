@@ -8,19 +8,32 @@ import (
 	"strings"
 )
 
-// String returns the contents of the Pipe as a string, or an error, and closes the pipe after reading. If there is an error reading, the
-// pipe's error status is also set.
+// String returns the contents of the Pipe as a string, or an error, and closes
+// the pipe after reading. If there is an error reading, the pipe's error status
+// is also set.
 func (p *Pipe) String() (string, error) {
+	data, err := p.Bytes()
+	if err != nil {
+		p.SetError(err)
+		return "", err
+	}
+	return string(data), nil
+}
+
+// Bytes returns the contents of the Pipe as a slice of byte, or an error, and
+// closes the pipe after reading. If there is an error reading, the pipe's error
+// status is also set.
+func (p *Pipe) Bytes() ([]byte, error) {
 	if p == nil || p.Reader == nil || p.Error() != nil {
-		return "", p.Error()
+		return []byte{}, p.Error()
 	}
 	defer p.Close()
 	res, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
 		p.SetError(err)
-		return "", err
+		return []byte{}, err
 	}
-	return string(res), nil
+	return res, nil
 }
 
 // CountLines counts lines from the pipe's reader, and returns the integer

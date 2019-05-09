@@ -324,6 +324,14 @@ fmt.Println(err)
 // Output: read test.txt: file already closed
 ```
 
+### Bytes
+
+`Bytes()` returns the contents of the pipe as a slice of byte, plus an error:
+
+```go
+data, err := script.File("test.bin").Bytes()
+```
+
 ### CountLines
 
 `CountLines()`, as the name suggests, counts lines in its input, and returns the number of lines as an integer, plus an error:

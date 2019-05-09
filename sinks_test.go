@@ -202,18 +202,15 @@ func TestStdout(t *testing.T) {
 	}
 }
 
-func TestEndToEndBytes(t *testing.T) {
+func TestBytes(t *testing.T) {
 	t.Parallel()
 	inFile := "testdata/bytes.bin"
-	outFile := "testdata/bytes.bin.out"
-	_, err := File(inFile).WriteFile(outFile)
+	got, err := File(inFile).Bytes()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(outFile)
-	inData, _ := ioutil.ReadFile(inFile)
-	outData, _ := ioutil.ReadFile(outFile)
-	if !bytes.Equal(inData, outData) {
+	want, _ := ioutil.ReadFile(inFile)
+	if !bytes.Equal(got, want) {
 		t.Fatal("output differs from input")
 	}
 }
