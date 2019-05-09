@@ -1,6 +1,7 @@
 package script
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -198,5 +199,21 @@ func TestStdout(t *testing.T) {
 	_, err = p.String()
 	if err == nil {
 		t.Fatal("input reader not closed")
+	}
+}
+
+func TestEndToEndBytes(t *testing.T) {
+	t.Parallel()
+	inFile := "testdata/bytes.bin"
+	outFile := "testdata/bytes.bin.out"
+	_, err := File(inFile).WriteFile(outFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(outFile)
+	inData, _ := ioutil.ReadFile(inFile)
+	outData, _ := ioutil.ReadFile(outFile)
+	if !bytes.Equal(inData, outData) {
+		t.Fatal("output differs from input")
 	}
 }
