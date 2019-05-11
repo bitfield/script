@@ -115,19 +115,16 @@ func (p *Pipe) Join() *Pipe {
 	return Echo(output + terminator)
 }
 
-// Concat reads a list of filenames from the pipe, one per line, and
-// returns a pipe which reads all those files in sequence. If there are any
-// errors (for example, non-existent files), the pipe's error status will be set
-// to the first error encountered.
+// Concat reads a list of filenames from the pipe, one per line, and returns a
+// pipe which reads all those files in sequence. If there are any errors (for
+// example, non-existent files), the pipe's error status will be set to the
+// first error encountered, but execution will continue.
 func (p *Pipe) Concat() *Pipe {
 	if p == nil || p.Error() != nil {
 		return p
 	}
 	var readers []io.Reader
 	p.EachLine(func(line string, out *strings.Builder) {
-		if p.Error() != nil {
-			return
-		}
 		input, err := os.Open(line)
 		if err != nil {
 			p.SetError(err)
