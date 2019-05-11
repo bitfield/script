@@ -488,7 +488,6 @@ func (p *script.Pipe) RejectEverything() *script.Pipe {
 Important things to note here:
 
 * The first thing we do is check the pipe's error status. If this is set, we do nothing, and just return the original pipe.
-* We close the source pipe once we successfully read all data from it.
 * If an error occurs, we set the pipe's error status, using `p.SetError()`, and return the pipe.
 
 Filters must not log anything, terminate the program, or return anything but `*script.Pipe`.
