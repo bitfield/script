@@ -14,17 +14,16 @@ func TestFile(t *testing.T) {
 	p := File("testdata/test.txt")
 	gotRaw, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
-		t.Fatal("failed to read file")
+		t.Error(err)
 	}
 	got := string(gotRaw)
 	if got != want {
-		t.Fatalf("want %q, got %q", want, got)
+		t.Errorf("want %q, got %q", want, got)
 	}
 	q := File("doesntexist")
 	if q.Error() == nil {
-		t.Fatalf("expected error status on opening non-existent file, but got nil")
+		t.Errorf("want error status on opening non-existent file, but got nil")
 	}
-
 }
 
 func TestEcho(t *testing.T) {
@@ -33,10 +32,10 @@ func TestEcho(t *testing.T) {
 	p := Echo(want)
 	got, err := p.String()
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if got != want {
-		t.Fatalf("want %q, got %q", want, got)
+		t.Errorf("want %q, got %q", want, got)
 	}
 }
 
@@ -45,35 +44,35 @@ func TestExec(t *testing.T) {
 	want := "Usage"
 	p := Exec("go")
 	if p.Error() == nil {
-		t.Fatal("expected error from command, but got nil")
+		t.Error("want error from command, but got nil")
 	}
 	if p.Error().Error() != "exit status 2" {
-		t.Fatalf("Expected error 'exit status 2' but got %v", p.Error())
+		t.Errorf("want error 'exit status 2' but got %v", p.Error())
 	}
 	p.SetError(nil)
 	output, err := p.String()
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	matches, err := Echo(output).Match(want).CountLines()
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if matches == 0 {
-		t.Fatalf("expected output of command to match %q, but no matches in %q", want, output)
+		t.Errorf("want output of command to match %q, but no matches in %q", want, output)
 	}
 	q := Exec("doesntexist")
 	if q.Error() == nil {
-		t.Fatal("expected error executing non-existent program, but got nil")
+		t.Errorf("want error executing non-existent program, but got nil")
 	}
 	// ignoring error because we already checked it
 	output, _ = q.String()
 	if output != "" {
-		t.Fatalf("expected no output from running non-existent program, but got %q", output)
+		t.Errorf("want zero output from running non-existent program, but got %q", output)
 	}
 	r := Exec("go help")
 	if r.Error() != nil {
-		t.Fatalf("expected no error running 'go help', but got %v", r.Error())
+		t.Errorf("want no error running 'go help', but got %v", r.Error())
 	}
 }
 
@@ -88,10 +87,10 @@ func TestStdin(t *testing.T) {
 	cmd.Stdin = Echo(want).Reader
 	got, err := cmd.Output()
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if string(got) != want {
-		t.Fatalf("want %q, got %q", want, string(got))
+		t.Errorf("want %q, got %q", want, string(got))
 	}
 }
 
@@ -104,11 +103,11 @@ func TestArgs(t *testing.T) {
 	cmd.Env = append(os.Environ(), "SCRIPT_TEST=args")
 	got, err := cmd.Output()
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	want := "hello\nworld\n"
 	if string(got) != want {
-		t.Fatalf("want %q, got %q", want, string(got))
+		t.Errorf("want %q, got %q", want, string(got))
 	}
 
 }

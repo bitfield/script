@@ -3,7 +3,6 @@ package script
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"testing"
 )
@@ -14,10 +13,10 @@ func TestWithReader(t *testing.T) {
 	p := NewPipe().WithReader(strings.NewReader(want))
 	got, err := p.String()
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if got != want {
-		t.Fatalf("want %q, got %q", want, got)
+		t.Errorf("want %q, got %q", want, got)
 	}
 }
 
@@ -25,26 +24,26 @@ func TestError(t *testing.T) {
 	t.Parallel()
 	p := File("testdata/nonexistent.txt")
 	if p.Error() == nil {
-		t.Fatalf("reading nonexistent file: pipe error status should be non-nil")
+		t.Errorf("want error status reading nonexistent file, but got nil")
 	}
 	defer func() {
 		// Reading an erroneous pipe should not panic.
 		if r := recover(); r != nil {
-			t.Fatalf("panic reading erroneous pipe: %v", r)
+			t.Errorf("panic reading erroneous pipe: %v", r)
 		}
 	}()
 	_, err := p.String()
 	if err != p.Error() {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	_, err = p.CountLines()
 	if err != p.Error() {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	e := errors.New("fake error")
 	p.SetError(e)
 	if p.Error() != e {
-		t.Fatalf("setting pipe error: want %v, got %v", e, p.Error())
+		t.Errorf("want %v when setting pipe error, got %v", e, p.Error())
 	}
 }
 
@@ -67,12 +66,12 @@ func TestExitStatus(t *testing.T) {
 		p.SetError(fmt.Errorf(tc.input))
 		got := p.ExitStatus()
 		if got != tc.want {
-			t.Fatalf("input %q: want %d, got %d", tc.input, tc.want, got)
+			t.Errorf("input %q: want %d, got %d", tc.input, tc.want, got)
 		}
 	}
 	got := NewPipe().ExitStatus()
 	if got != 0 {
-		t.Fatalf("want 0, got %d", got)
+		t.Errorf("want 0, got %d", got)
 	}
 }
 
@@ -82,7 +81,7 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	var action string
 	defer func() {
 		if r := recover(); r != nil {
-			t.Fatalf("panic: %s on %s pipe", action, kind)
+			t.Errorf("panic: %s on %s pipe", action, kind)
 		}
 	}()
 	action = "Close()"
@@ -95,8 +94,6 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.SetError(nil)
 	action = "WithReader()"
 	p.WithReader(strings.NewReader(""))
-	action = "WithCloser()"
-	p.WithCloser(ioutil.NopCloser(strings.NewReader("")))
 	action = "WithError()"
 	p.WithError(nil)
 }

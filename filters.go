@@ -62,7 +62,7 @@ func (p *Pipe) RejectRegexp(re *regexp.Regexp) *Pipe {
 // line as a string, and a *strings.Builder to write its output to. The return
 // value from EachLine is a pipe containing the contents of the strings.Builder.
 func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
-	if p == nil || p.Reader == nil || p.Error() != nil {
+	if p == nil || p.Error() != nil {
 		return p
 	}
 	scanner := bufio.NewScanner(p.Reader)
@@ -74,7 +74,6 @@ func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 	if err != nil {
 		p.SetError(err)
 	}
-	p.Close()
 	return Echo(output.String())
 }
 
@@ -82,14 +81,13 @@ func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 // the command had a non-zero exit status, the pipe's error status will also be
 // set to the string "exit status X", where X is the integer exit status.
 func (p *Pipe) Exec(s string) *Pipe {
-	if p == nil || p.Reader == nil || p.Error() != nil {
+	if p == nil || p.Error() != nil {
 		return p
 	}
+	q := NewPipe()
 	args := strings.Fields(s)
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdin = p.Reader
-	defer p.Close()
-	q := NewPipe()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		q.SetError(err)
@@ -101,7 +99,7 @@ func (p *Pipe) Exec(s string) *Pipe {
 // single space-separated string. It returns a pipe containing this string. Any
 // terminating newline is preserved.
 func (p *Pipe) Join() *Pipe {
-	if p == nil || p.Reader == nil || p.Error() != nil {
+	if p == nil || p.Error() != nil {
 		return p
 	}
 	result, err := p.String()
@@ -117,12 +115,12 @@ func (p *Pipe) Join() *Pipe {
 	return Echo(output + terminator)
 }
 
-// ConcatFiles reads a list of filenames from the pipe, one per line, and
+// Concat reads a list of filenames from the pipe, one per line, and
 // returns a pipe which reads all those files in sequence. If there are any
 // errors (for example, non-existent files), the pipe's error status will be set
 // to the first error encountered.
-func (p *Pipe) ConcatFiles() *Pipe {
-	if p == nil || p.Reader == nil || p.Error() != nil {
+func (p *Pipe) Concat() *Pipe {
+	if p == nil || p.Error() != nil {
 		return p
 	}
 	var readers []io.Reader
@@ -135,7 +133,7 @@ func (p *Pipe) ConcatFiles() *Pipe {
 			p.SetError(err)
 			return
 		}
-		readers = append(readers, input)
+		readers = append(readers, NewReadAutoCloser(input))
 	})
-	return NewPipe().WithReader(io.MultiReader(readers...))
+	return p.WithReader(io.MultiReader(readers...))
 }

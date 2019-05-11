@@ -2,7 +2,9 @@
 
 # script
 
-`script` is a collection of utilities for doing the kind of tasks that shell scripts are good at: reading files, counting lines, matching strings, and so on. Why shouldn't it be as easy to write system administration programs in Go as it is in a typical shell? `script` aims to make it just that easy.
+`script` is a Go library for doing the kind of tasks that shell scripts are good at: reading files, executing subprocesses, counting lines, matching strings, and so on.
+
+Why shouldn't it be as easy to write system administration programs in Go as it is in a typical shell? `script` aims to make it just that easy.
 
 ## What can I do with it?
 
@@ -116,15 +118,22 @@ if err != nil {
 
 If you've dealt with files in Go before, you'll know that you need to _close_ the file once you've finished with it. Otherwise, the program will retain what's called a _file handle_ (the kernel data structure which represents an open file). There is a limit to the total number of open file handles for a given program, and for the system as a whole, so a program which leaks file handles will eventually crash, and will waste resources in the meantime.
 
-How does `script` handle this? Simple. Any operation which completely reads the data from a pipe (such as `Match()` or `String()`) also closes the pipe by calling `p.Close()`. This closes the original data source that was used to create the pipe.
+Files aren't the only things which need to be closed after reading: so do network connections, HTTP response bodies, and so on.
+
+How does `script` handle this? Simple. The data source associated with a pipe will be automatically closed once it is read completely. Therefore, calling any sink method which reads the pipe to completion (such as `String()`) will close its data source. The only case in which you need to call `Close()` on a pipe is when you don't read from it, or you don't read it to completion.
 
 If the pipe was created from something that doesn't need to be closed, such as a string, then calling `Close()` simply does nothing.
 
-TL;DR you don't need to worry about closing pipes; `script` will do it for you.
+This is implemented using a type called `ReadAutoCloser`, which takes an `io.Reader` and wraps it so that:
+
+1. it is always safe to close (if it's not a closable resource, it will be wrapped in an `ioutil.NopCloser` to make it one), and
+2. it is closed automatically once read to completion (specifically, once the `Read()` call on it returns `io.EOF`).
+
+_It is your responsibility to close a pipe if you do not read it to completion_.
 
 ## Sources, filters, and sinks
 
-So `script` provides three types of pipe operations:
+`script` provides three types of pipe operations: sources, filters, and sinks.
 
 1. _Sources_ create pipes from input in some way (for example, `File()` opens a file).
 2. _Filters_ read from a pipe and filter the data in some way (for example `Match()` passes on only lines which contain a given string).
@@ -302,6 +311,41 @@ fmt.Println(output)
 // Output: hello world\n
 ```
 
+### Concat
+
+`Concat()` reads a list of filenames from the pipe, one per line, and creates a pipe which concatenates the contents of those files. For example, if you have files `a`, `b`, and `c`:
+
+```go
+output, err := Echo("a\nb\nc\n").Concat().String()
+fmt.Println(output)
+// Output: contents of a, followed by contents of b, followed
+// by contents of c
+```
+
+This makes it convenient to write programs which take a list of input files on the command line, for example:
+
+```go
+func main() {
+	script.Args().Concat().Stdout()
+}
+```
+
+The list of files could also come from a file:
+
+```go
+// Read all files in filelist.txt
+p := File("filelist.txt").Concat()
+```
+
+...or from the output of a command:
+
+```go
+// Print all config files to the terminal.
+p := Exec("ls /var/app/config/").Concat().Stdout()
+```
+
+Each input file will be closed once it has been fully read.
+
 ## Sinks
 
 Sinks are operations which return some data from a pipe, ending the pipeline.
@@ -314,7 +358,7 @@ The simplest sink is `String()`, which just returns the contents of the pipe as 
 contents, err := script.File("test.txt").String()
 ```
 
-Note that `String()`, like all sinks, consumes the complete output of the pipe, closing the input reader if appropriate. Therefore, calling `String()` (or any other sink method) again on the same pipe will return an error:
+Note that `String()`, like all sinks, consumes the complete output of the pipe, which closes the input reader automatically. Therefore, calling `String()` (or any other sink method) again on the same pipe will return an error:
 
 ```go
 p := script.File("test.txt")
@@ -329,6 +373,7 @@ fmt.Println(err)
 `Bytes()` returns the contents of the pipe as a slice of byte, plus an error:
 
 ```go
+var data []byte
 data, err := script.File("test.bin").Bytes()
 ```
 
@@ -337,6 +382,7 @@ data, err := script.File("test.bin").Bytes()
 `CountLines()`, as the name suggests, counts lines in its input, and returns the number of lines as an integer, plus an error:
 
 ```go
+var numLines int
 numLines, err := script.File("test.txt").CountLines()
 ```
 
@@ -345,6 +391,7 @@ numLines, err := script.File("test.txt").CountLines()
 `WriteFile()` writes the contents of the pipe to a named file. It returns the number of bytes written, or an error:
 
 ```go
+var wrote int
 wrote, err := script.File("source.txt").WriteFile("destination.txt")
 ```
 
@@ -353,6 +400,7 @@ wrote, err := script.File("source.txt").WriteFile("destination.txt")
 `AppendFile()` is like `WriteFile()`, but appends to the destination file instead of overwriting it. It returns the number of bytes written, or an error:
 
 ```go
+var wrote int
 wrote, err := script.Echo("Got this far!").AppendFile("logfile.txt")
 ```
 
@@ -365,15 +413,19 @@ p := Echo("hello world")
 wrote, err := p.Stdout()
 ```
 
-In conjunction with `Stdin()`, `Stdout()` is useful for writing programs which filter input. For example, here is a simple implementation of the Unix `cat` utility (which just copies its input to its output):
+In conjunction with `Stdin()`, `Stdout()` is useful for writing programs which filter input. For example, here is a program which simply copies its input to its output, like `cat`:
 
 ```go
-package main
-
-import "github.com/bitfield/script"
-
 func main() {
 	script.Stdin().Stdout()
+}
+```
+
+To filter only lines matching a string:
+
+```go
+func main() {
+	script.Stdin().Match("hello").Stdout()
 }
 ```
 
@@ -383,7 +435,7 @@ There's nothing to stop you writing your own sources, sinks, or filters (in fact
 
 ### Writing a source
 
-All a pipe source has to do is return a pointer to a `script.Pipe`. To be useful, a pipe needs to have a `Reader` attached to it. This is simply anything that implements `io.Reader`.
+All a pipe source has to do is return a pointer to a `script.Pipe`. To be useful, a pipe needs to have a reader (a data source, such as a file) associated with it.
 
 `Echo()` is a simple example, which just creates a pipe containing a string:
 
@@ -399,24 +451,20 @@ Let's break this down:
 * We create a new pipe with `NewPipe()`.
 * We attach the reader to the pipe with `WithReader()`.
 
-Simple, right? One more thing: when you create a pipe from a data source that needs to be closed after reading (such as a file), use `WithCloser()` instead of `WithReader()`.
+In fact, any `io.Reader` can be the data source for a pipe. Passing it to `WithReader()` will turn it into a `ReadAutoCloser`, which is a wrapper for `io.Reader` that automatically closes the reader once it has been fully read.
+
 
 Here's an implementation of `File()`, for example:
 
 ```go
 func File(name string) *script.Pipe {
-	r, err := os.Open(name)
+	p := script.NewPipe()
+	f, err := os.Open(name)
 	if err != nil {
-		return script.NewPipe().WithError(err)
+		return p.WithError(err)
 	}
-	return script.NewPipe().WithCloser(r)
+	return p.WithReader(f)
 }
-```
-
-You can also see from this example how to create a pipe with error status:
-
-```go
-return script.NewPipe().WithError(err)
 ```
 
 ### Writing a filter

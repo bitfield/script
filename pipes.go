@@ -2,28 +2,26 @@ package script
 
 import (
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
-// Pipe represents a pipe object with an associated Reader.
+// Pipe represents a pipe object with an associated ReadAutoCloser.
 type Pipe struct {
-	Reader io.ReadCloser
+	Reader ReadAutoCloser
 	err    error
 }
 
 // NewPipe returns a pointer to a new empty pipe.
 func NewPipe() *Pipe {
-	return &Pipe{ioutil.NopCloser(strings.NewReader("")), nil}
+	return &Pipe{ReadAutoCloser{}, nil}
 }
 
 // Close closes the pipe's associated reader. This is always safe to do, because
 // pipes created from a non-closable source will have an `ioutil.NopCloser` to
 // call.
 func (p *Pipe) Close() error {
-	if p == nil || p.Reader == nil {
+	if p == nil {
 		return nil
 	}
 	return p.Reader.Close()
@@ -61,15 +59,10 @@ func (p *Pipe) ExitStatus() int {
 // WithReader takes an io.Reader which does not need to be closed after reading,
 // and associates the pipe with that reader.
 func (p *Pipe) WithReader(r io.Reader) *Pipe {
-	return p.WithCloser(ioutil.NopCloser(r))
-}
-
-// WithCloser takes an io.ReadCloser and associates the pipe with that source.
-func (p *Pipe) WithCloser(r io.ReadCloser) *Pipe {
-	if p == nil || p.Reader == nil {
-		return nil
+	if p == nil {
+		return p
 	}
-	p.Reader = r
+	p.Reader = NewReadAutoCloser(r)
 	return p
 }
 

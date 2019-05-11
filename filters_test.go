@@ -15,19 +15,28 @@ func doFiltersOnPipe(t *testing.T, p *Pipe, kind string) {
 	var action string
 	defer func() {
 		if r := recover(); r != nil {
-			t.Fatalf("panic: %s on %s pipe", action, kind)
+			t.Errorf("panic: %s on %s pipe", action, kind)
 		}
 	}()
 	// also tests methods that wrap EachLine, such as Match*/Reject*
 	action = "EachLine()"
-	q := p.EachLine(func(string, *strings.Builder) {})
-	if q != p {
-		t.Fatalf("no-op expected from %s on %s pipe", action, kind)
+	output, err := p.EachLine(func(string, *strings.Builder) {}).String()
+	if err != nil {
+		t.Error(err)
+	}
+	if output != "" {
+		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
 	}
 	action = "Exec()"
-	q = p.Exec("bogus")
-	if q != p {
-		t.Fatalf("no-op expected from %s on %s pipe", action, kind)
+	output, err = p.Exec("bogus").String()
+	if err != nil && kind == "nil" {
+		t.Errorf("%s on %s pipe: %v", action, kind, err)
+	}
+	if err == nil && kind == "zero" {
+		t.Errorf("want error from %s on %s pipe, but got nil", action, kind)
+	}
+	if output != "" {
+		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
 	}
 }
 func TestNilPipeFilters(t *testing.T) {
@@ -55,10 +64,10 @@ func TestMatch(t *testing.T) {
 	for _, tc := range testCases {
 		got, err := File(tc.testFileName).Match(tc.match).CountLines()
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 		if got != tc.want {
-			t.Fatalf("%q in %q: want %d, got %d", tc.match, tc.testFileName, tc.want, got)
+			t.Errorf("%q in %q: want %d, got %d", tc.match, tc.testFileName, tc.want, got)
 		}
 	}
 }
@@ -78,10 +87,10 @@ func TestMatchRegexp(t *testing.T) {
 	for _, tc := range testCases {
 		got, err := File(tc.testFileName).MatchRegexp(regexp.MustCompile(tc.match)).CountLines()
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 		if got != tc.want {
-			t.Fatalf("%q in %q: want %d, got %d", tc.match, tc.testFileName, tc.want, got)
+			t.Errorf("%q in %q: want %d, got %d", tc.match, tc.testFileName, tc.want, got)
 		}
 	}
 }
@@ -101,10 +110,10 @@ func TestReject(t *testing.T) {
 	for _, tc := range testCases {
 		got, err := File(tc.testFileName).Reject(tc.reject).CountLines()
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 		if got != tc.want {
-			t.Fatalf("%q in %q: want %d, got %d", tc.reject, tc.testFileName, tc.want, got)
+			t.Errorf("%q in %q: want %d, got %d", tc.reject, tc.testFileName, tc.want, got)
 		}
 	}
 }
@@ -124,10 +133,10 @@ func TestRejectRegexp(t *testing.T) {
 	for _, tc := range testCases {
 		got, err := File(tc.testFileName).RejectRegexp(regexp.MustCompile(tc.reject)).CountLines()
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 		if got != tc.want {
-			t.Fatalf("%q in %q: want %d, got %d", tc.reject, tc.testFileName, tc.want, got)
+			t.Errorf("%q in %q: want %d, got %d", tc.reject, tc.testFileName, tc.want, got)
 		}
 	}
 }
@@ -141,10 +150,10 @@ func TestEachLine(t *testing.T) {
 	want := "Hello world\nGoodbye world\n"
 	got, err := q.String()
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if got != want {
-		t.Fatalf("want %q, got %q", want, got)
+		t.Errorf("want %q, got %q", want, got)
 	}
 }
 
@@ -155,22 +164,22 @@ func TestExecFilter(t *testing.T) {
 	q := p.Exec("cat")
 	got, err := q.String()
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if got != want {
-		t.Fatalf("want %q, got %q", want, got)
+		t.Errorf("want %q, got %q", want, got)
 	}
 	// This should fail because p is now closed.
 	_, err = p.String()
 	if err == nil {
-		t.Fatal("input reader not closed")
+		t.Error("input not closed after reading")
 	}
 	p = Echo("hello world")
 	p.SetError(errors.New("oh no"))
 	// This should be a no-op because the pipe has error status.
 	out, _ := p.Exec("cat").String()
 	if out != "" {
-		t.Fatal("expected exec on erroneous pipe to be a no-op, but it wasn't")
+		t.Error("want exec on erroneous pipe to be a no-op, but it wasn't")
 	}
 }
 
@@ -180,31 +189,33 @@ func TestJoin(t *testing.T) {
 	want := "hello from the join test\n"
 	got, err := Echo(input).Join().String()
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if got != want {
-		t.Fatalf("want %q, got %q", want, got)
+		t.Errorf("want %q, got %q", want, got)
 	}
 	input = "hello\nworld"
 	want = "hello world"
 	got, err = Echo(input).Join().String()
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if got != want {
-		t.Fatalf("want %q, got %q", want, got)
+		t.Errorf("want %q, got %q", want, got)
 	}
 }
 
-func TestConcatFiles(t *testing.T) {
+func TestConcat(t *testing.T) {
 	t.Parallel()
-	want, _ := ioutil.ReadFile("testdata/concatfiles.golden.txt")
-	got, err := Echo("testdata/test.txt\ntestdata/hello.txt").ConcatFiles().Bytes()
+	want, err := ioutil.ReadFile("testdata/concat.golden.txt")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Equal(got, want) {
-		t.Fatalf("want %q, got %q", want, got)
+	got, err := Echo("testdata/test.txt\ntestdata/hello.txt").Concat().Bytes()
+	if err != nil {
+		t.Error(err)
 	}
-	t.Fatal("files not closed after reading")
+	if !bytes.Equal(got, want) {
+		t.Errorf("want %q, got %q", want, got)
+	}
 }
