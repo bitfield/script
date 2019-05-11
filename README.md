@@ -547,7 +547,8 @@ These are some ideas I'm playing with for additional features. If you feel like 
 
 Since `script` is designed to help you write system administration programs, a few simple examples of such programs are included in the [examples](examples/) directory:
 
-* [cat](examples/cat/main.go)
+* [cat](examples/cat/main.go) (copies stdin to stdout)
+* [cat 2](examples/cat2/main.go) (takes a list of files on the command line and concatenates their contents to stdout)
 * [grep](examples/grep/main.go)
 * [echo](examples/echo/main.go)
 
