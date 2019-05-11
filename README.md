@@ -516,7 +516,7 @@ func (p *script.Pipe) String() (string, error) {
 
 Again, the first thing we do is check the error status on the pipe. If it's set, we return the zero value (empty string in this case) and the error.
 
-We then defer closing the pipe, and try to read from it. If we get an error reading the pipe, we set the pipe's error status and return the zero value and the error.
+We then try to read the whole contents of the pipe. If we get an error on reading, we set the pipe's error status and return the zero value and the error.
 
 Otherwise, we return the result of reading the pipe, and a nil error.
 
