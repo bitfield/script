@@ -476,7 +476,6 @@ func (p *script.Pipe) RejectEverything() *script.Pipe {
 	if p.Error() != nil {
 		return &p
 	}
-	defer p.Close()
 	_, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
 		p.SetError(err)
@@ -507,7 +506,6 @@ func (p *script.Pipe) String() (string, error) {
 	if p.Error() != nil {
 		return "", p.Error()
 	}
-	defer p.Close()
 	res, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
 		p.SetError(err)
