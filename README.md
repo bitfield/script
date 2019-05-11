@@ -474,12 +474,12 @@ Filters are methods on pipes, that return pipes. For example, here's a simple fi
 ```go
 func (p *script.Pipe) RejectEverything() *script.Pipe {
 	if p.Error() != nil {
-		return &p
+		return p
 	}
 	_, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
 		p.SetError(err)
-		return &p
+		return p
 	}
 	return script.Echo("")
 }
