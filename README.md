@@ -6,6 +6,8 @@
 
 Why shouldn't it be as easy to write system administration programs in Go as it is in a typical shell? `script` aims to make it just that easy.
 
+Shell scripts often compose a sequence of operations on a stream of data (a _pipeline_). This is how `script` works, too.
+
 ## What can I do with it?
 
 Let's see a simple example. Suppose you want to read the contents of a file as a string:
@@ -26,7 +28,25 @@ For something a bit more challenging, let's try counting the number of lines in 
 numErrors, err := script.File("test.txt").Match("Error").CountLines()
 ```
 
-## Wait, what?
+But what if, instead of reading a specific file, we want to simply pipe input into this program, and have it output only matching lines (like `grep`)?
+
+```go
+script.Stdin().Match("Error").Stdout()
+```
+
+That was almost too easy! So let's pass in a list of files on the command line, and have our program read them all in sequence and output the matching lines:
+
+```go
+script.Args().Concat().Match("Error").Stdout()
+```
+
+What's that? You want to append that output to a file instead of printing it to the terminal? No problem:
+
+```go
+script.Args().Concat().Match("Error").AppendFile("/var/log/errors.txt")
+```
+
+## How does it work?
 
 Those chained function calls look a bit weird. What's going on there?
 
