@@ -14,11 +14,11 @@ type ReadAutoCloser struct {
 // Read reads up to len(p) bytes from the data source into p. It returns the
 // number of bytes read and any error encountered. At end of file, Read returns
 // 0, io.EOF. In the EOF case, the data source will be closed.
-func (a ReadAutoCloser) Read(p []byte) (n int, err error) {
+func (a ReadAutoCloser) Read(b []byte) (n int, err error) {
 	if a.r == nil {
 		return 0, io.EOF
 	}
-	n, err = a.r.Read(p)
+	n, err = a.r.Read(b)
 	if err == io.EOF {
 		a.Close()
 	}

@@ -3,6 +3,8 @@ package script
 import (
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"strings"
 	"testing"
 )
@@ -96,6 +98,8 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.WithReader(strings.NewReader(""))
 	action = "WithError()"
 	p.WithError(nil)
+	action = "Read()"
+	p.Read([]byte{})
 }
 
 func TestNilPipes(t *testing.T) {
@@ -111,4 +115,13 @@ func TestZeroPipes(t *testing.T) {
 func TestNewPipes(t *testing.T) {
 	t.Parallel()
 	doMethodsOnPipe(t, NewPipe(), "new")
+}
+
+func TestPipeIsReader(t *testing.T) {
+	t.Parallel()
+	var p io.Reader = NewPipe()
+	_, err := ioutil.ReadAll(p)
+	if err != nil {
+		t.Error(err)
+	}
 }

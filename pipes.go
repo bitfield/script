@@ -79,3 +79,13 @@ func (p *Pipe) WithError(err error) *Pipe {
 	p.SetError(err)
 	return p
 }
+
+// Read reads up to len(b) bytes from the data source into b. It returns the
+// number of bytes read and any error encountered. At end of file, or on a nil
+// pipe, Read returns 0, io.EOF.
+func (p *Pipe) Read(b []byte) (int, error) {
+	if p == nil {
+		return 0, io.EOF
+	}
+	return p.Reader.Read(b)
+}

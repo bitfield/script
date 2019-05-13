@@ -449,6 +449,17 @@ func main() {
 }
 ```
 
+### Read
+
+`Read()` behaves just like the standard `Read()` method on any `io.Reader`:
+
+```go
+buf := make([]byte, 256)
+n, err := r.Read(buf)
+```
+
+Because a Pipe is an `io.Reader`, you can use it anywhere you would use a file, network connection, and so on. You can pass it to `ioutil.ReadAll`, `io.Copy`, `json.NewDecoder`, and anything else which takes an `io.Reader`.
+
 ## Writing your own pipe operations
 
 There's nothing to stop you writing your own sources, sinks, or filters (in fact, that would be excellent. Please submit a pull request if you want to add them to the standard operations supplied with `script`.)
