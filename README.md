@@ -165,15 +165,15 @@ Let's look at the source, filter, and sink options that `script` provides.
 
 These are operations which create a pipe.
 
-### File
+### Args
 
-`File()` creates a pipe that reads from a file.
+`Args()` creates a pipe containing the program's command-line arguments, one per line.
 
 ```go
-p = script.File("test.txt")
+p := script.Args()
 output, err := p.String()
 fmt.Println(output)
-// Output: contents of file
+// Output: command-line arguments
 ```
 
 ### Echo
@@ -235,6 +235,17 @@ fmt.Println(output)
 // Output: No manual entry for bogus
 ```
 
+### File
+
+`File()` creates a pipe that reads from a file.
+
+```go
+p = script.File("test.txt")
+output, err := p.String()
+fmt.Println(output)
+// Output: contents of file
+```
+
 ### Stdin
 
 `Stdin()` creates a pipe which reads from the program's standard input.
@@ -246,52 +257,44 @@ fmt.Println(output)
 // Output: [contents of standard input]
 ```
 
-### Args
-
-`Args()` creates a pipe containing the program's command-line arguments, one per line.
-
-```go
-p := script.Args()
-output, err := p.String()
-fmt.Println(output)
-// Output: command-line arguments
-```
-
 ## Filters
 
 Filters are operations on an existing pipe that also return a pipe, allowing you to chain filters indefinitely.
 
-### Match
+### Concat
 
-`Match()` returns a pipe containing only the input lines which match the supplied string:
-
-```go
-p := script.File("test.txt").Match("Error")
-```
-
-### MatchRegexp
-
-`MatchRegexp()` is like `Match()`, but takes a compiled regular expression instead of a string.
+`Concat()` reads a list of filenames from the pipe, one per line, and creates a pipe which concatenates the contents of those files. For example, if you have files `a`, `b`, and `c`:
 
 ```go
-p := script.File("test.txt").MatchRegexp(regexp.MustCompile(`E.*r`))
+output, err := Echo("a\nb\nc\n").Concat().String()
+fmt.Println(output)
+// Output: contents of a, followed by contents of b, followed
+// by contents of c
 ```
 
-### Reject
-
-`Reject()` is the inverse of `Match()`. Its pipe produces only lines which _don't_ contain the given string:
+This makes it convenient to write programs which take a list of input files on the command line, for example:
 
 ```go
-p := script.File("test.txt").Match("Error").Reject("false alarm")
+func main() {
+	script.Args().Concat().Stdout()
+}
 ```
 
-### RejectRegexp
-
-`RejectRegexp()` is like `Reject()`, but takes a compiled regular expression instead of a string.
+The list of files could also come from a file:
 
 ```go
-p := script.File("test.txt").Match("Error").RejectRegexp(regexp.MustCompile(`false|bogus`))
+// Read all files in filelist.txt
+p := File("filelist.txt").Concat()
 ```
+
+...or from the output of a command:
+
+```go
+// Print all config files to the terminal.
+p := Exec("ls /var/app/config/").Concat().Stdout()
+```
+
+Each input file will be closed once it has been fully read.
 
 ### EachLine
 
@@ -331,61 +334,49 @@ fmt.Println(output)
 // Output: hello world\n
 ```
 
-### Concat
+### Match
 
-`Concat()` reads a list of filenames from the pipe, one per line, and creates a pipe which concatenates the contents of those files. For example, if you have files `a`, `b`, and `c`:
-
-```go
-output, err := Echo("a\nb\nc\n").Concat().String()
-fmt.Println(output)
-// Output: contents of a, followed by contents of b, followed
-// by contents of c
-```
-
-This makes it convenient to write programs which take a list of input files on the command line, for example:
+`Match()` returns a pipe containing only the input lines which match the supplied string:
 
 ```go
-func main() {
-	script.Args().Concat().Stdout()
-}
+p := script.File("test.txt").Match("Error")
 ```
 
-The list of files could also come from a file:
+### MatchRegexp
+
+`MatchRegexp()` is like `Match()`, but takes a compiled regular expression instead of a string.
 
 ```go
-// Read all files in filelist.txt
-p := File("filelist.txt").Concat()
+p := script.File("test.txt").MatchRegexp(regexp.MustCompile(`E.*r`))
 ```
 
-...or from the output of a command:
+### Reject
+
+`Reject()` is the inverse of `Match()`. Its pipe produces only lines which _don't_ contain the given string:
 
 ```go
-// Print all config files to the terminal.
-p := Exec("ls /var/app/config/").Concat().Stdout()
+p := script.File("test.txt").Match("Error").Reject("false alarm")
 ```
 
-Each input file will be closed once it has been fully read.
+### RejectRegexp
+
+`RejectRegexp()` is like `Reject()`, but takes a compiled regular expression instead of a string.
+
+```go
+p := script.File("test.txt").Match("Error").RejectRegexp(regexp.MustCompile(`false|bogus`))
+```
 
 ## Sinks
 
 Sinks are operations which return some data from a pipe, ending the pipeline.
 
-### String
+### AppendFile
 
-The simplest sink is `String()`, which just returns the contents of the pipe as a string, plus an error:
-
-```go
-contents, err := script.File("test.txt").String()
-```
-
-Note that `String()`, like all sinks, consumes the complete output of the pipe, which closes the input reader automatically. Therefore, calling `String()` (or any other sink method) again on the same pipe will return an error:
+`AppendFile()` is like `WriteFile()`, but appends to the destination file instead of overwriting it. It returns the number of bytes written, or an error:
 
 ```go
-p := script.File("test.txt")
-_, _ = p.String()
-_, err := p.String()
-fmt.Println(err)
-// Output: read test.txt: file already closed
+var wrote int
+wrote, err := script.Echo("Got this far!").AppendFile("logfile.txt")
 ```
 
 ### Bytes
@@ -404,24 +395,6 @@ data, err := script.File("test.bin").Bytes()
 ```go
 var numLines int
 numLines, err := script.File("test.txt").CountLines()
-```
-
-### WriteFile
-
-`WriteFile()` writes the contents of the pipe to a named file. It returns the number of bytes written, or an error:
-
-```go
-var wrote int
-wrote, err := script.File("source.txt").WriteFile("destination.txt")
-```
-
-### AppendFile
-
-`AppendFile()` is like `WriteFile()`, but appends to the destination file instead of overwriting it. It returns the number of bytes written, or an error:
-
-```go
-var wrote int
-wrote, err := script.Echo("Got this far!").AppendFile("logfile.txt")
 ```
 
 ### Stdout
@@ -449,16 +422,32 @@ func main() {
 }
 ```
 
-### Read
+### String
 
-`Read()` behaves just like the standard `Read()` method on any `io.Reader`:
+`String()` returns the contents of the pipe as a string, plus an error:
 
 ```go
-buf := make([]byte, 256)
-n, err := r.Read(buf)
+contents, err := script.File("test.txt").String()
 ```
 
-Because a Pipe is an `io.Reader`, you can use it anywhere you would use a file, network connection, and so on. You can pass it to `ioutil.ReadAll`, `io.Copy`, `json.NewDecoder`, and anything else which takes an `io.Reader`.
+Note that `String()`, like all sinks, consumes the complete output of the pipe, which closes the input reader automatically. Therefore, calling `String()` (or any other sink method) again on the same pipe will return an error:
+
+```go
+p := script.File("test.txt")
+_, _ = p.String()
+_, err := p.String()
+fmt.Println(err)
+// Output: read test.txt: file already closed
+```
+
+### WriteFile
+
+`WriteFile()` writes the contents of the pipe to a named file. It returns the number of bytes written, or an error:
+
+```go
+var wrote int
+wrote, err := script.File("source.txt").WriteFile("destination.txt")
+```
 
 ## Writing your own pipe operations
 
