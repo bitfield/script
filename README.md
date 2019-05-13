@@ -397,6 +397,19 @@ var numLines int
 numLines, err := script.File("test.txt").CountLines()
 ```
 
+### Read
+
+`Read()` behaves just like the standard `Read()` method on any `io.Reader`:
+
+```go
+buf := make([]byte, 256)
+n, err := r.Read(buf)
+```
+
+Because a Pipe is an `io.Reader`, you can use it anywhere you would use a file, network connection, and so on. You can pass it to `ioutil.ReadAll`, `io.Copy`, `json.NewDecoder`, and anything else which takes an `io.Reader`.
+
+Unlike most sinks, `Read()` does not read the whole contents of the pipe (unless the supplied buffer is big enough to hold them).
+
 ### Stdout
 
 `Stdout()` writes the contents of the pipe to the program's standard output. It returns the number of bytes written, or an error:
