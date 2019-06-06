@@ -193,6 +193,14 @@ func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
 	})
 }
 
+// Replace reads from the pipe, and returns a new pipe containing replaces lines
+func (p *Pipe) Replace(old, new string) *Pipe {
+	return p.EachLine(func(line string, out *strings.Builder) {
+		out.WriteString(strings.ReplaceAll(line, old, new))
+		out.WriteByte('\n')
+	})
+}
+
 // Reject reads from the pipe, and returns a new pipe containing only lines
 // which do not contain the specified string. If there is an error reading the
 // pipe, the pipe's error status is also set.

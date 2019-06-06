@@ -95,6 +95,29 @@ func TestMatchRegexp(t *testing.T) {
 	}
 }
 
+func TestReplace(t *testing.T) {
+	testCases := []struct {
+		testFileName string
+		old          string
+		new          string
+		want         string
+	}{
+		{"testdata/hello.txt", "hello", "bye", "bye world\n"},
+		{"testdata/hello.txt", "Hello", "Bye", "hello world\n"},
+	}
+
+	for _, tc := range testCases {
+		got, err := File(tc.testFileName).Replace(tc.old, tc.new).String()
+		if err != nil {
+			t.Error(err)
+		}
+
+		if got != tc.want {
+			t.Errorf("Replacing %s with %s in %s, wanted %s, got %s", tc.old, tc.new, tc.testFileName, tc.want, got)
+		}
+	}
+}
+
 func TestReject(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
