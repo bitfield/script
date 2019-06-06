@@ -91,8 +91,9 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 	- [Join](#Join)
 	- [Match](#Match)
 	- [MatchRegexp](#MatchRegexp)
-	- [Reject](#Reject)
+		- [Reject](#Reject)
 	- [RejectRegexp](#RejectRegexp)
+		- [Replace](#Replace)
 - [Sinks](#Sinks)
 	- [AppendFile](#AppendFile)
 	- [Bytes](#Bytes)
@@ -562,7 +563,7 @@ p := script.File("test.txt").Match("Error")
 p := script.File("test.txt").MatchRegexp(regexp.MustCompile(`E.*r`))
 ```
 
-## Reject
+### Reject
 
 `Reject()` is the inverse of `Match()`. Its pipe produces only lines which _don't_ contain the given string:
 
@@ -576,6 +577,14 @@ p := script.File("test.txt").Match("Error").Reject("false alarm")
 
 ```go
 p := script.File("test.txt").Match("Error").RejectRegexp(regexp.MustCompile(`false|bogus`))
+```
+
+### Replace
+
+`Replace()` returns a pipe which filters its input by replacing one string with another:
+
+```go
+p := script.File("test.txt").Replace("old","new")
 ```
 
 # Sinks
