@@ -26,6 +26,39 @@ func TestFile(t *testing.T) {
 	}
 }
 
+func TestListFiles(t *testing.T) {
+	// first case
+	want := "testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip"
+	p := ListFiles("testdata/multiple_files")
+	gotRaw, err := ioutil.ReadAll(p.Reader)
+	if err != nil {
+		t.Error(err)
+	}
+
+	got := string(gotRaw)
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+
+	// second case
+	q := ListFiles("nonexistentpath")
+	if q.Error() == nil {
+		t.Errorf("want error status on listing non-existent path, but got nil")
+	}
+
+	// third case
+	want = "testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt"
+	z := ListFiles("testdata/multiple_files/*.txt")
+	gotRaw, err = ioutil.ReadAll(z.Reader)
+	if err != nil {
+		t.Error(err)
+	}
+	got = string(gotRaw)
+	if want != got {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
 func TestEcho(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world."
