@@ -1,6 +1,7 @@
 package script
 
 import (
+	"net/http"
 	"os"
 	"strings"
 )
@@ -42,4 +43,15 @@ func Args() *Pipe {
 		s.WriteString(a + "\n")
 	}
 	return Echo(s.String())
+}
+
+// Get creates a pipe containing the output of retrieving the web resource
+// given by the supplied url.
+func Get(url string) *Pipe {
+	p := NewPipe()
+	res, err := http.Get(url)
+	if err != nil {
+		return p.WithError(err)
+	}
+	return p.WithReader(res.Body)
 }

@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+
+	"gopkg.in/h2non/gock.v1"
 )
 
 func TestFile(t *testing.T) {
@@ -110,4 +112,23 @@ func TestArgs(t *testing.T) {
 		t.Errorf("want %q, got %q", want, string(got))
 	}
 
+}
+
+func TestGet(t *testing.T) {
+	defer gock.Off()
+
+	gock.New("http://localhost:8000").
+		Get("/").
+		Reply(200).
+		BodyString("Hello World")
+
+	p := Get("http://localhost:8000/")
+	got, err := p.String()
+	if err != nil {
+		t.Error(err)
+	}
+	want := "Hello World"
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
 }
