@@ -1,7 +1,10 @@
 package script
 
 import (
+	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"testing"
@@ -110,4 +113,34 @@ func TestArgs(t *testing.T) {
 		t.Errorf("want %q, got %q", want, string(got))
 	}
 
+}
+
+func TestGet(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "Hello World")
+	}))
+	defer ts.Close()
+
+	p := Get(ts.URL)
+	got, err := p.String()
+	if err != nil {
+		t.Error(err)
+	}
+	want := "Hello World\n"
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestGetError(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}))
+	defer ts.Close()
+
+	p := Get(ts.URL)
+	_, err := p.String()
+	if err == nil {
+		t.Fatalf("expected non-nill err but got: %s", err)
+	}
 }

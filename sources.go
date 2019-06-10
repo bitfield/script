@@ -1,6 +1,8 @@
 package script
 
 import (
+	"fmt"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -42,4 +44,19 @@ func Args() *Pipe {
 		s.WriteString(a + "\n")
 	}
 	return Echo(s.String())
+}
+
+// Get retrives the web resources given by `url` and returns a Pipe containing
+// the response body. If an error occurs or a non-200 HTTP Status is encountered
+// the error status of the pipe is set appropriately.
+func Get(url string) *Pipe {
+	p := NewPipe()
+	res, err := http.Get(url)
+	if err != nil {
+		return p.WithError(err)
+	}
+	if res.StatusCode != 200 {
+		return p.WithError(fmt.Errorf("non-200 status: %s", res.Status))
+	}
+	return p.WithReader(res.Body)
 }
