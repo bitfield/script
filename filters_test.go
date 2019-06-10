@@ -103,17 +103,17 @@ func TestReplace(t *testing.T) {
 		want         string
 	}{
 		{"testdata/hello.txt", "hello", "bye", "bye world\n"},
-		{"testdata/hello.txt", "Hello", "Bye", "hello world\n"},
+		{"testdata/hello.txt", "Does not exist in input", "Will not appear in output", "hello world\n"},
+		{"testdata/hello.txt", "hello world", "string with newline\n", "string with newline\n\n"},
+		{"testdata/hello.txt", "hello", "Ж9", "Ж9 world\n"},
 	}
-
 	for _, tc := range testCases {
 		got, err := File(tc.testFileName).Replace(tc.old, tc.new).String()
 		if err != nil {
 			t.Error(err)
 		}
-
 		if got != tc.want {
-			t.Errorf("Replacing %s with %s in %s, wanted %s, got %s", tc.old, tc.new, tc.testFileName, tc.want, got)
+			t.Errorf("%s with %s in %s, wanted %s, got %s", tc.old, tc.new, tc.testFileName, tc.want, got)
 		}
 	}
 }
