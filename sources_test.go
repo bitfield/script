@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -27,15 +28,15 @@ func TestFile(t *testing.T) {
 	}
 }
 
-func TestListFiles(t *testing.T) {
+func TestListFiles_Path(t *testing.T) {
 	t.Parallel()
-	testFiles, _ := ioutil.ReadDir("testdata/") // trailing slash is not required. Added to emphasis it's a path
+	testFiles, _ := ioutil.ReadDir("testdata") // ignoring error
 	var fileNames []string
 	for _, file := range testFiles {
-		fileNames = append(fileNames, file.Name())
+		fileNames = append(fileNames, "testdata/"+file.Name())
 	}
-	want := strings.Join(fileNames, "  ")
-	p := ListFiles("testdata/")
+	want := strings.Join(fileNames, "\n")
+	p := ListFiles("testdata")
 	gotRaw, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
 		t.Error(err)
@@ -44,9 +45,33 @@ func TestListFiles(t *testing.T) {
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
 	}
-	q := ListFiles("non-existent-path/")
+	q := ListFiles("non-existent-path")
 	if q.Error() == nil {
-		t.Errorf("want error status on listing files of non-existent path, but got nil")
+		t.Errorf("want error status when listing non-existent path, but got nil")
+	}
+}
+
+func TestListFiles_Glob(t *testing.T) {
+	t.Parallel()
+	testFiles, _ := filepath.Glob("./test?ata/*") // ignoring error
+	var fileNames []string
+	for _, file := range testFiles {
+		fileNames = append(fileNames, file)
+	}
+	want := strings.Join(fileNames, "\n")
+	p := ListFiles("./test?ata/*")
+	gotRaw, err := ioutil.ReadAll(p.Reader)
+	if err != nil {
+		t.Error(err)
+	}
+	got := string(gotRaw)
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+	q := ListFiles("./no-test-data/*")
+	files, err := q.String()
+	if files != "" {
+		t.Errorf("want empty result when listing non-existent glob, but got output")
 	}
 }
 

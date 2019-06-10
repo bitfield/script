@@ -248,12 +248,12 @@ fmt.Println(output)
 
 ### ListFiles
 
-`ListFiles()` Creates a pipe with list of files of the given path.
+`ListFiles()` Creates a pipe with list of files under the given path or glob.
 ```go
-p = script.ListFiles("folder-path")
+p = script.ListFiles("/path/to/*/folder")
 fileNames, err := p.String()
 fmt.Println(filenames)
-// Output: List of files in the  given path separated with two spaces
+// Output: List of files in the path separated with new-lines
 ```
 ### Stdin
 
