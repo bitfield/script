@@ -246,6 +246,15 @@ fmt.Println(output)
 // Output: contents of file
 ```
 
+### ListFiles
+
+`ListFiles()` Creates a pipe with list of files of the given path.
+```go
+p = script.ListFiles("folder-path")
+fileNames, err := p.String()
+fmt.Println(filenames)
+// Output: List of files in the  given path separated with two spaces
+```
 ### Stdin
 
 `Stdin()` creates a pipe which reads from the program's standard input.
@@ -561,7 +570,6 @@ These are some ideas I'm playing with for additional features. If you feel like 
 
 * `Get()` makes a web request, like `curl`, and pipes the result
 * `Net()` makes a network connection to a specified address and port, and reads the connection until it's closed
-* `ListFiles()` takes a filesystem path or glob, and pipes the list of matching files
 * `Find()` pipes a list of files matching various criteria (name, modified time, and so on)
 * `Processes()` pipes the list of running processes, like `ps`.
 

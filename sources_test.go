@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 )
 
@@ -23,6 +24,29 @@ func TestFile(t *testing.T) {
 	q := File("doesntexist")
 	if q.Error() == nil {
 		t.Errorf("want error status on opening non-existent file, but got nil")
+	}
+}
+
+func TestListFiles(t *testing.T) {
+	t.Parallel()
+	testFiles, _ := ioutil.ReadDir("testdata/") // trailing slash is not required. Added to emphasis it's a path
+	var fileNames []string
+	for _, file := range testFiles {
+		fileNames = append(fileNames, file.Name())
+	}
+	want := strings.Join(fileNames, "  ")
+	p := ListFiles("testdata/")
+	gotRaw, err := ioutil.ReadAll(p.Reader)
+	if err != nil {
+		t.Error(err)
+	}
+	got := string(gotRaw)
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+	q := ListFiles("non-existent-path/")
+	if q.Error() == nil {
+		t.Errorf("want error status on listing files of non-existent path, but got nil")
 	}
 }
 

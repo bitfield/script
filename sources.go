@@ -1,6 +1,7 @@
 package script
 
 import (
+	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -15,6 +16,22 @@ func File(name string) *Pipe {
 		return p.WithError(err)
 	}
 	return p.WithReader(f)
+}
+
+// ListFiles returns a *Pipe containing list of files under the given path. This can
+// be used to iterate over the files. If there is an error reading the path, the pipe's error
+// status will be set.
+func ListFiles(path string) *Pipe {
+	p := NewPipe()
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return p.WithError(err)
+	}
+	var fileNames []string
+	for _, file := range files {
+		fileNames = append(fileNames, file.Name())
+	}
+	return NewPipe().WithReader(strings.NewReader(strings.Join(fileNames, "  ")))
 }
 
 // Echo returns a pipe containing the supplied string.
