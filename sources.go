@@ -55,3 +55,8 @@ func Get(url string) *Pipe {
 	}
 	return p.WithReader(res.Body)
 }
+
+// NetCat connnects to the specified address reads the connection until closed
+func NetCat(addr string) *Pipe {
+	return NewPipe().NetCat(addr)
+}

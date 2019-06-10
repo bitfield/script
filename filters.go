@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"net"
 	"os"
 	"os/exec"
 	"regexp"
@@ -133,4 +134,23 @@ func (p *Pipe) Concat() *Pipe {
 		readers = append(readers, NewReadAutoCloser(input))
 	})
 	return p.WithReader(io.MultiReader(readers...))
+}
+
+// NetCat connnects to the specified address reads the connection until closed
+func (p *Pipe) NetCat(addr string) *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+
+	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+	if err != nil {
+		return p.WithError(err)
+	}
+
+	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	if err != nil {
+		return p.WithError(err)
+	}
+
+	return p.WithReader(conn)
 }

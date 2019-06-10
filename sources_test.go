@@ -2,6 +2,7 @@ package script
 
 import (
 	"io/ioutil"
+	"net"
 	"os"
 	"os/exec"
 	"testing"
@@ -123,6 +124,37 @@ func TestGet(t *testing.T) {
 		BodyString("Hello World")
 
 	p := Get("http://localhost:8000/")
+	got, err := p.String()
+	if err != nil {
+		t.Error(err)
+	}
+	want := "Hello World"
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestNetCat(t *testing.T) {
+	l, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Error(err)
+	}
+
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				t.Error(err)
+				continue
+			}
+			go func(conn net.Conn) {
+				conn.Write([]byte("Hello World"))
+				conn.Close()
+			}(conn)
+		}
+	}()
+
+	p := NetCat(l.Addr().String())
 	got, err := p.String()
 	if err != nil {
 		t.Error(err)
