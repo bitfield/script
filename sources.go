@@ -29,6 +29,14 @@ func Exec(s string) *Pipe {
 	return NewPipe().Exec(s)
 }
 
+// ExecAt runs an external command at the specified directory and returns a pipe
+// containing the output. If the command had a non-zero exit status, the pipe's
+// error status will also be set to the string "exit status X", where X is the
+// integer exit status.
+func ExecAt(dir, s string) *Pipe {
+	return NewPipe().ExecAt(dir, s)
+}
+
 // Stdin returns a pipe which reads from the program's standard input.
 func Stdin() *Pipe {
 	return NewPipe().WithReader(os.Stdin)

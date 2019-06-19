@@ -95,6 +95,26 @@ func (p *Pipe) Exec(s string) *Pipe {
 	return q.WithReader(bytes.NewReader(output))
 }
 
+// ExecAt runs an external command at the specified directory and returns a pipe
+// containing the output. If the command had a non-zero exit status, the pipe's
+// error status will also be set to the string "exit status X", where X is the
+// integer exit status.
+func (p *Pipe) ExecAt(dir, s string) *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	q := NewPipe()
+	args := strings.Fields(s)
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Stdin = p.Reader
+	cmd.Dir = dir
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		q.SetError(err)
+	}
+	return q.WithReader(bytes.NewReader(output))
+}
+
 // Join reads the contents of the pipe, line by line, and joins them into a
 // single space-separated string. It returns a pipe containing this string. Any
 // terminating newline is preserved.

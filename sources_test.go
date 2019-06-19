@@ -76,6 +76,47 @@ func TestExec(t *testing.T) {
 	}
 }
 
+func TestExecAt(t *testing.T) {
+	t.Parallel()
+	wdir, err := os.Getwd()
+	if err != nil {
+		t.Error(err)
+	}
+	want := "Usage"
+	p := ExecAt(wdir, "go")
+	if p.Error() == nil {
+		t.Error("want error from command, but got nil")
+	}
+	if p.Error().Error() != "exit status 2" {
+		t.Errorf("want error 'exit status 2' but got %v", p.Error())
+	}
+	p.SetError(nil)
+	output, err := p.String()
+	if err != nil {
+		t.Error(err)
+	}
+	matches, err := Echo(output).Match(want).CountLines()
+	if err != nil {
+		t.Error(err)
+	}
+	if matches == 0 {
+		t.Errorf("want output of command to match %q, but no matches in %q", want, output)
+	}
+	q := ExecAt(wdir, "doesntexist")
+	if q.Error() == nil {
+		t.Errorf("want error executing non-existent program, but got nil")
+	}
+	// ignoring error because we already checked it
+	output, _ = q.String()
+	if output != "" {
+		t.Errorf("want zero output from running non-existent program, but got %q", output)
+	}
+	r := ExecAt(wdir, "go help")
+	if r.Error() != nil {
+		t.Errorf("want no error running 'go help', but got %v", r.Error())
+	}
+}
+
 func TestStdin(t *testing.T) {
 	t.Parallel()
 	// dummy test to prove coverage
