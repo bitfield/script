@@ -100,6 +100,8 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.WithError(nil)
 	action = "Read()"
 	p.Read([]byte{})
+	action = "First()"
+	p.First(1)
 }
 
 func TestNilPipes(t *testing.T) {

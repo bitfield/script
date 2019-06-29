@@ -40,10 +40,16 @@ That was almost too easy! So let's pass in a list of files on the command line, 
 script.Args().Concat().Match("Error").Stdout()
 ```
 
-What's that? You want to append that output to a file instead of printing it to the terminal? No problem:
+Maybe we're only interested in the first 10 matches. No problem:
 
 ```go
-script.Args().Concat().Match("Error").AppendFile("/var/log/errors.txt")
+script.Args().Concat().Match("Error").First(10).Stdout()
+```
+
+What's that? You want to append that output to a file instead of printing it to the terminal? _You've got some attitude, mister_.
+
+```go
+script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt")
 ```
 
 ## How does it work?
@@ -323,6 +329,14 @@ fmt.Println(output)
 // Output: hello world
 ```
 
+### First
+
+`First()` reads its input and passes on the first N lines of it (like Unix [`head`](examples/head/main.go)):
+
+```go
+Stdin().First(10).Stdout()
+```
+
 ### Join
 
 `Join()` reads its input and replaces newlines with spaces, preserving a terminating newline if there is one.
@@ -580,6 +594,7 @@ Since `script` is designed to help you write system administration programs, a f
 * [cat](examples/cat/main.go) (copies stdin to stdout)
 * [cat 2](examples/cat2/main.go) (takes a list of files on the command line and concatenates their contents to stdout)
 * [grep](examples/grep/main.go)
+* [head](examples/head/main.go)
 * [echo](examples/echo/main.go)
 
 More examples would be welcome!
