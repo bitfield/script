@@ -134,3 +134,26 @@ func (p *Pipe) Concat() *Pipe {
 	})
 	return p.WithReader(io.MultiReader(readers...))
 }
+
+// First reads from the pipe, and returns a new pipe containing only the first N
+// lines. If there is an error reading the pipe, the pipe's error status is also
+// set.
+func (p *Pipe) First(lines int) *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	scanner := bufio.NewScanner(p.Reader)
+	output := strings.Builder{}
+	for i := 0; i < lines; i++ {
+		if !scanner.Scan() {
+			break
+		}
+		output.WriteString(scanner.Text())
+		output.WriteRune('\n')
+	}
+	err := scanner.Err()
+	if err != nil {
+		p.SetError(err)
+	}
+	return Echo(output.String())
+}

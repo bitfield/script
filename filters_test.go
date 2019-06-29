@@ -219,3 +219,39 @@ func TestConcat(t *testing.T) {
 		t.Errorf("want %q, got %q", want, got)
 	}
 }
+
+func TestFirst(t *testing.T) {
+	t.Parallel()
+	want, err := ioutil.ReadFile("testdata/first10.golden.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := File("testdata/first.input.txt").First(10).Bytes()
+	if err != nil {
+		t.Error(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Errorf("want %q, got %q", want, got)
+	}
+	// First(0) should return zero lines
+	zero := File("testdata/first.input.txt").First(0)
+	gotZero, err := zero.CountLines()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotZero != 0 {
+		t.Errorf("want 0 lines, got %d lines", gotZero)
+	}
+	// First(N) where the input has less than N lines, should just return the input.
+	want, err = File("testdata/first.input.txt").Bytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err = File("testdata/first.input.txt").First(100).Bytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}

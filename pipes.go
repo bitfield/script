@@ -56,8 +56,9 @@ func (p *Pipe) ExitStatus() int {
 	return status
 }
 
-// WithReader takes an io.Reader which does not need to be closed after reading,
-// and associates the pipe with that reader.
+// WithReader takes an io.Reader, and associates the pipe with that reader. If
+// necessary, the reader will be automatically closed once it has been
+// completely read.
 func (p *Pipe) WithReader(r io.Reader) *Pipe {
 	if p == nil {
 		return p

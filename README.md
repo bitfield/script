@@ -40,10 +40,16 @@ That was almost too easy! So let's pass in a list of files on the command line, 
 script.Args().Concat().Match("Error").Stdout()
 ```
 
-What's that? You want to append that output to a file instead of printing it to the terminal? No problem:
+Maybe we're only interested in the first 10 matches. No problem:
 
 ```go
-script.Args().Concat().Match("Error").AppendFile("/var/log/errors.txt")
+script.Args().Concat().Match("Error").First(10).Stdout()
+```
+
+What's that? You want to append that output to a file instead of printing it to the terminal? _You've got some attitude, mister_.
+
+```go
+script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt")
 ```
 
 ## How does it work?
@@ -323,6 +329,14 @@ fmt.Println(output)
 // Output: hello world
 ```
 
+### First
+
+`First()` reads its input and passes on the first N lines of it (like Unix [`head`](examples/head/main.go)):
+
+```go
+Stdin().First(10).Stdout()
+```
+
 ### Join
 
 `Join()` reads its input and replaces newlines with spaces, preserving a terminating newline if there is one.
@@ -567,11 +581,12 @@ These are some ideas I'm playing with for additional features. If you feel like 
 
 ### Filters
 
-* Ideas welcome!
+* `Column()` reads columnar (whitespace-separated) data and cuts the specified column, like Unix `cut`
+* `CountFreq()` counts the frequency of input lines, and prepends each unique line with its frequency (like Unix `uniq -c`). The results are sorted in descending numerical order (that is, most frequent lines first).
 
 ### Sinks
 
-* Ideas equally welcome!
+* [Ideas welcome!](https://github.com/bitfield/script/issues/new)
 
 ### Examples
 
@@ -580,10 +595,13 @@ Since `script` is designed to help you write system administration programs, a f
 * [cat](examples/cat/main.go) (copies stdin to stdout)
 * [cat 2](examples/cat2/main.go) (takes a list of files on the command line and concatenates their contents to stdout)
 * [grep](examples/grep/main.go)
+* [head](examples/head/main.go)
 * [echo](examples/echo/main.go)
 
-More examples would be welcome!
+[More examples would be welcome!](https://github.com/bitfield/script/pulls)
 
 ### Use cases
 
-The best libraries are designed to satisfy real use cases. If you have a sysadmin task which you'd like to implement with `script`, let me know by opening an issue.
+The best libraries are designed to satisfy real use cases. If you have a sysadmin task which you'd like to implement with `script`, let me know by [opening an issue](https://github.com/bitfield/script/issues/new) - I'd love to hear from you.
+
+If you use `script` for real work (or, for that matter, real play), I'm always very interested to hear about it. Drop me a line to john@bitfieldconsulting.com and tell me how you're using `script` and what you think of it!
