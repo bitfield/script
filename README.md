@@ -187,6 +187,25 @@ func main() {
 
 (Thanks to Lucas Bremgartner for suggesting this example. You can find the complete [program](examples/visitors/main.go), along with a sample [logfile](examples/visitors/access.log), in the [`examples/visitors/`](examples/visitors) directory.)
 
+## Quick start: Unix equivalents
+
+If you're already familiar with shell scripting and the Unix toolset, here is a rough guide to the equivalent `script` operation for each listed Unix command.
+
+|Unix / shell|`script` equivalent|
+|---|---|
+|(any program name)|`Exec()`|
+|`>`|`WriteFile()`|
+|`>>`|`AppendFile()`|
+|`$*`|`Args()`|
+|`cat`|`File()` / `Concat()`|
+|`cut`|`Column()`|
+|`echo`|`Echo()`|
+|`grep`|`Match()` / `MatchRegexp()`|
+|`grep -v`|`Reject()` / `RejectRegexp()`|
+|`head`|`First()`|
+|`uniq -c`|`Freq()`|
+|`wc -l`|`CountLines()`|
+
 ## Sources, filters, and sinks
 
 `script` provides three types of pipe operations: sources, filters, and sinks.
