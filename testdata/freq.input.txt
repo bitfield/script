@@ -1,0 +1,11 @@
+apple
+orange
+banana
+banana
+apple
+orange
+kumquat
+apple
+apple
+banana
+banana

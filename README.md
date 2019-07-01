@@ -334,7 +334,45 @@ fmt.Println(output)
 `First()` reads its input and passes on the first N lines of it (like Unix [`head`](examples/head/main.go)):
 
 ```go
-Stdin().First(10).Stdout()
+script.Stdin().First(10).Stdout()
+```
+
+### Freq
+
+`Freq()` counts the frequencies of input lines, and outputs only the unique lines in the input, each prefixed with a count of its frequency, in descending order of frequency (that is, most frequent lines first). Lines with the same frequency will be sorted alphabetically. For example, given this input:
+
+```
+banana
+apple
+orange
+apple
+banana
+```
+
+and a program like:
+
+```go
+script.Stdin().Freq().Stdout()
+```
+
+the output will be:
+
+```
+2 apple
+2 banana
+1 orange
+```
+
+This is a common pattern in shell scripts to find the most frequently-occurring lines in a file:
+
+```sh
+sort testdata/freq.input.txt |uniq -c |sort -rn
+```
+
+`Freq()`'s behaviour is like the combination of Unix `sort`, `uniq -c`, and `sort -rn` used here. You can use `Freq()` in combination with `First()` to get, for example, the ten most common lines in a file:
+
+```go
+script.Stdin().Freq().First(10).Stdout()
 ```
 
 ### Join

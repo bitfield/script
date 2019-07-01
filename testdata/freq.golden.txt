@@ -1,0 +1,4 @@
+4 apple
+4 banana
+2 orange
+1 kumquat
