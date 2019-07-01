@@ -157,6 +157,36 @@ This is implemented using a type called `ReadAutoCloser`, which takes an `io.Rea
 
 _It is your responsibility to close a pipe if you do not read it to completion_.
 
+## A real-world example
+
+Let's use `script` to write a program which system administrators might actually need. One thing I often find myself doing is counting the most frequent visitors to a website over a given period of time. Given an Apache log in the Common Log Format like this:
+
+```
+212.205.21.11 - - [30/Jun/2019:17:06:15 +0000] "GET / HTTP/1.1" 200 2028 "https://example.com/ "Mozilla/5.0 (Linux; Android 8.0.0; FIG-LX1 Build/HUAWEIFIG-LX1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.156 Mobile Safari/537.36"
+```
+
+we would like to extract the visitor's IP address (the first column in the logfile), and count the number of times this IP address occurs in the file. Finally, we might like to list the top 10 visitors by frequency. In a shell script we might do something like:
+
+```sh
+cut -d' ' -f 1 access.log |sort |uniq -c |sort -rn |head
+```
+
+There's a lot going on there, and it's pleasing to find that the equivalent `script` program is quite brief:
+
+```go
+package main
+
+import (
+	"github.com/bitfield/script"
+)
+
+func main() {
+	script.Stdin().Column(1).Freq().First(10).Stdout()
+}
+```
+
+(Thanks to Lucas Bremgartner for suggesting this example. You can find the complete [program](examples/visitors/main.go), along with a sample [logfile](examples/visitors/access.log), in the [`examples/visitors/`](examples/visitors) directory.)
+
 ## Sources, filters, and sinks
 
 `script` provides three types of pipe operations: sources, filters, and sinks.
@@ -647,8 +677,7 @@ These are some ideas I'm playing with for additional features. If you feel like 
 
 ### Filters
 
-* `Column()` reads columnar (whitespace-separated) data and cuts the specified column, like Unix `cut`
-* `CountFreq()` counts the frequency of input lines, and prepends each unique line with its frequency (like Unix `uniq -c`). The results are sorted in descending numerical order (that is, most frequent lines first).
+* [Ideas welcome!](https://github.com/bitfield/script/issues/new)
 
 ### Sinks
 
@@ -663,6 +692,7 @@ Since `script` is designed to help you write system administration programs, a f
 * [grep](examples/grep/main.go)
 * [head](examples/head/main.go)
 * [echo](examples/echo/main.go)
+* [visitors](examples/visitors/main.go)
 
 [More examples would be welcome!](https://github.com/bitfield/script/pulls)
 
