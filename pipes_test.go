@@ -102,6 +102,8 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.Read([]byte{})
 	action = "First()"
 	p.First(1)
+	action = "Freq()"
+	p.Freq()
 }
 
 func TestNilPipes(t *testing.T) {

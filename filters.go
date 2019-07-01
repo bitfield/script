@@ -3,10 +3,12 @@ package script
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -154,6 +156,41 @@ func (p *Pipe) First(lines int) *Pipe {
 	err := scanner.Err()
 	if err != nil {
 		p.SetError(err)
+	}
+	return Echo(output.String())
+}
+
+// Freq reads from the pipe, and returns a new pipe containing only unique lines
+// from the input, prefixed with a frequency count, in descending numerical
+// order (most frequent lines first). Lines with equal frequency will be sorted
+// alphabetically. If there is an error reading the pipe, the pipe's error
+// status is also set.
+func (p *Pipe) Freq() *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	var freq = map[string]int{}
+	p.EachLine(func(line string, out *strings.Builder) {
+		freq[line]++
+	})
+	type frequency struct {
+		line  string
+		count int
+	}
+	var freqs = make([]frequency, 0, len(freq))
+	for line, count := range freq {
+		freqs = append(freqs, frequency{line, count})
+	}
+	sort.Slice(freqs, func(i, j int) bool {
+		if freqs[i].count == freqs[j].count {
+			return freqs[i].line < freqs[j].line
+		}
+		return freqs[i].count > freqs[j].count
+	})
+	var output strings.Builder
+	for _, item := range freqs {
+		output.WriteString(fmt.Sprintf("%d %s", item.count, item.line))
+		output.WriteRune('\n')
 	}
 	return Echo(output.String())
 }
