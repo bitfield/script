@@ -194,3 +194,16 @@ func (p *Pipe) Freq() *Pipe {
 	}
 	return Echo(output.String())
 }
+
+// Column reads from the pipe, and returns a new pipe containing only the Nth
+// column of each line in the input (where columns are delimited by whitespace).
+// If there is an error reading the pipe, the pipe's error status is also set.
+func (p *Pipe) Column(col int) *Pipe {
+	return p.EachLine(func(line string, out *strings.Builder) {
+		columns := strings.Fields(line)
+		if col <= len(columns) {
+			out.WriteString(columns[col-1])
+			out.WriteByte('\n')
+		}
+	})
+}

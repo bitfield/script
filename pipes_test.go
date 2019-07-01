@@ -104,6 +104,8 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.First(1)
 	action = "Freq()"
 	p.Freq()
+	action = "Column()"
+	p.Column(2)
 }
 
 func TestNilPipes(t *testing.T) {

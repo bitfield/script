@@ -270,3 +270,18 @@ func TestFreq(t *testing.T) {
 		t.Errorf("want %q, got %q", want, got)
 	}
 }
+
+func TestColumn(t *testing.T) {
+	t.Parallel()
+	want, err := ioutil.ReadFile("testdata/column.golden.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := File("testdata/column.input.txt").Column(3).Bytes()
+	if err != nil {
+		t.Error(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}

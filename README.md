@@ -267,6 +267,34 @@ fmt.Println(output)
 
 Filters are operations on an existing pipe that also return a pipe, allowing you to chain filters indefinitely.
 
+### Column
+
+`Column()` reads input tabulated by whitespace, and outputs only the Nth column of each input line (like Unix `cut`). Lines containing less than N columns will be ignored.
+
+For example, given this input:
+
+```
+  PID   TT  STAT      TIME COMMAND
+    1   ??  Ss   873:17.62 /sbin/launchd
+   50   ??  Ss    13:18.13 /usr/libexec/UserEventAgent (System)
+   51   ??  Ss    22:56.75 /usr/sbin/syslogd
+```
+
+and this program:
+
+```go
+script.Stdin().Column(1).Stdout()
+```
+
+this will be the output:
+
+```
+PID
+1
+50
+51
+```
+
 ### Concat
 
 `Concat()` reads a list of filenames from the pipe, one per line, and creates a pipe which concatenates the contents of those files. For example, if you have files `a`, `b`, and `c`:
