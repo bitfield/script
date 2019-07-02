@@ -19,7 +19,7 @@ func (p *Pipe) Match(s string) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		if strings.Contains(line, s) {
 			out.WriteString(line)
-			out.WriteByte('\n')
+			out.WriteRune('\n')
 		}
 	})
 }
@@ -31,7 +31,7 @@ func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		if re.MatchString(line) {
 			out.WriteString(line)
-			out.WriteByte('\n')
+			out.WriteRune('\n')
 		}
 	})
 }
@@ -43,7 +43,7 @@ func (p *Pipe) Reject(s string) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		if !strings.Contains(line, s) {
 			out.WriteString(line)
-			out.WriteByte('\n')
+			out.WriteRune('\n')
 		}
 	})
 }
@@ -55,7 +55,7 @@ func (p *Pipe) RejectRegexp(re *regexp.Regexp) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		if !re.MatchString(line) {
 			out.WriteString(line)
-			out.WriteByte('\n')
+			out.WriteRune('\n')
 		}
 	})
 }
@@ -205,7 +205,7 @@ func (p *Pipe) Column(col int) *Pipe {
 		columns := strings.Fields(line)
 		if col <= len(columns) {
 			out.WriteString(columns[col-1])
-			out.WriteByte('\n')
+			out.WriteRune('\n')
 		}
 	})
 }
