@@ -4,6 +4,6 @@ bogus line
 80159 s004  Ss     0:00.56 /bin/bash -l
 60942 s006  Ss+    0:00.53 /bin/bash -l
 60943 s007  Ss+    0:00.51 /bin/bash -l
-60977 s009  Ss+    0:00.52 /bin/bash -l
-60978 s010  Ss+    0:00.53 /bin/bash -l
-61356 s011  Ss     0:00.54 /bin/bash -l
+60977 s009  Ss+  	0:00.52 /bin/bash -l
+	60978 s010  Ss+    0:00.53 /bin/bash -l
+61356 s011	Ss     0:00.54 /bin/bash -l
