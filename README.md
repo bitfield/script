@@ -157,6 +157,28 @@ This is implemented using a type called `ReadAutoCloser`, which takes an `io.Rea
 
 _It is your responsibility to close a pipe if you do not read it to completion_.
 
+## Why not just use shell?
+
+It's a fair question. Shell scripts and one-liners are perfectly adequate for building one-off tasks, initialization scripts, and the kind of 'glue code' that holds the internet together. I speak as someone who's spent at least thirty years doing this for a living. But in many ways they're not ideal for important, non-trivial programs:
+
+* Trying to build portable shell scripts is a nightmare. The exact syntax and options of Unix commands varies from one distribution to another. Although in theory POSIX is a workable common subset of functionality, in practice it's usually precisely the non-POSIX behaviour that you need.
+
+* Shell scripts are hard to test (though test frameworks have been written, and if you're seriously putting mission-critical shell scripts into production, you should be using them, or reconsidering your technology choices).
+
+* Shell scripts don't scale. Because there are very limited facilities for logic and abstraction, and because any successful program tends to grow remorselessly over time, shell scripts can become an unreadable mess of special cases and spaghetti code. We've all seen it, if not, indeed, done it.
+
+* Shell syntax is awkward: quoting, whitespace, and brackets can require a lot of fiddling to get right, and so many characters are magic to the shell (`*`, `?`, `>` and so on) that this can lead to subtle bugs. Scripts can work fine for years until you suddenly encounter a file whose name contains whitespace, and then everything breaks horribly.
+
+* Deploying shell scripts obviously requires at least a (sizable) shell binary in addition to the source code, but it usually also requires an unknown and variable number of extra userland programs (`cut`, `grep`, `head`, and friends). If you're building container images, for example, you effectively need to include a whole Unix distribution with your program, which runs to hundreds of megabytes, and is not at all in the spirit of containers.
+
+To be fair to the shell, this kind of thing is not what it was ever intended for. Shell is an interactive job control tool for launching programs, connecting programs together, and to a limited extent, manipulating text. It's not for building portable, scalable, reliable, and elegant programs. That's what Go is for.
+
+Go has a superb testing framework built right into the standard library. It has a superb standard library, and thousands of high-quality third-party packages for just about any functionality you can imagine. It is compiled, so it's fast, and statically typed, so it's reliable. It's efficient and memory-safe. Go programs can be distributed as a single binary. Go scales to enormous projects (Kubernetes, for example).
+
+The `script` library is implemented entirely in Go, and does not require any userland programs (or any other dependencies) to be present. Thus you can build your `script` program as a container image containing a single (very small) binary, which is quick to build, quick to upload, quick to deploy, quick to run, and economical with resources.
+
+If you've ever struggled to get a shell script containing a simple `if` statement to work (and who hasn't?), then the `script` library is dedicated to you.
+
 ## A real-world example
 
 Let's use `script` to write a program which system administrators might actually need. One thing I often find myself doing is counting the most frequent visitors to a website over a given period of time. Given an Apache log in the Common Log Format like this:
