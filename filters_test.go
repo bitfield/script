@@ -226,23 +226,30 @@ func TestFirst(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := File("testdata/first.input.txt").First(10).Bytes()
+	input := File("testdata/first.input.txt")
+	got, err := input.First(10).Bytes()
 	if err != nil {
 		t.Error(err)
 	}
 	if !bytes.Equal(got, want) {
 		t.Errorf("want %q, got %q", want, got)
 	}
-	// First(0) should return zero lines
-	zero := File("testdata/first.input.txt").First(0)
-	gotZero, err := zero.CountLines()
+	_, err = ioutil.ReadAll(input.Reader)
+	if err == nil {
+		t.Error("input not closed after reading")
+	}
+	input = File("testdata/first.input.txt")
+	gotZero, err := input.First(0).CountLines()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if gotZero != 0 {
 		t.Errorf("want 0 lines, got %d lines", gotZero)
 	}
-	// First(N) where the input has less than N lines, should just return the input.
+	_, err = ioutil.ReadAll(input.Reader)
+	if err == nil {
+		t.Error("input not closed after reading")
+	}
 	want, err = File("testdata/first.input.txt").Bytes()
 	if err != nil {
 		t.Fatal(err)

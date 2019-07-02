@@ -154,6 +154,7 @@ func (p *Pipe) First(lines int) *Pipe {
 		output.WriteString(scanner.Text())
 		output.WriteRune('\n')
 	}
+	p.Close()
 	err := scanner.Err()
 	if err != nil {
 		p.SetError(err)
