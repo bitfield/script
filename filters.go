@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -178,8 +179,12 @@ func (p *Pipe) Freq() *Pipe {
 		count int
 	}
 	var freqs = make([]frequency, 0, len(freq))
+	var maxCount int
 	for line, count := range freq {
 		freqs = append(freqs, frequency{line, count})
+		if count > maxCount {
+			maxCount = count
+		}
 	}
 	sort.Slice(freqs, func(i, j int) bool {
 		if freqs[i].count == freqs[j].count {
@@ -187,9 +192,10 @@ func (p *Pipe) Freq() *Pipe {
 		}
 		return freqs[i].count > freqs[j].count
 	})
+	fieldWidth := len(strconv.Itoa(maxCount))
 	var output strings.Builder
 	for _, item := range freqs {
-		output.WriteString(fmt.Sprintf("%d %s", item.count, item.line))
+		output.WriteString(fmt.Sprintf("%*d %s", fieldWidth, item.count, item.line))
 		output.WriteRune('\n')
 	}
 	return Echo(output.String())

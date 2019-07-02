@@ -474,6 +474,15 @@ sort testdata/freq.input.txt |uniq -c |sort -rn
 script.Stdin().Freq().First(10).Stdout()
 ```
 
+Like `uniq -c`, `Freq()` left-pads its count values if necessary to make them easier to read:
+
+```
+10 apple
+ 4 banana
+ 2 orange
+ 1 kumquat
+```
+
 ### Join
 
 `Join()` reads its input and replaces newlines with spaces, preserving a terminating newline if there is one.
