@@ -1,6 +1,6 @@
 [![GoDoc](https://godoc.org/github.com/bitfield/script?status.png)](http://godoc.org/github.com/bitfield/script)[![Go Report Card](https://goreportcard.com/badge/github.com/bitfield/script)](https://goreportcard.com/report/github.com/bitfield/script)[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge-flat.svg)](https://github.com/avelino/awesome-go)[![CircleCI](https://circleci.com/gh/bitfield/script.svg?style=svg)](https://circleci.com/gh/bitfield/script)
 
-# script
+# What is `script`?
 
 `script` is a Go library for doing the kind of tasks that shell scripts are good at: reading files, executing subprocesses, counting lines, matching strings, and so on.
 
@@ -8,7 +8,13 @@ Why shouldn't it be as easy to write system administration programs in Go as it 
 
 Shell scripts often compose a sequence of operations on a stream of data (a _pipeline_). This is how `script` works, too.
 
-## What can I do with it?
+# How do I import it?
+
+```go
+import github.com/bitfield/script
+```
+
+# What can I do with it?
 
 Let's see a simple example. Suppose you want to read the contents of a file as a string:
 
@@ -52,7 +58,63 @@ What's that? You want to append that output to a file instead of printing it to 
 script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt")
 ```
 
-## How does it work?
+# Table of contents
+
+- [What is `script`?](#What-is-script)
+- [How do I import it?](#How-do-I-import-it)
+- [What can I do with it?](#What-can-I-do-with-it)
+- [Table of contents](#Table-of-contents)
+- [How does it work?](#How-does-it-work)
+- [Everything is a pipe](#Everything-is-a-pipe)
+- [What use is a pipe?](#What-use-is-a-pipe)
+- [Handling errors](#Handling-errors)
+- [Getting output](#Getting-output)
+- [Errors](#Errors)
+- [Closing pipes](#Closing-pipes)
+- [Why not just use shell?](#Why-not-just-use-shell)
+- [A real-world example](#A-real-world-example)
+- [Quick start: Unix equivalents](#Quick-start-Unix-equivalents)
+- [Sources, filters, and sinks](#Sources-filters-and-sinks)
+- [Sources](#Sources)
+	- [Args](#Args)
+	- [Echo](#Echo)
+	- [Exec](#Exec)
+		- [Exit status](#Exit-status)
+		- [Error output](#Error-output)
+	- [File](#File)
+	- [Stdin](#Stdin)
+- [Filters](#Filters)
+	- [Column](#Column)
+	- [Concat](#Concat)
+	- [EachLine](#EachLine)
+	- [Exec](#Exec-1)
+	- [First](#First)
+	- [Freq](#Freq)
+	- [Join](#Join)
+	- [Match](#Match)
+	- [MatchRegexp](#MatchRegexp)
+	- [Reject](#Reject)
+	- [RejectRegexp](#RejectRegexp)
+- [Sinks](#Sinks)
+	- [AppendFile](#AppendFile)
+	- [Bytes](#Bytes)
+	- [CountLines](#CountLines)
+	- [Read](#Read)
+	- [Stdout](#Stdout)
+	- [String](#String)
+	- [WriteFile](#WriteFile)
+- [Writing your own pipe operations](#Writing-your-own-pipe-operations)
+	- [Writing a source](#Writing-a-source)
+	- [Writing a filter](#Writing-a-filter)
+	- [Writing a sink](#Writing-a-sink)
+- [Ideas](#Ideas)
+	- [Sources](#Sources-1)
+	- [Filters](#Filters-1)
+	- [Sinks](#Sinks-1)
+- [Examples](#Examples)
+- [Use cases](#Use-cases)
+
+# How does it work?
 
 Those chained function calls look a bit weird. What's going on there?
 
@@ -68,7 +130,7 @@ By comparison, writing shell-like scripts in raw Go is much less convenient, bec
 
 In scripts for system administration we often want to compose different operations like this in a quick and convenient way. If an error occurs somewhere along the pipeline, we would like to check this just once at the end, rather than after every operation.
 
-## Everything is a pipe
+# Everything is a pipe
 
 The `script` library allows us to do this because everything is a pipe (specifically, a `script.Pipe`). To create a pipe, start with a _source_ like `File()`:
 
@@ -88,7 +150,7 @@ if p.Error() != nil {
 }
 ```
 
-## What use is a pipe?
+# What use is a pipe?
 
 Now, what can you do with this pipe? You can call a method on it:
 
@@ -104,7 +166,7 @@ var q script.Pipe
 q = script.File("test.txt").Match("Error")
 ```
 
-## Handling errors
+# Handling errors
 
 Woah, woah! Just a minute! What if there was an error opening the file in the first place? Won't `Match` blow up if it tries to read from a non-existent file?
 
@@ -112,7 +174,7 @@ No, it won't. As soon as an error status is set on a pipe, all operations on the
 
 (Seasoned Gophers will recognise this as the `errWriter` pattern described by Rob Pike in the blog post [Errors are values](https://blog.golang.org/errors-are-values).)
 
-## Getting output
+# Getting output
 
 A pipe is useless if we can't get some output from it. To do this, you can use a _sink_, such as `String()`:
 
@@ -124,7 +186,7 @@ if err != nil {
 fmt.Println(result)
 ```
 
-## Errors
+# Errors
 
 Note that sinks return an error value in addition to the data. This is the same value you would get by calling `p.Error()`. If the pipe had an error in any operation along the pipeline, the pipe's error status will be set, and a sink operation which gets output will return the zero value, plus the error.
 
@@ -140,7 +202,7 @@ if err != nil {
 
 `CountLines()` is another useful sink, which simply returns the number of lines read from the pipe.
 
-## Closing pipes
+# Closing pipes
 
 If you've dealt with files in Go before, you'll know that you need to _close_ the file once you've finished with it. Otherwise, the program will retain what's called a _file handle_ (the kernel data structure which represents an open file). There is a limit to the total number of open file handles for a given program, and for the system as a whole, so a program which leaks file handles will eventually crash, and will waste resources in the meantime.
 
@@ -157,7 +219,7 @@ This is implemented using a type called `ReadAutoCloser`, which takes an `io.Rea
 
 _It is your responsibility to close a pipe if you do not read it to completion_.
 
-## Why not just use shell?
+# Why not just use shell?
 
 It's a fair question. Shell scripts and one-liners are perfectly adequate for building one-off tasks, initialization scripts, and the kind of 'glue code' that holds the internet together. I speak as someone who's spent at least thirty years doing this for a living. But in many ways they're not ideal for important, non-trivial programs:
 
@@ -179,7 +241,7 @@ The `script` library is implemented entirely in Go, and does not require any use
 
 If you've ever struggled to get a shell script containing a simple `if` statement to work (and who hasn't?), then the `script` library is dedicated to you.
 
-## A real-world example
+# A real-world example
 
 Let's use `script` to write a program which system administrators might actually need. One thing I often find myself doing is counting the most frequent visitors to a website over a given period of time. Given an Apache log in the Common Log Format like this:
 
@@ -209,7 +271,7 @@ func main() {
 
 (Thanks to [Lucas Bremgartner](https://github.com/breml) for suggesting this example. You can find the complete [program](examples/visitors/main.go), along with a sample [logfile](examples/visitors/access.log), in the [`examples/visitors/`](examples/visitors) directory.)
 
-## Quick start: Unix equivalents
+# Quick start: Unix equivalents
 
 If you're already familiar with shell scripting and the Unix toolset, here is a rough guide to the equivalent `script` operation for each listed Unix command.
 
@@ -228,7 +290,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `uniq -c`          | [`Freq()`](#freq)                                         |
 | `wc -l`            | [`CountLines()`](#countlines)                             |
 
-## Sources, filters, and sinks
+# Sources, filters, and sinks
 
 `script` provides three types of pipe operations: sources, filters, and sinks.
 
@@ -238,11 +300,11 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 
 Let's look at the source, filter, and sink options that `script` provides.
 
-## Sources
+# Sources
 
 These are operations which create a pipe.
 
-### Args
+## Args
 
 `Args()` creates a pipe containing the program's command-line arguments, one per line.
 
@@ -253,7 +315,7 @@ fmt.Println(output)
 // Output: command-line arguments
 ```
 
-### Echo
+## Echo
 
 `Echo()` creates a pipe containing a given string:
 
@@ -264,7 +326,7 @@ fmt.Println(output)
 // Output: Hello, world!
 ```
 
-### Exec
+## Exec
 
 `Exec()` runs a given command and creates a pipe containing its combined output (`stdout` and `stderr`). If there was an error running the command, the pipe's error status will be set.
 
@@ -277,7 +339,7 @@ fmt.Println(output)
 
 Note that `Exec()` can also be used as a filter, in which case the given command will read from the pipe as its standard input.
 
-#### Exit status
+### Exit status
 
 If the command returns a non-zero exit status, the pipe's error status will be set to the string "exit status X", where X is the integer exit status.
 
@@ -300,7 +362,7 @@ fmt.Println(exit)
 
 The value of `ExitStatus()` will be zero unless the pipe's error status matches the string "exit status X", where X is a non-zero integer.
 
-#### Error output
+### Error output
 
 Even in the event of a non-zero exit status, the command's output will still be available in the pipe. This is often helpful for debugging. However, because `String()` is a no-op if the pipe's error status is set, if you want output you will need to reset the error status before calling `String()`:
 
@@ -312,7 +374,7 @@ fmt.Println(output)
 // Output: No manual entry for bogus
 ```
 
-### File
+## File
 
 `File()` creates a pipe that reads from a file.
 
@@ -323,7 +385,7 @@ fmt.Println(output)
 // Output: contents of file
 ```
 
-### Stdin
+## Stdin
 
 `Stdin()` creates a pipe which reads from the program's standard input.
 
@@ -334,11 +396,11 @@ fmt.Println(output)
 // Output: [contents of standard input]
 ```
 
-## Filters
+# Filters
 
 Filters are operations on an existing pipe that also return a pipe, allowing you to chain filters indefinitely.
 
-### Column
+## Column
 
 `Column()` reads input tabulated by whitespace, and outputs only the Nth column of each input line (like Unix `cut`). Lines containing less than N columns will be ignored.
 
@@ -366,7 +428,7 @@ PID
 51
 ```
 
-### Concat
+## Concat
 
 `Concat()` reads a list of filenames from the pipe, one per line, and creates a pipe which concatenates the contents of those files. For example, if you have files `a`, `b`, and `c`:
 
@@ -401,7 +463,7 @@ p := Exec("ls /var/app/config/").Concat().Stdout()
 
 Each input file will be closed once it has been fully read.
 
-### EachLine
+## EachLine
 
 `EachLine()` lets you create custom filters. You provide a function, and it will be called once for each line of input. If you want to produce output, your function can write to a supplied `strings.Builder`. The return value from EachLine is a pipe containing your output.
 
@@ -414,7 +476,7 @@ output, err := q.String()
 fmt.Println(output)
 ```
 
-### Exec
+## Exec
 
 `Exec()` runs a given command, which will read from the pipe as its standard input, and returns a pipe containing the command's combined output (`stdout` and `stderr`). If there was an error running the command, the pipe's error status will be set.
 
@@ -428,7 +490,7 @@ fmt.Println(output)
 // Output: hello world
 ```
 
-### First
+## First
 
 `First()` reads its input and passes on the first N lines of it (like Unix [`head`](examples/head/main.go)):
 
@@ -436,7 +498,7 @@ fmt.Println(output)
 script.Stdin().First(10).Stdout()
 ```
 
-### Freq
+## Freq
 
 `Freq()` counts the frequencies of input lines, and outputs only the unique lines in the input, each prefixed with a count of its frequency, in descending order of frequency (that is, most frequent lines first). Lines with the same frequency will be sorted alphabetically. For example, given this input:
 
@@ -483,7 +545,7 @@ Like `uniq -c`, `Freq()` left-pads its count values if necessary to make them ea
  1 kumquat
 ```
 
-### Join
+## Join
 
 `Join()` reads its input and replaces newlines with spaces, preserving a terminating newline if there is one.
 
@@ -494,7 +556,7 @@ fmt.Println(output)
 // Output: hello world\n
 ```
 
-### Match
+## Match
 
 `Match()` returns a pipe containing only the input lines which match the supplied string:
 
@@ -502,7 +564,7 @@ fmt.Println(output)
 p := script.File("test.txt").Match("Error")
 ```
 
-### MatchRegexp
+## MatchRegexp
 
 `MatchRegexp()` is like `Match()`, but takes a compiled regular expression instead of a string.
 
@@ -510,7 +572,7 @@ p := script.File("test.txt").Match("Error")
 p := script.File("test.txt").MatchRegexp(regexp.MustCompile(`E.*r`))
 ```
 
-### Reject
+## Reject
 
 `Reject()` is the inverse of `Match()`. Its pipe produces only lines which _don't_ contain the given string:
 
@@ -518,7 +580,7 @@ p := script.File("test.txt").MatchRegexp(regexp.MustCompile(`E.*r`))
 p := script.File("test.txt").Match("Error").Reject("false alarm")
 ```
 
-### RejectRegexp
+## RejectRegexp
 
 `RejectRegexp()` is like `Reject()`, but takes a compiled regular expression instead of a string.
 
@@ -526,11 +588,11 @@ p := script.File("test.txt").Match("Error").Reject("false alarm")
 p := script.File("test.txt").Match("Error").RejectRegexp(regexp.MustCompile(`false|bogus`))
 ```
 
-## Sinks
+# Sinks
 
 Sinks are operations which return some data from a pipe, ending the pipeline.
 
-### AppendFile
+## AppendFile
 
 `AppendFile()` is like `WriteFile()`, but appends to the destination file instead of overwriting it. It returns the number of bytes written, or an error:
 
@@ -539,7 +601,7 @@ var wrote int
 wrote, err := script.Echo("Got this far!").AppendFile("logfile.txt")
 ```
 
-### Bytes
+## Bytes
 
 `Bytes()` returns the contents of the pipe as a slice of byte, plus an error:
 
@@ -548,7 +610,7 @@ var data []byte
 data, err := script.File("test.bin").Bytes()
 ```
 
-### CountLines
+## CountLines
 
 `CountLines()`, as the name suggests, counts lines in its input, and returns the number of lines as an integer, plus an error:
 
@@ -557,7 +619,7 @@ var numLines int
 numLines, err := script.File("test.txt").CountLines()
 ```
 
-### Read
+## Read
 
 `Read()` behaves just like the standard `Read()` method on any `io.Reader`:
 
@@ -570,7 +632,7 @@ Because a Pipe is an `io.Reader`, you can use it anywhere you would use a file, 
 
 Unlike most sinks, `Read()` does not read the whole contents of the pipe (unless the supplied buffer is big enough to hold them).
 
-### Stdout
+## Stdout
 
 `Stdout()` writes the contents of the pipe to the program's standard output. It returns the number of bytes written, or an error:
 
@@ -595,7 +657,7 @@ func main() {
 }
 ```
 
-### String
+## String
 
 `String()` returns the contents of the pipe as a string, plus an error:
 
@@ -613,7 +675,7 @@ fmt.Println(err)
 // Output: read test.txt: file already closed
 ```
 
-### WriteFile
+## WriteFile
 
 `WriteFile()` writes the contents of the pipe to a named file. It returns the number of bytes written, or an error:
 
@@ -622,11 +684,11 @@ var wrote int
 wrote, err := script.File("source.txt").WriteFile("destination.txt")
 ```
 
-## Writing your own pipe operations
+# Writing your own pipe operations
 
 There's nothing to stop you writing your own sources, sinks, or filters (in fact, that would be excellent. Please submit a pull request if you want to add them to the standard operations supplied with `script`.)
 
-### Writing a source
+## Writing a source
 
 All a pipe source has to do is return a pointer to a `script.Pipe`. To be useful, a pipe needs to have a reader (a data source, such as a file) associated with it.
 
@@ -660,7 +722,7 @@ func File(name string) *script.Pipe {
 }
 ```
 
-### Writing a filter
+## Writing a filter
 
 Filters are methods on pipes, that return pipes. For example, here's a simple filter which just reads and rejects all input, returning an empty pipe:
 
@@ -689,7 +751,7 @@ As you can see from the example, the pipe's reader is available to you as `p.Rea
 
 If your method modifies the pipe (for example if it can set an error on the pipe), it must take a pointer receiver, as in this example. Otherwise, it can take a value receiver.
 
-### Writing a sink
+## Writing a sink
 
 Any method on a pipe which returns something other than a pipe is a sink. For example, here's an implementation of `String()`:
 
@@ -713,11 +775,11 @@ We then try to read the whole contents of the pipe. If we get an error on readin
 
 Otherwise, we return the result of reading the pipe, and a nil error.
 
-## Ideas
+# Ideas
 
 These are some ideas I'm playing with for additional features. If you feel like working on one of them, send a pull request. If you have ideas for other features, open an issue (or, better, a pull request).
 
-### Sources
+## Sources
 
 * `Get()` makes a web request, like `curl`, and pipes the result
 * `Net()` makes a network connection to a specified address and port, and reads the connection until it's closed
@@ -725,15 +787,15 @@ These are some ideas I'm playing with for additional features. If you feel like 
 * `Find()` pipes a list of files matching various criteria (name, modified time, and so on)
 * `Processes()` pipes the list of running processes, like `ps`.
 
-### Filters
+## Filters
 
 * [Ideas welcome!](https://github.com/bitfield/script/issues/new)
 
-### Sinks
+## Sinks
 
 * [Ideas welcome!](https://github.com/bitfield/script/issues/new)
 
-### Examples
+# Examples
 
 Since `script` is designed to help you write system administration programs, a few simple examples of such programs are included in the [examples](examples/) directory:
 
@@ -746,7 +808,7 @@ Since `script` is designed to help you write system administration programs, a f
 
 [More examples would be welcome!](https://github.com/bitfield/script/pulls)
 
-### Use cases
+# Use cases
 
 The best libraries are designed to satisfy real use cases. If you have a sysadmin task which you'd like to implement with `script`, let me know by [opening an issue](https://github.com/bitfield/script/issues/new) - I'd love to hear from you.
 
