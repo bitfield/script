@@ -2,3 +2,6 @@ examples/cat/cat
 examples/grep/grep
 examples/cat2/cat2
 examples/echo/echo
+examples/head/head
+examples/visitors/visitors
+.vscode/settings.json

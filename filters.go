@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -19,7 +20,7 @@ func (p *Pipe) Match(s string) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		if strings.Contains(line, s) {
 			out.WriteString(line)
-			out.WriteByte('\n')
+			out.WriteRune('\n')
 		}
 	})
 }
@@ -31,7 +32,7 @@ func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		if re.MatchString(line) {
 			out.WriteString(line)
-			out.WriteByte('\n')
+			out.WriteRune('\n')
 		}
 	})
 }
@@ -43,7 +44,7 @@ func (p *Pipe) Reject(s string) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		if !strings.Contains(line, s) {
 			out.WriteString(line)
-			out.WriteByte('\n')
+			out.WriteRune('\n')
 		}
 	})
 }
@@ -55,7 +56,7 @@ func (p *Pipe) RejectRegexp(re *regexp.Regexp) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		if !re.MatchString(line) {
 			out.WriteString(line)
-			out.WriteByte('\n')
+			out.WriteRune('\n')
 		}
 	})
 }
@@ -153,6 +154,7 @@ func (p *Pipe) First(lines int) *Pipe {
 		output.WriteString(scanner.Text())
 		output.WriteRune('\n')
 	}
+	p.Close()
 	err := scanner.Err()
 	if err != nil {
 		p.SetError(err)
@@ -178,8 +180,12 @@ func (p *Pipe) Freq() *Pipe {
 		count int
 	}
 	var freqs = make([]frequency, 0, len(freq))
+	var maxCount int
 	for line, count := range freq {
 		freqs = append(freqs, frequency{line, count})
+		if count > maxCount {
+			maxCount = count
+		}
 	}
 	sort.Slice(freqs, func(i, j int) bool {
 		if freqs[i].count == freqs[j].count {
@@ -187,10 +193,26 @@ func (p *Pipe) Freq() *Pipe {
 		}
 		return freqs[i].count > freqs[j].count
 	})
+	fieldWidth := len(strconv.Itoa(maxCount))
 	var output strings.Builder
 	for _, item := range freqs {
-		output.WriteString(fmt.Sprintf("%d %s", item.count, item.line))
+		output.WriteString(fmt.Sprintf("%*d %s", fieldWidth, item.count, item.line))
 		output.WriteRune('\n')
 	}
 	return Echo(output.String())
+}
+
+// Column reads from the pipe, and returns a new pipe containing only the Nth
+// column of each line in the input, where '1' means the first column, and
+// columns are delimited by whitespace. Specifically, whatever Unicode defines
+// as whitespace ('WSpace=yes'). If there is an error reading the pipe, the
+// pipe's error status is also set.
+func (p *Pipe) Column(col int) *Pipe {
+	return p.EachLine(func(line string, out *strings.Builder) {
+		columns := strings.Fields(line)
+		if col <= len(columns) {
+			out.WriteString(columns[col-1])
+			out.WriteRune('\n')
+		}
+	})
 }
