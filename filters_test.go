@@ -99,8 +99,8 @@ func TestReplace(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		testFileName string
-		old          string
-		new          string
+		search       string
+		replace      string
 		want         string
 	}{
 		{"testdata/hello.txt", "hello", "bye", "bye world\n"},
@@ -109,12 +109,36 @@ func TestReplace(t *testing.T) {
 		{"testdata/hello.txt", "hello", "Ж9", "Ж9 world\n"},
 	}
 	for _, tc := range testCases {
-		got, err := File(tc.testFileName).Replace(tc.old, tc.new).String()
+		got, err := File(tc.testFileName).Replace(tc.search, tc.replace).String()
 		if err != nil {
 			t.Error(err)
 		}
 		if got != tc.want {
-			t.Errorf("%s with %s in %s, want %s, got %s", tc.old, tc.new, tc.testFileName, tc.want, got)
+			t.Errorf("%s with %s in %s, want %s, got %s", tc.search, tc.replace, tc.testFileName, tc.want, got)
+		}
+	}
+}
+
+func TestReplaceRegexp(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		testFileName string
+		regexp       string
+		replace      string
+		want         string
+	}{
+		{"testdata/hello.txt", "hel+o", "bye", "bye world\n"},
+		{"testdata/hello.txt", "Does not .* in input", "Will not appear in output", "hello world\n"},
+		{"testdata/hello.txt", "^([a-z]+) ([a-z]+)", "$1 cruel $2", "hello cruel world\n"},
+		{"testdata/hello.txt", "hello{1}", "Ж9", "Ж9 world\n"},
+	}
+	for _, tc := range testCases {
+		got, err := File(tc.testFileName).ReplaceRegexp(regexp.MustCompile(tc.regexp), tc.replace).String()
+		if err != nil {
+			t.Error(err)
+		}
+		if got != tc.want {
+			t.Errorf("%s with %s in %s, want %s, got %s", tc.regexp, tc.replace, tc.testFileName, tc.want, got)
 		}
 	}
 }

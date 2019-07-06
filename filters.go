@@ -193,15 +193,6 @@ func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
 	})
 }
 
-// Replace reads from the pipe, and returns a new pipe which filters its input
-// by replacing all occurrences of the string `old` with the string `new`. If
-// there is an error reading the pipe, the pipe's error status is also set.
-func (p *Pipe) Replace(old, new string) *Pipe {
-	return p.EachLine(func(line string, out *strings.Builder) {
-		out.WriteString(strings.ReplaceAll(line, old, new))
-		out.WriteRune('\n')
-	})
-}
 
 // Reject reads from the pipe, and returns a new pipe containing only lines
 // which do not contain the specified string. If there is an error reading the
@@ -224,5 +215,27 @@ func (p *Pipe) RejectRegexp(re *regexp.Regexp) *Pipe {
 			out.WriteString(line)
 			out.WriteRune('\n')
 		}
+	})
+}
+
+// Replace filters its input by replacing all occurrences of the string `search`
+// with the string `replace`. If there is an error reading the pipe, the pipe's
+// error status is also set.
+func (p *Pipe) Replace(search, replace string) *Pipe {
+	return p.EachLine(func(line string, out *strings.Builder) {
+		out.WriteString(strings.ReplaceAll(line, search, replace))
+		out.WriteRune('\n')
+	})
+}
+
+// ReplaceRegexp filters its input by replacing all matches of the compiled
+// regular expression `re` with the replacement string `replace`. Inside
+// `replace`, $ signs are interpreted as in regexp.Expand, so for instance "$1"
+// represents the text of the first submatch. If there is an error reading the
+// pipe, the pipe's error status is also set.
+func (p *Pipe) ReplaceRegexp(re *regexp.Regexp, replace string) *Pipe {
+	return p.EachLine(func(line string, out *strings.Builder) {
+		out.WriteString(re.ReplaceAllString(line, replace))
+		out.WriteRune('\n')
 	})
 }
