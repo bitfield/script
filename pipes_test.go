@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -86,12 +88,19 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 			t.Errorf("panic: %s on %s pipe", action, kind)
 		}
 	}()
+	defer os.Remove("testdata/bogus.txt")
 	action = "Close()"
 	p.Close()
+	action = "Concat()"
+	p.Concat()
 	action = "Error()"
 	p.Error()
+	action = "Exec()"
+	p.Exec("bogus")
 	action = "ExitStatus()"
 	p.ExitStatus()
+	action = "Join()"
+	p.Join()
 	action = "SetError()"
 	p.SetError(nil)
 	action = "WithReader()"
@@ -106,6 +115,22 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.Freq()
 	action = "Column()"
 	p.Column(2)
+	action = "Match()"
+	p.Match("foo")
+	action = "MatchRegexp()"
+	p.MatchRegexp(regexp.MustCompile(".*"))
+	action = "String()"
+	p.String()
+	action = "Bytes()"
+	p.Bytes()
+	action = "CountLines()"
+	p.CountLines()
+	action = "WriteFile()"
+	p.WriteFile("testdata/bogus.txt")
+	action = "AppendFile()"
+	p.AppendFile("testdata/bogus.txt")
+	action = "Stdout()"
+	p.Stdout()
 }
 
 func TestNilPipes(t *testing.T) {
