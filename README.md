@@ -581,10 +581,10 @@ p := script.File("test.txt").Match("Error").RejectRegexp(regexp.MustCompile(`fal
 
 ### Replace
 
-`Replace()` returns a pipe which filters its input by replacing one string with another:
+`Replace()` returns a pipe which filters its input by replacing all occurrences of one string with another, like Unix `sed`:
 
 ```go
-p := script.File("test.txt").Replace("old","new")
+p := script.File("test.txt").Replace("old", "new")
 ```
 
 # Sinks

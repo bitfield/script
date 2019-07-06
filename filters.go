@@ -193,13 +193,13 @@ func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
 	})
 }
 
-// Replace reads from the pipe, and returns a new pipe
-// which filters its input by replacing the string `old` with the string `new`.
-// If there is an error reading the pipe, the pipe's error status is also set.
+// Replace reads from the pipe, and returns a new pipe which filters its input
+// by replacing all occurrences of the string `old` with the string `new`. If
+// there is an error reading the pipe, the pipe's error status is also set.
 func (p *Pipe) Replace(old, new string) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		out.WriteString(strings.ReplaceAll(line, old, new))
-		out.WriteByte('\n')
+		out.WriteRune('\n')
 	})
 }
 
