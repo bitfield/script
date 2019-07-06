@@ -89,48 +89,48 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 		}
 	}()
 	defer os.Remove("testdata/bogus.txt")
+	action = "AppendFile()"
+	p.AppendFile("testdata/bogus.txt")
+	action = "Bytes()"
+	p.Bytes()
 	action = "Close()"
 	p.Close()
+	action = "Column()"
+	p.Column(2)
 	action = "Concat()"
 	p.Concat()
+	action = "CountLines()"
+	p.CountLines()
 	action = "Error()"
 	p.Error()
 	action = "Exec()"
 	p.Exec("bogus")
 	action = "ExitStatus()"
 	p.ExitStatus()
-	action = "Join()"
-	p.Join()
-	action = "SetError()"
-	p.SetError(nil)
-	action = "WithReader()"
-	p.WithReader(strings.NewReader(""))
-	action = "WithError()"
-	p.WithError(nil)
-	action = "Read()"
-	p.Read([]byte{})
 	action = "First()"
 	p.First(1)
 	action = "Freq()"
 	p.Freq()
-	action = "Column()"
-	p.Column(2)
+	action = "Join()"
+	p.Join()
 	action = "Match()"
 	p.Match("foo")
 	action = "MatchRegexp()"
 	p.MatchRegexp(regexp.MustCompile(".*"))
-	action = "String()"
-	p.String()
-	action = "Bytes()"
-	p.Bytes()
-	action = "CountLines()"
-	p.CountLines()
-	action = "WriteFile()"
-	p.WriteFile("testdata/bogus.txt")
-	action = "AppendFile()"
-	p.AppendFile("testdata/bogus.txt")
+	action = "Read()"
+	p.Read([]byte{})
+	action = "SetError()"
+	p.SetError(nil)
 	action = "Stdout()"
 	p.Stdout()
+	action = "String()"
+	p.String()
+	action = "WithError()"
+	p.WithError(nil)
+	action = "WithReader()"
+	p.WithReader(strings.NewReader(""))
+	action = "WriteFile()"
+	p.WriteFile("testdata/bogus.txt")
 }
 
 func TestNilPipes(t *testing.T) {
