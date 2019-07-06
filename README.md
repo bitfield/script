@@ -58,7 +58,7 @@ What's that? You want to append that output to a file instead of printing it to 
 script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt")
 ```
 
-<!-- omit in toc --># Table of contents
+# Table of contents<!-- omit in toc -->
 - [What is `script`?](#What-is-script)
 - [How do I import it?](#How-do-I-import-it)
 - [What can I do with it?](#What-can-I-do-with-it)

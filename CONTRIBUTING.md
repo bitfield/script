@@ -1,5 +1,33 @@
 So you'd like to contribute to the `script` library? Excellent! Thank you very much. I can absolutely use your help.
 
+- [Getting started](#Getting-started)
+	- [Look for existing issues](#Look-for-existing-issues)
+	- [Open a new issue before making a PR](#Open-a-new-issue-before-making-a-PR)
+	- [Write a use case](#Write-a-use-case)
+	- [Ideas](#Ideas)
+- [Coding standards](#Coding-standards)
+	- [Tests](#Tests)
+		- [Use the standard library](#Use-the-standard-library)
+		- [Spend time on your test cases](#Spend-time-on-your-test-cases)
+		- [Add your method to `doMethodsOnPipe` for stress testing](#Add-your-method-to-doMethodsOnPipe-for-stress-testing)
+	- [Dealing with errors](#Dealing-with-errors)
+		- [Don't panic](#Dont-panic)
+		- [Set the pipe's error status](#Set-the-pipes-error-status)
+	- [Style and formatting](#Style-and-formatting)
+- [Documentation](#Documentation)
+	- [Write doc comments](#Write-doc-comments)
+	- [Update the README](#Update-the-README)
+- [Writing pipe operations](#Writing-pipe-operations)
+	- [Writing a source](#Writing-a-source)
+	- [Writing a filter](#Writing-a-filter)
+	- [Writing a sink](#Writing-a-sink)
+- [Before submitting your pull request](#Before-submitting-your-pull-request)
+- [After submitting your PR](#After-submitting-your-PR)
+- [The code review process](#The-code-review-process)
+	- [Expect to be taken seriously](#Expect-to-be-taken-seriously)
+	- [Dealing with comments](#Dealing-with-comments)
+	- [This may take a while](#This-may-take-a-while)
+
 # Getting started
 
 Here are some hints on a good workflow for contributing to the project.
@@ -52,6 +80,8 @@ Test data should go in the `testdata` directory. If you create a file of data fo
 
 You'll get the feel of things by reading the existing tests, and maybe copying and adapting them for your own feature.
 
+All tests should call `t.Parallel()`. If there is some really good reason why your test can't be run in parallel, we'll talk about it.
+
 ### Spend time on your test cases
 
 Add lots of test cases; they're cheap. Don't just test the obvious happy-path cases; test the null case, where your feature does nothing (make sure it does!). Test edge cases, strange inputs, missing inputs, non-ASCII characters, zeroes, and nils. Knowing what you know about your implementation, what inputs and cases might possibly cause it to break? Test those.
@@ -82,19 +112,20 @@ Here's an example:
 
 ```go
 func (p *Pipe) Frobnicate() *Pipe {
-    // If the pipe has an error, or is nil, this is a no-op
+	// If the pipe has an error, or is nil, this is a no-op
 	if p == nil || p.Error() != nil {
 		return p
 	}
-    output, err := doSomething()
+	output, err := doSomething()
 	if err != nil {
-        // Something went wrong, so save the error in the pipe. The user can
-        // check it afterwards.
-        p.SetError(err)
-        return p
+		// Something went wrong, so save the error in the pipe. The user can
+		// check it afterwards.
+		p.SetError(err)
+		return p
 	}
 	return NewPipe().WithReader(bytes.NewReader(output))
 }
+```
 
 ## Style and formatting
 
@@ -175,8 +206,8 @@ Filters are methods on pipes, that return pipes. For example, here's a simple fi
 func (p *script.Pipe) RejectEverything() *script.Pipe {
 	if p == nil || p.Error() != nil {
 		return p
-    }
-    // don't care about result, just reading for effect
+	}
+	// don't care about result, just reading for effect
 	_, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
 		p.SetError(err)
@@ -238,8 +269,46 @@ Otherwise, we return the result of reading the pipe, and a nil error.
 
 Here's a handy checklist for making sure your PR will be accepted as quickly as possible.
 
-[ ] Have you opened an issue to discuss the feature and agree its general design?
-[ ] Do you have a use case and, ideally, an example program using the feature?
-[ ] Do you have tests covering 90%+ of the feature code (and, of course, passing)
-[ ] Have you added your method to the `doMethodsOnPipe` stress tests?
-[ ]
+ - [ ] Have you opened an issue to discuss the feature and agree its general design?
+ - [ ] Do you have a use case and, ideally, an example program using the feature?
+ - [ ] Do you have tests covering 90%+ of the feature code (and, of course passing)
+ - [ ] Have you added your method to the `doMethodsOnPipe` stress tests?
+ - [ ] Have you written complete and accurate doc comments?
+ - [ ] Have you updated the README and its table of contents?
+ - [ ] You rock. Thanks a lot.
+
+# After submitting your PR
+
+Here's a nice tip for PR-driven development in general. After you've submitted the PR, do a 'pre-code-review'. Go through the diffs, line by line, and be your own code reviewer. Does something look weird? Is something not quite straightforward? It's quite likely that you'll spot errors at this stage which you missed before, simply because you're looking at the code with a reviewer's mindset.
+
+If so, fix them! But if you can foresee a question from a code reviewer, comment on the code to answer it in advance. (Even better, improve the code so that the question doesn't arise.)
+
+# The code review process
+
+If you've completed all these steps, I _will_ invest significant time and energy in giving your PR a detailed code review. This is a powerful and beneficial process which can not only improve the code, but can also help you learn to be a better engineer and a better Go programmer—and the same goes for me!
+
+## Expect to be taken seriously
+
+Don't think of code review as a "you got this wrong, fix it" kind of conversation (this isn't a helpful review comment). Instead, think of it as a discussion where both sides can ask questions, make suggestions, clarify problems and misunderstandings, catch mistakes, and add improvements.
+
+You shouldn't be disappointed if you don't get a simple 'LGTM' and an instant merge. If this is what you're used to, then your team isn't really doing code review to its full potential. Instead, the more comments you get, the more seriously it means I'm taking your work. Where appropriate, I'll say what I liked as well as what I'd like to see improved.
+
+## Dealing with comments
+
+Now comes the tricky bit. You may not agree with some of the code review comments. Reviewing code is a delicate business in the first place, requiring diplomacy as well as discretion, but responding to code reviews is also a skilled task.
+
+If you find yourself reacting emotionally, take a break. Go walk in the woods for a while, or play with a laughing child. When you come back to the code, approach it as though it were someone else's, not your own, and ask yourself seriously whether or not the reviewer _has a point_.
+
+If you genuinely think the reviewer has just misunderstood something, or made a mistake, try to clarify the issue. Ask questions, don't make accusations. Remember that every project has a certain way of doing things, which may not be your way. It's polite to go along with these practices and conventions.
+
+You may feel as though you're doing the project maintainer a favour by contributing, as indeed you are, but an open source project is like somebody's home. They're used to living there, they probably like it the way it is, and they don't always respond well to strangers marching in and rearranging the furniture. Be considerate, and be willing to listen and make changes.
+
+## This may take a while
+
+Don't be impatient. We've all had the experience of sending in our beautifully-crafted PR and then waiting, waiting, waiting. Why won't those idiots just merge it? How come other issues and PRs are getting dealt with ahead of mine? Am I invisible?
+
+In fact, doing a _proper_ and serious code review is a time-consuming business. It's not just a case of skim-reading the diffs. The reviewer will need to check out your branch, run the tests, think carefully about what you've done, make suggestions, test alternatives. It's almost as much work as writing the PR in the first place.
+
+Open source maintainers are just regular folk with jobs, kids, and zero free time or energy. They may not be able to drop everything and put in several hours on your PR. The task may have to wait a week or two until they can get sufficient time and peace and quiet to work on it. Don't pester them. It's fine to add a comment on the PR if you haven't heard anything for a while, asking if the reviewer's been able to look at it and whether there's anything you can do to help speed things up. Comments like 'Y U NO MERGE' are unlikely to elicit a positive response.
+
+Thanks again for helping out!
