@@ -58,12 +58,10 @@ What's that? You want to append that output to a file instead of printing it to 
 script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt")
 ```
 
-# Table of contents
-
+# Table of contents<!-- omit in toc -->
 - [What is `script`?](#What-is-script)
 - [How do I import it?](#How-do-I-import-it)
 - [What can I do with it?](#What-can-I-do-with-it)
-- [Table of contents](#Table-of-contents)
 - [How does it work?](#How-does-it-work)
 - [Everything is a pipe](#Everything-is-a-pipe)
 - [What use is a pipe?](#What-use-is-a-pipe)
@@ -103,16 +101,8 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 	- [Stdout](#Stdout)
 	- [String](#String)
 	- [WriteFile](#WriteFile)
-- [Writing your own pipe operations](#Writing-your-own-pipe-operations)
-	- [Writing a source](#Writing-a-source)
-	- [Writing a filter](#Writing-a-filter)
-	- [Writing a sink](#Writing-a-sink)
-- [Ideas](#Ideas)
-	- [Sources](#Sources-1)
-	- [Filters](#Filters-1)
-	- [Sinks](#Sinks-1)
 - [Examples](#Examples)
-- [Use cases](#Use-cases)
+- [How can I contribute?](#How-can-I-contribute)
 
 # How does it work?
 
@@ -684,117 +674,6 @@ var wrote int
 wrote, err := script.File("source.txt").WriteFile("destination.txt")
 ```
 
-# Writing your own pipe operations
-
-There's nothing to stop you writing your own sources, sinks, or filters (in fact, that would be excellent. Please submit a pull request if you want to add them to the standard operations supplied with `script`.)
-
-## Writing a source
-
-All a pipe source has to do is return a pointer to a `script.Pipe`. To be useful, a pipe needs to have a reader (a data source, such as a file) associated with it.
-
-`Echo()` is a simple example, which just creates a pipe containing a string:
-
-```go
-func Echo(s string) *script.Pipe {
-	return script.NewPipe().WithReader(strings.NewReader(s))
-}
-```
-
-Let's break this down:
-
-* We create a `strings.Reader` to be our data source, using `strings.NewReader` on the supplied string.
-* We create a new pipe with `NewPipe()`.
-* We attach the reader to the pipe with `WithReader()`.
-
-In fact, any `io.Reader` can be the data source for a pipe. Passing it to `WithReader()` will turn it into a `ReadAutoCloser`, which is a wrapper for `io.Reader` that automatically closes the reader once it has been fully read.
-
-
-Here's an implementation of `File()`, for example:
-
-```go
-func File(name string) *script.Pipe {
-	p := script.NewPipe()
-	f, err := os.Open(name)
-	if err != nil {
-		return p.WithError(err)
-	}
-	return p.WithReader(f)
-}
-```
-
-## Writing a filter
-
-Filters are methods on pipes, that return pipes. For example, here's a simple filter which just reads and rejects all input, returning an empty pipe:
-
-```go
-func (p *script.Pipe) RejectEverything() *script.Pipe {
-	if p.Error() != nil {
-		return p
-	}
-	_, err := ioutil.ReadAll(p.Reader)
-	if err != nil {
-		p.SetError(err)
-		return p
-	}
-	return script.Echo("")
-}
-```
-
-Important things to note here:
-
-* The first thing we do is check the pipe's error status. If this is set, we do nothing, and just return the original pipe.
-* If an error occurs, we set the pipe's error status, using `p.SetError()`, and return the pipe.
-
-Filters must not log anything, terminate the program, or return anything but `*script.Pipe`.
-
-As you can see from the example, the pipe's reader is available to you as `p.Reader`. You can do anything with that that you can with an `io.Reader`.
-
-If your method modifies the pipe (for example if it can set an error on the pipe), it must take a pointer receiver, as in this example. Otherwise, it can take a value receiver.
-
-## Writing a sink
-
-Any method on a pipe which returns something other than a pipe is a sink. For example, here's an implementation of `String()`:
-
-```go
-func (p *script.Pipe) String() (string, error) {
-	if p.Error() != nil {
-		return "", p.Error()
-	}
-	res, err := ioutil.ReadAll(p.Reader)
-	if err != nil {
-		p.SetError(err)
-		return "", err
-	}
-	return string(res), nil
-}
-```
-
-Again, the first thing we do is check the error status on the pipe. If it's set, we return the zero value (empty string in this case) and the error.
-
-We then try to read the whole contents of the pipe. If we get an error on reading, we set the pipe's error status and return the zero value and the error.
-
-Otherwise, we return the result of reading the pipe, and a nil error.
-
-# Ideas
-
-These are some ideas I'm playing with for additional features. If you feel like working on one of them, send a pull request. If you have ideas for other features, open an issue (or, better, a pull request).
-
-## Sources
-
-* `Get()` makes a web request, like `curl`, and pipes the result
-* `Net()` makes a network connection to a specified address and port, and reads the connection until it's closed
-* `ListFiles()` takes a filesystem path or glob, and pipes the list of matching files
-* `Find()` pipes a list of files matching various criteria (name, modified time, and so on)
-* `Processes()` pipes the list of running processes, like `ps`.
-
-## Filters
-
-* [Ideas welcome!](https://github.com/bitfield/script/issues/new)
-
-## Sinks
-
-* [Ideas welcome!](https://github.com/bitfield/script/issues/new)
-
 # Examples
 
 Since `script` is designed to help you write system administration programs, a few simple examples of such programs are included in the [examples](examples/) directory:
@@ -808,8 +687,8 @@ Since `script` is designed to help you write system administration programs, a f
 
 [More examples would be welcome!](https://github.com/bitfield/script/pulls)
 
-# Use cases
-
-The best libraries are designed to satisfy real use cases. If you have a sysadmin task which you'd like to implement with `script`, let me know by [opening an issue](https://github.com/bitfield/script/issues/new) - I'd love to hear from you.
-
 If you use `script` for real work (or, for that matter, real play), I'm always very interested to hear about it. Drop me a line to john@bitfieldconsulting.com and tell me how you're using `script` and what you think of it!
+
+# How can I contribute?
+
+See the [contributor's guide](CONTRIBUTING.md) for some helpful tips.

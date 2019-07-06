@@ -13,52 +13,39 @@ import (
 	"strings"
 )
 
-// Match reads from the pipe, and returns a new pipe containing only lines which
-// contain the specified string. If there is an error reading the pipe, the
+// Column reads from the pipe, and returns a new pipe containing only the Nth
+// column of each line in the input, where '1' means the first column, and
+// columns are delimited by whitespace. Specifically, whatever Unicode defines
+// as whitespace ('WSpace=yes'). If there is an error reading the pipe, the
 // pipe's error status is also set.
-func (p *Pipe) Match(s string) *Pipe {
+func (p *Pipe) Column(col int) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
-		if strings.Contains(line, s) {
-			out.WriteString(line)
+		columns := strings.Fields(line)
+		if col <= len(columns) {
+			out.WriteString(columns[col-1])
 			out.WriteRune('\n')
 		}
 	})
 }
 
-// MatchRegexp reads from the pipe, and returns a new pipe containing only lines
-// which match the specified compiled regular expression. If there is an error
-// reading the pipe, the pipe's error status is also set.
-func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
-	return p.EachLine(func(line string, out *strings.Builder) {
-		if re.MatchString(line) {
-			out.WriteString(line)
-			out.WriteRune('\n')
+// Concat reads a list of filenames from the pipe, one per line, and returns a
+// pipe which reads all those files in sequence. If there are any errors (for
+// example, non-existent files), the pipe's error status will be set to the
+// first error encountered, but execution will continue.
+func (p *Pipe) Concat() *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	var readers []io.Reader
+	p.EachLine(func(line string, out *strings.Builder) {
+		input, err := os.Open(line)
+		if err != nil {
+			p.SetError(err)
+			return
 		}
+		readers = append(readers, NewReadAutoCloser(input))
 	})
-}
-
-// Reject reads from the pipe, and returns a new pipe containing only lines
-// which do not contain the specified string. If there is an error reading the
-// pipe, the pipe's error status is also set.
-func (p *Pipe) Reject(s string) *Pipe {
-	return p.EachLine(func(line string, out *strings.Builder) {
-		if !strings.Contains(line, s) {
-			out.WriteString(line)
-			out.WriteRune('\n')
-		}
-	})
-}
-
-// RejectRegexp reads from the pipe, and returns a new pipe containing only
-// lines which don't match the specified compiled regular expression. If there
-// is an error reading the pipe, the pipe's error status is also set.
-func (p *Pipe) RejectRegexp(re *regexp.Regexp) *Pipe {
-	return p.EachLine(func(line string, out *strings.Builder) {
-		if !re.MatchString(line) {
-			out.WriteString(line)
-			out.WriteRune('\n')
-		}
-	})
+	return p.WithReader(io.MultiReader(readers...))
 }
 
 // EachLine calls the specified function for each line of input, passing it the
@@ -96,46 +83,6 @@ func (p *Pipe) Exec(s string) *Pipe {
 		q.SetError(err)
 	}
 	return q.WithReader(bytes.NewReader(output))
-}
-
-// Join reads the contents of the pipe, line by line, and joins them into a
-// single space-separated string. It returns a pipe containing this string. Any
-// terminating newline is preserved.
-func (p *Pipe) Join() *Pipe {
-	if p == nil || p.Error() != nil {
-		return p
-	}
-	result, err := p.String()
-	if err != nil {
-		return p
-	}
-	var terminator string
-	if strings.HasSuffix(result, "\n") {
-		terminator = "\n"
-		result = result[:len(result)-1]
-	}
-	output := strings.ReplaceAll(result, "\n", " ")
-	return Echo(output + terminator)
-}
-
-// Concat reads a list of filenames from the pipe, one per line, and returns a
-// pipe which reads all those files in sequence. If there are any errors (for
-// example, non-existent files), the pipe's error status will be set to the
-// first error encountered, but execution will continue.
-func (p *Pipe) Concat() *Pipe {
-	if p == nil || p.Error() != nil {
-		return p
-	}
-	var readers []io.Reader
-	p.EachLine(func(line string, out *strings.Builder) {
-		input, err := os.Open(line)
-		if err != nil {
-			p.SetError(err)
-			return
-		}
-		readers = append(readers, NewReadAutoCloser(input))
-	})
-	return p.WithReader(io.MultiReader(readers...))
 }
 
 // First reads from the pipe, and returns a new pipe containing only the first N
@@ -202,16 +149,69 @@ func (p *Pipe) Freq() *Pipe {
 	return Echo(output.String())
 }
 
-// Column reads from the pipe, and returns a new pipe containing only the Nth
-// column of each line in the input, where '1' means the first column, and
-// columns are delimited by whitespace. Specifically, whatever Unicode defines
-// as whitespace ('WSpace=yes'). If there is an error reading the pipe, the
+// Join reads the contents of the pipe, line by line, and joins them into a
+// single space-separated string. It returns a pipe containing this string. Any
+// terminating newline is preserved.
+func (p *Pipe) Join() *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	result, err := p.String()
+	if err != nil {
+		return p
+	}
+	var terminator string
+	if strings.HasSuffix(result, "\n") {
+		terminator = "\n"
+		result = result[:len(result)-1]
+	}
+	output := strings.ReplaceAll(result, "\n", " ")
+	return Echo(output + terminator)
+}
+
+// Match reads from the pipe, and returns a new pipe containing only lines which
+// contain the specified string. If there is an error reading the pipe, the
 // pipe's error status is also set.
-func (p *Pipe) Column(col int) *Pipe {
+func (p *Pipe) Match(s string) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
-		columns := strings.Fields(line)
-		if col <= len(columns) {
-			out.WriteString(columns[col-1])
+		if strings.Contains(line, s) {
+			out.WriteString(line)
+			out.WriteRune('\n')
+		}
+	})
+}
+
+// MatchRegexp reads from the pipe, and returns a new pipe containing only lines
+// which match the specified compiled regular expression. If there is an error
+// reading the pipe, the pipe's error status is also set.
+func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
+	return p.EachLine(func(line string, out *strings.Builder) {
+		if re.MatchString(line) {
+			out.WriteString(line)
+			out.WriteRune('\n')
+		}
+	})
+}
+
+// Reject reads from the pipe, and returns a new pipe containing only lines
+// which do not contain the specified string. If there is an error reading the
+// pipe, the pipe's error status is also set.
+func (p *Pipe) Reject(s string) *Pipe {
+	return p.EachLine(func(line string, out *strings.Builder) {
+		if !strings.Contains(line, s) {
+			out.WriteString(line)
+			out.WriteRune('\n')
+		}
+	})
+}
+
+// RejectRegexp reads from the pipe, and returns a new pipe containing only
+// lines which don't match the specified compiled regular expression. If there
+// is an error reading the pipe, the pipe's error status is also set.
+func (p *Pipe) RejectRegexp(re *regexp.Regexp) *Pipe {
+	return p.EachLine(func(line string, out *strings.Builder) {
+		if !re.MatchString(line) {
+			out.WriteString(line)
 			out.WriteRune('\n')
 		}
 	})

@@ -56,6 +56,23 @@ func (p *Pipe) ExitStatus() int {
 	return status
 }
 
+// Read reads up to len(b) bytes from the data source into b. It returns the
+// number of bytes read and any error encountered. At end of file, or on a nil
+// pipe, Read returns 0, io.EOF.
+func (p *Pipe) Read(b []byte) (int, error) {
+	if p == nil {
+		return 0, io.EOF
+	}
+	return p.Reader.Read(b)
+}
+
+// SetError sets the pipe's error status to the specified error.
+func (p *Pipe) SetError(err error) {
+	if p != nil {
+		p.err = err
+	}
+}
+
 // WithReader takes an io.Reader, and associates the pipe with that reader. If
 // necessary, the reader will be automatically closed once it has been
 // completely read.
@@ -67,13 +84,6 @@ func (p *Pipe) WithReader(r io.Reader) *Pipe {
 	return p
 }
 
-// SetError sets the pipe's error status to the specified error.
-func (p *Pipe) SetError(err error) {
-	if p != nil {
-		p.err = err
-	}
-}
-
 // WithError sets the pipe's error status to the specified error and returns the
 // modified pipe.
 func (p *Pipe) WithError(err error) *Pipe {
@@ -81,12 +91,3 @@ func (p *Pipe) WithError(err error) *Pipe {
 	return p
 }
 
-// Read reads up to len(b) bytes from the data source into b. It returns the
-// number of bytes read and any error encountered. At end of file, or on a nil
-// pipe, Read returns 0, io.EOF.
-func (p *Pipe) Read(b []byte) (int, error) {
-	if p == nil {
-		return 0, io.EOF
-	}
-	return p.Reader.Read(b)
-}

@@ -5,16 +5,14 @@ import (
 	"strings"
 )
 
-// File returns a *Pipe associated with the specified file. This is useful for
-// starting pipelines. If there is an error opening the file, the pipe's error
-// status will be set.
-func File(name string) *Pipe {
-	p := NewPipe()
-	f, err := os.Open(name)
-	if err != nil {
-		return p.WithError(err)
+// Args creates a pipe containing the program's command-line arguments, one per
+// line.
+func Args() *Pipe {
+	var s strings.Builder
+	for _, a := range os.Args[1:] {
+		s.WriteString(a + "\n")
 	}
-	return p.WithReader(f)
+	return Echo(s.String())
 }
 
 // Echo returns a pipe containing the supplied string.
@@ -29,17 +27,19 @@ func Exec(s string) *Pipe {
 	return NewPipe().Exec(s)
 }
 
+// File returns a *Pipe associated with the specified file. This is useful for
+// starting pipelines. If there is an error opening the file, the pipe's error
+// status will be set.
+func File(name string) *Pipe {
+	p := NewPipe()
+	f, err := os.Open(name)
+	if err != nil {
+		return p.WithError(err)
+	}
+	return p.WithReader(f)
+}
+
 // Stdin returns a pipe which reads from the program's standard input.
 func Stdin() *Pipe {
 	return NewPipe().WithReader(os.Stdin)
-}
-
-// Args creates a pipe containing the program's command-line arguments, one per
-// line.
-func Args() *Pipe {
-	var s strings.Builder
-	for _, a := range os.Args[1:] {
-		s.WriteString(a + "\n")
-	}
-	return Echo(s.String())
 }
