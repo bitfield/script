@@ -20,28 +20,22 @@ func Args() *Pipe {
 // ListFiles contains list of files in `path` as string per line
 // names of files are relative to `path`
 func ListFiles(path string) *Pipe {
-	p := NewPipe()
-
-	if strings.Contains(path, "*") {
+	if strings.ContainsAny(path, "[]^*?\\{}!") {
 		fileNames, err := filepath.Glob(path)
 		if err != nil {
-			return p.WithError(err)
+			return NewPipe().WithError(err)
 		}
-
-		return p.WithReader(strings.NewReader(strings.Join(fileNames, "\n")))
+		return Echo(strings.Join(fileNames, "\n"))
 	}
-
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
-		return p.WithError(err)
+		return NewPipe().WithError(err)
 	}
-
 	var fileNames []string
 	for _, f := range files {
 		fileNames = append(fileNames, filepath.Join(path, f.Name()))
 	}
-
-	return p.WithReader(strings.NewReader(strings.Join(fileNames, "\n")))
+	return Echo(strings.Join(fileNames, "\n"))
 }
 
 // Echo returns a pipe containing the supplied string.

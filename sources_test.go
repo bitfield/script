@@ -1,6 +1,7 @@
 package script
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -26,36 +27,39 @@ func TestFile(t *testing.T) {
 	}
 }
 
-func TestListFiles(t *testing.T) {
-	// first case
-	want := "testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip"
-	p := ListFiles("testdata/multiple_files")
-	gotRaw, err := ioutil.ReadAll(p.Reader)
+func TestListFilesMultipleFiles(t *testing.T) {
+	t.Parallel()
+	dir := "testdata/multiple_files"
+	want := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip", dir, dir, dir)
+	p := ListFiles(dir)
+	got, err := p.String()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-
-	got := string(gotRaw)
 	if got != want {
-		t.Errorf("want %q, got %q", want, got)
+		t.Errorf("In %q: want %q, got %q", dir, want, got)
 	}
+}
 
-	// second case
-	q := ListFiles("nonexistentpath")
-	if q.Error() == nil {
+func TestListFilesNonexistent(t *testing.T) {
+	t.Parallel()
+	p := ListFiles("nonexistentpath")
+	if p.Error() == nil {
 		t.Errorf("want error status on listing non-existent path, but got nil")
 	}
+}
 
-	// third case
-	want = "testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt"
-	z := ListFiles("testdata/multiple_files/*.txt")
-	gotRaw, err = ioutil.ReadAll(z.Reader)
+func TestListFilesGlob(t *testing.T) {
+	t.Parallel()
+	dir := "testdata/multiple_files"
+	want := fmt.Sprintf("%s/1.txt\n%s/2.txt", dir, dir)
+	p := ListFiles("testdata/multi?le_files/*.txt")
+	got, err := p.String()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	got = string(gotRaw)
 	if want != got {
-		t.Errorf("want %q, got %q", want, got)
+		t.Errorf("In %q: want %q, got %q", dir, want, got)
 	}
 }
 

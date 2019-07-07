@@ -80,6 +80,7 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 		- [Exit status](#Exit-status)
 		- [Error output](#Error-output)
 	- [File](#File)
+	- [ListFiles](#ListFiles)
 	- [Stdin](#Stdin)
 - [Filters](#Filters)
 	- [Column](#Column)
@@ -377,6 +378,20 @@ output, err := p.String()
 fmt.Println(output)
 // Output: contents of file
 ```
+
+## ListFiles
+
+`ListFiles()` Creates a pipe with list of files under the given path or glob.
+Each file is represented by path starting from argument provided for a function.
+Paths are newline separated.
+More concrete example in `examples/ls`.
+```go
+p := script.ListFiles("path/to/dir")
+fileNames, err := p.String()
+fmt.Println(fileNames)
+// Output: path/to/dir/1.txt\npath/to/dir/2.txt
+```
+
 
 ## Stdin
 
