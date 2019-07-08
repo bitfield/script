@@ -92,7 +92,7 @@ Remember people are using `script` to write mission-critical system administrati
 
 One final point: a common source of errors in Go programs is methods being called on zero or nil values. All `script` pipe methods should handle this situation, as well as being called on a valid pipe that just happens to have no contents (such as a newly-created pipe).
 
-To ensure this, we call every possible method on (in turn) a nil pipe, a zero pipe, and an empty pipe, using the `doMethodsOnPipe` helper function. If you add a new method to `script`, add a call to your method to this helper function, and it will automatically stress tested.
+To ensure this, we call every possible method on (in turn) a nil pipe, a zero pipe, and an empty pipe, using the `doMethodsOnPipe` helper function. If you add a new method to `script`, add a call to your method to this helper function, and it will automatically be stress tested.
 
 Methods on a nil, zero, or empty pipe should not necessarily do nothing; that depends on the method semantics. For example, `WriteFile()` on an empty pipe creates the required file, writes nothing to it, and closes it. This is correct behaviour.
 
