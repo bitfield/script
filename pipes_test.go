@@ -119,6 +119,10 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.MatchRegexp(regexp.MustCompile(".*"))
 	action = "Read()"
 	p.Read([]byte{})
+	action = "Replace()"
+	p.Replace("old", "new")
+	action = "ReplaceRegexp()"
+	p.ReplaceRegexp(regexp.MustCompile(".*"), "")
 	action = "SetError()"
 	p.SetError(nil)
 	action = "Stdout()"

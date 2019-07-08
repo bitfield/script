@@ -93,6 +93,8 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 	- [MatchRegexp](#MatchRegexp)
 	- [Reject](#Reject)
 	- [RejectRegexp](#RejectRegexp)
+	- [Replace](#Replace)
+	- [ReplaceRegexp](#ReplaceRegexp)
 - [Sinks](#Sinks)
 	- [AppendFile](#AppendFile)
 	- [Bytes](#Bytes)
@@ -265,20 +267,21 @@ func main() {
 
 If you're already familiar with shell scripting and the Unix toolset, here is a rough guide to the equivalent `script` operation for each listed Unix command.
 
-| Unix / shell       | `script` equivalent                                       |
-| ------------------ | --------------------------------------------------------- |
-| (any program name) | [`Exec()`](#exec)                                         |
-| `>`                | [`WriteFile()`](#writefile)                               |
-| `>>`               | [`AppendFile()`](#appendfile)                             |
-| `$*`               | [`Args()`](#args)                                         |
-| `cat`              | [`File()`](#file) / [`Concat()`](#concat)                 |
-| `cut`              | [`Column()`](#column)                                     |
-| `echo`             | [`Echo()`](#echo)                                         |
-| `grep`             | [`Match()`](#match) / [`MatchRegexp()`](#matchregexp)     |
-| `grep -v`          | [`Reject()`](#reject) / [`RejectRegexp()`](#rejectregexp) |
-| `head`             | [`First()`](#first)                                       |
-| `uniq -c`          | [`Freq()`](#freq)                                         |
-| `wc -l`            | [`CountLines()`](#countlines)                             |
+| Unix / shell       | `script` equivalent                                           |
+| ------------------ | ------------------------------------------------------------- |
+| (any program name) | [`Exec()`](#exec)                                             |
+| `>`                | [`WriteFile()`](#writefile)                                   |
+| `>>`               | [`AppendFile()`](#appendfile)                                 |
+| `$*`               | [`Args()`](#args)                                             |
+| `cat`              | [`File()`](#file) / [`Concat()`](#concat)                     |
+| `cut`              | [`Column()`](#column)                                         |
+| `echo`             | [`Echo()`](#echo)                                             |
+| `grep`             | [`Match()`](#match) / [`MatchRegexp()`](#matchregexp)         |
+| `grep -v`          | [`Reject()`](#reject) / [`RejectRegexp()`](#rejectregexp)     |
+| `head`             | [`First()`](#first)                                           |
+| `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
+| `uniq -c`          | [`Freq()`](#freq)                                             |
+| `wc -l`            | [`CountLines()`](#countlines)                                 |
 
 # Sources, filters, and sinks
 
@@ -576,6 +579,22 @@ p := script.File("test.txt").Match("Error").Reject("false alarm")
 
 ```go
 p := script.File("test.txt").Match("Error").RejectRegexp(regexp.MustCompile(`false|bogus`))
+```
+
+## Replace
+
+`Replace()` returns a pipe which filters its input by replacing all occurrences of one string with another, like Unix `sed`:
+
+```go
+p := script.File("test.txt").Replace("old", "new")
+```
+
+## ReplaceRegexp
+
+`ReplaceRegexp()` returns a pipe which filters its input by replacing all matches of a compiled regular expression with a supplied replacement string, like Unix `sed`:
+
+```go
+p := script.File("test.txt").ReplaceRegexp(regexp.MustCompile("Gol[a-z]{1}ng"), "Go")
 ```
 
 # Sinks
