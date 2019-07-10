@@ -111,3 +111,16 @@ func TestArgs(t *testing.T) {
 	}
 
 }
+
+func TestProcesses(t *testing.T) {
+	t.Parallel()
+	want := "1 /sbin/init\n"
+	p := Processes().Match("/sbin/init")
+	got, err := p.String()
+	if err != nil {
+		t.Error(err)
+	}
+	if want != got {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
