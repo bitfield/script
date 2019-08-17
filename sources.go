@@ -31,7 +31,7 @@ func ListFiles(path string) *Pipe {
 	if err != nil {
 		return NewPipe().WithError(err)
 	}
-	var fileNames []string
+	fileNames := make([]string, 0, len(files))
 	for _, f := range files {
 		fileNames = append(fileNames, filepath.Join(path, f.Name()))
 	}

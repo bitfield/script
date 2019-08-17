@@ -37,7 +37,7 @@ func TestListFilesMultipleFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 	if got != want {
-		t.Errorf("In %q: want %q, got %q", dir, want, got)
+		t.Errorf("Want %q, got %q", want, got)
 	}
 }
 
@@ -45,7 +45,7 @@ func TestListFilesNonexistent(t *testing.T) {
 	t.Parallel()
 	p := ListFiles("nonexistentpath")
 	if p.Error() == nil {
-		t.Errorf("want error status on listing non-existent path, but got nil")
+		t.Error("want error status on listing non-existent path, but got nil")
 	}
 }
 
@@ -59,7 +59,7 @@ func TestListFilesGlob(t *testing.T) {
 		t.Fatal(err)
 	}
 	if want != got {
-		t.Errorf("In %q: want %q, got %q", dir, want, got)
+		t.Errorf("Want %q, got %q", want, got)
 	}
 }
 

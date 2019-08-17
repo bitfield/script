@@ -381,15 +381,18 @@ fmt.Println(output)
 
 ## ListFiles
 
-`ListFiles()` Creates a pipe with list of files under the given path or glob.
-Each file is represented by path starting from argument provided for a function.
-Paths are newline separated.
-More concrete example in `examples/ls`.
+`ListFiles()` lists files, like Unix ls. It creates a pipe containing all files 
+and directories matching the supplied path specification, one per line.
+This can be the name of a directory (/path/to/dir), the name of a file (/path/to/file),
+or a glob (wildcard expression) conforming to the syntax accepted by filepath.Match (/path/to/*).
 ```go
-p := script.ListFiles("path/to/dir")
-fileNames, err := p.String()
-fmt.Println(fileNames)
-// Output: path/to/dir/1.txt\npath/to/dir/2.txt
+p := script.ListFiles("/tmp/*.php")
+files, err := p.String()
+if err != nil {
+	log.Fatal(err)
+}
+fmt.Println("found suspicious PHP files in /tmp:")
+fmt.Println(files)
 ```
 
 
@@ -718,6 +721,7 @@ Since `script` is designed to help you write system administration programs, a f
 * [head](examples/head/main.go)
 * [echo](examples/echo/main.go)
 * [visitors](examples/visitors/main.go)
+* [ls](examples/ls/main.go)
 
 [More examples would be welcome!](https://github.com/bitfield/script/pulls)
 

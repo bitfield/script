@@ -13,10 +13,26 @@ package main
 
 import (
 	"os"
+	"regexp"
 
 	"github.com/bitfield/script"
 )
 
 func main() {
-	script.ListFiles(os.Args[1]).Stdout()
+	var listPath string
+	var err error
+	if len(os.Args) > 1 {
+		listPath = os.Args[1]
+	} else {
+		listPath, err = os.Getwd()
+	}
+	if err != nil {
+		panic(err)
+	}
+	//dont show files starting with dot
+	reg, err := regexp.Compile("(/[^/])*/\\.[^/]*$")
+	if err != nil {
+		panic(err)
+	}
+	script.ListFiles(listPath).RejectRegexp(reg).Stdout()
 }
