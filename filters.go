@@ -3,6 +3,7 @@ package script
 import (
 	"bufio"
 	"bytes"
+	"container/ring"
 	"fmt"
 	"io"
 	"os"
@@ -167,6 +168,38 @@ func (p *Pipe) Join() *Pipe {
 	}
 	output := strings.ReplaceAll(result, "\n", " ")
 	return Echo(output + terminator)
+}
+
+// Last reads from the pipe, and returns a new pipe containing only the last N
+// lines. If there is an error reading the pipe, the pipe's error status is also
+// set.
+func (p *Pipe) Last(lines int) *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	defer p.Close()
+	if lines == 0 {
+		return NewPipe()
+	}
+	scanner := bufio.NewScanner(p.Reader)
+	input := ring.New(lines)
+	for scanner.Scan() {
+		input.Value = scanner.Text()
+		input = input.Next()
+	}
+	output := strings.Builder{}
+	input.Do(func(p interface{}) {
+		value, ok := p.(string)
+		if ok {
+			output.WriteString(value)
+			output.WriteRune('\n')
+		}
+	})
+	err := scanner.Err()
+	if err != nil {
+		p.SetError(err)
+	}
+	return Echo(output.String())
 }
 
 // Match reads from the pipe, and returns a new pipe containing only lines which

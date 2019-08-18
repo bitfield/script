@@ -311,6 +311,49 @@ func TestFirst(t *testing.T) {
 	}
 }
 
+func TestLast(t *testing.T) {
+	t.Parallel()
+	want, err := ioutil.ReadFile("testdata/last10.golden.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	input := File("testdata/first.input.txt")
+	got, err := input.Last(10).Bytes()
+	if err != nil {
+		t.Error(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Errorf("want %q, got %q", want, got)
+	}
+	_, err = ioutil.ReadAll(input.Reader)
+	if err == nil {
+		t.Error("input not closed after reading")
+	}
+	input = File("testdata/first.input.txt")
+	gotZero, err := input.Last(0).CountLines()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotZero != 0 {
+		t.Errorf("want 0 lines, got %d lines", gotZero)
+	}
+	_, err = ioutil.ReadAll(input.Reader)
+	if err == nil {
+		t.Error("input not closed after reading")
+	}
+	want, err = File("testdata/first.input.txt").Bytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err = File("testdata/first.input.txt").Last(100).Bytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
 func TestFreq(t *testing.T) {
 	t.Parallel()
 	want, err := ioutil.ReadFile("testdata/freq.golden.txt")

@@ -97,6 +97,7 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 	- [RejectRegexp](#rejectregexp)
 	- [Replace](#replace)
 	- [ReplaceRegexp](#replaceregexp)
+	- [Last](#last)
 - [Sinks](#sinks)
 	- [AppendFile](#appendfile)
 	- [Bytes](#bytes)
@@ -283,6 +284,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `head`             | [`First()`](#first)                                           |
 | `ls`               | [`ListFiles()`](#listfiles)                                   |
 | `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
+| `tail`             | [`Last()`](#last)                                             |
 | `uniq -c`          | [`Freq()`](#freq)                                             |
 | `wc -l`            | [`CountLines()`](#countlines)                                 |
 
@@ -628,6 +630,15 @@ p := script.File("test.txt").Replace("old", "new")
 p := script.File("test.txt").ReplaceRegexp(regexp.MustCompile("Gol[a-z]{1}ng"), "Go")
 ```
 
+## Last
+
+`Last()` reads its input and passes on the last N lines of it (like Unix [`tail`](examples/tail/main.go)):
+
+```go
+script.Stdin().Last(10).Stdout()
+```
+
+
 # Sinks
 
 Sinks are operations which return some data from a pipe, ending the pipeline.
@@ -733,6 +744,8 @@ Since `script` is designed to help you write system administration programs, a f
 * [grep](examples/grep/main.go)
 * [head](examples/head/main.go)
 * [echo](examples/echo/main.go)
+* [tail](examples/tail/main.go)
+* [least_freq](examples/least_freq/main.go)
 * [visitors](examples/visitors/main.go)
 * [ls](examples/ls/main.go)
 
