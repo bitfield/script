@@ -17,25 +17,26 @@ func Args() *Pipe {
 	return Echo(s.String())
 }
 
-// ListFiles contains list of files in `path` as string per line
-// names of files are relative to `path`
+// ListFiles creates a pipe containing the files and directories matching the
+// supplied path, one per line. The path may be a glob, conforming to
+// filepath.Match syntax.
 func ListFiles(path string) *Pipe {
 	if strings.ContainsAny(path, "[]^*?\\{}!") {
 		fileNames, err := filepath.Glob(path)
 		if err != nil {
 			return NewPipe().WithError(err)
 		}
-		return Echo(strings.Join(fileNames, "\n"))
+		return Slice(fileNames)
 	}
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return NewPipe().WithError(err)
 	}
-	fileNames := make([]string, 0, len(files))
-	for _, f := range files {
-		fileNames = append(fileNames, filepath.Join(path, f.Name()))
+	fileNames := make([]string, len(files))
+	for i, f := range files {
+		fileNames[i] = filepath.Join(path, f.Name())
 	}
-	return Echo(strings.Join(fileNames, "\n"))
+	return Slice(fileNames)
 }
 
 // Echo returns a pipe containing the supplied string.
@@ -60,6 +61,11 @@ func File(name string) *Pipe {
 		return p.WithError(err)
 	}
 	return p.WithReader(f)
+}
+
+// Slice returns a pipe containing each element of the supplied slice of strings, one per line.
+func Slice(s []string) *Pipe {
+	return Echo(strings.Join(s, "\n") + "\n")
 }
 
 // Stdin returns a pipe which reads from the program's standard input.
