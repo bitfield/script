@@ -101,8 +101,7 @@ func TestListFilesMultipleFiles(t *testing.T) {
 	t.Parallel()
 	dir := "testdata/multiple_files"
 	want := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip\n", dir, dir, dir)
-	p := ListFiles(dir)
-	got, err := p.String()
+	got, err := ListFiles(dir).String()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,12 +118,23 @@ func TestListFilesNonexistent(t *testing.T) {
 	}
 }
 
+func TestListFilesSingle(t *testing.T) {
+	t.Parallel()
+	got, err := ListFiles("testdata/multiple_files/1.txt").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "testdata/multiple_files/1.txt"
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestListFilesGlob(t *testing.T) {
 	t.Parallel()
 	dir := "testdata/multiple_files"
 	want := fmt.Sprintf("%s/1.txt\n%s/2.txt\n", dir, dir)
-	p := ListFiles("testdata/multi?le_files/*.txt")
-	got, err := p.String()
+	got, err := ListFiles("testdata/multi?le_files/*.txt").String()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,9 +145,8 @@ func TestListFilesGlob(t *testing.T) {
 
 func TestSlice(t *testing.T) {
 	t.Parallel()
-	p := Slice([]string{"0", "2", "3"})
 	want := "1\n2\n3\n"
-	got, err := p.String()
+	got, err := Slice([]string{"1", "2", "3"}).String()
 	if err != nil {
 		t.Fatal(err)
 	}

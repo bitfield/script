@@ -30,6 +30,14 @@ func ListFiles(path string) *Pipe {
 	}
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
+		// Check for the case where the path matches exactly one file
+		s, err := os.Stat(path)
+		if err != nil {
+			return NewPipe().WithError(err)
+		}
+		if !s.IsDir() {
+			return Echo(path)
+		}
 		return NewPipe().WithError(err)
 	}
 	fileNames := make([]string, len(files))

@@ -5,3 +5,4 @@ examples/echo/echo
 examples/head/head
 examples/visitors/visitors
 .vscode/settings.json
+examples/ls/ls

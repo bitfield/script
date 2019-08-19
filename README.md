@@ -281,6 +281,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `grep`             | [`Match()`](#match) / [`MatchRegexp()`](#matchregexp)         |
 | `grep -v`          | [`Reject()`](#reject) / [`RejectRegexp()`](#rejectregexp)     |
 | `head`             | [`First()`](#first)                                           |
+| `ls`               | [`ListFiles()`](#listfiles)                                   |
 | `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
 | `uniq -c`          | [`Freq()`](#freq)                                             |
 | `wc -l`            | [`CountLines()`](#countlines)                                 |
@@ -382,7 +383,7 @@ fmt.Println(output)
 
 ## ListFiles
 
-`ListFiles()` lists files, like Unix [`ls`](examples/ls/main.go). It creates a pipe containing all files and directories matching the supplied path specification, one per line. This can be the name of a directory (`/path/to/dir`), the name of a file (`/path/to/file`), or a _glob_ (wildcard expression) conforming to the syntax accepted by [filepath.Glob](https://golang.org/pkg/path/filepath/#Match) (`/path/to/*`).
+`ListFiles()` lists files, like Unix [`ls`](examples/ls/main.go). It creates a pipe containing all files and directories matching the supplied path specification, one per line. This can be the name of a directory (`/path/to/dir`), the name of a file (`/path/to/file`), or a _glob_ (wildcard expression) conforming to the syntax accepted by [filepath.Match()](https://golang.org/pkg/path/filepath/#Match) (`/path/to/*`).
 
 ```go
 p := script.ListFiles("/tmp/*.php")
