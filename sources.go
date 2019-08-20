@@ -1,7 +1,9 @@
 package script
 
 import (
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -13,6 +15,36 @@ func Args() *Pipe {
 		s.WriteString(a + "\n")
 	}
 	return Echo(s.String())
+}
+
+// ListFiles creates a pipe containing the files and directories matching the
+// supplied path, one per line. The path may be a glob, conforming to
+// filepath.Match syntax.
+func ListFiles(path string) *Pipe {
+	if strings.ContainsAny(path, "[]^*?\\{}!") {
+		fileNames, err := filepath.Glob(path)
+		if err != nil {
+			return NewPipe().WithError(err)
+		}
+		return Slice(fileNames)
+	}
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		// Check for the case where the path matches exactly one file
+		s, err := os.Stat(path)
+		if err != nil {
+			return NewPipe().WithError(err)
+		}
+		if !s.IsDir() {
+			return Echo(path)
+		}
+		return NewPipe().WithError(err)
+	}
+	fileNames := make([]string, len(files))
+	for i, f := range files {
+		fileNames[i] = filepath.Join(path, f.Name())
+	}
+	return Slice(fileNames)
 }
 
 // Echo returns a pipe containing the supplied string.
@@ -37,6 +69,11 @@ func File(name string) *Pipe {
 		return p.WithError(err)
 	}
 	return p.WithReader(f)
+}
+
+// Slice returns a pipe containing each element of the supplied slice of strings, one per line.
+func Slice(s []string) *Pipe {
+	return Echo(strings.Join(s, "\n") + "\n")
 }
 
 // Stdin returns a pipe which reads from the program's standard input.

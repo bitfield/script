@@ -59,52 +59,54 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 ```
 
 # Table of contents<!-- omit in toc -->
-- [What is `script`?](#What-is-script)
-- [How do I import it?](#How-do-I-import-it)
-- [What can I do with it?](#What-can-I-do-with-it)
-- [How does it work?](#How-does-it-work)
-- [Everything is a pipe](#Everything-is-a-pipe)
-- [What use is a pipe?](#What-use-is-a-pipe)
-- [Handling errors](#Handling-errors)
-- [Getting output](#Getting-output)
-- [Errors](#Errors)
-- [Closing pipes](#Closing-pipes)
-- [Why not just use shell?](#Why-not-just-use-shell)
-- [A real-world example](#A-real-world-example)
-- [Quick start: Unix equivalents](#Quick-start-Unix-equivalents)
-- [Sources, filters, and sinks](#Sources-filters-and-sinks)
-- [Sources](#Sources)
-	- [Args](#Args)
-	- [Echo](#Echo)
-	- [Exec](#Exec)
-		- [Exit status](#Exit-status)
-		- [Error output](#Error-output)
-	- [File](#File)
-	- [Stdin](#Stdin)
-- [Filters](#Filters)
-	- [Column](#Column)
-	- [Concat](#Concat)
-	- [EachLine](#EachLine)
-	- [Exec](#Exec-1)
-	- [First](#First)
-	- [Freq](#Freq)
-	- [Join](#Join)
-	- [Match](#Match)
-	- [MatchRegexp](#MatchRegexp)
-	- [Reject](#Reject)
-	- [RejectRegexp](#RejectRegexp)
-	- [Replace](#Replace)
-	- [ReplaceRegexp](#ReplaceRegexp)
-- [Sinks](#Sinks)
-	- [AppendFile](#AppendFile)
-	- [Bytes](#Bytes)
-	- [CountLines](#CountLines)
-	- [Read](#Read)
-	- [Stdout](#Stdout)
-	- [String](#String)
-	- [WriteFile](#WriteFile)
-- [Examples](#Examples)
-- [How can I contribute?](#How-can-I-contribute)
+- [What is `script`?](#what-is-script)
+- [How do I import it?](#how-do-i-import-it)
+- [What can I do with it?](#what-can-i-do-with-it)
+- [How does it work?](#how-does-it-work)
+- [Everything is a pipe](#everything-is-a-pipe)
+- [What use is a pipe?](#what-use-is-a-pipe)
+- [Handling errors](#handling-errors)
+- [Getting output](#getting-output)
+- [Errors](#errors)
+- [Closing pipes](#closing-pipes)
+- [Why not just use shell?](#why-not-just-use-shell)
+- [A real-world example](#a-real-world-example)
+- [Quick start: Unix equivalents](#quick-start-unix-equivalents)
+- [Sources, filters, and sinks](#sources-filters-and-sinks)
+- [Sources](#sources)
+	- [Args](#args)
+	- [Echo](#echo)
+	- [Exec](#exec)
+		- [Exit status](#exit-status)
+		- [Error output](#error-output)
+	- [File](#file)
+	- [ListFiles](#listfiles)
+	- [Slice](#slice)
+	- [Stdin](#stdin)
+- [Filters](#filters)
+	- [Column](#column)
+	- [Concat](#concat)
+	- [EachLine](#eachline)
+	- [Exec](#exec-1)
+	- [First](#first)
+	- [Freq](#freq)
+	- [Join](#join)
+	- [Match](#match)
+	- [MatchRegexp](#matchregexp)
+	- [Reject](#reject)
+	- [RejectRegexp](#rejectregexp)
+	- [Replace](#replace)
+	- [ReplaceRegexp](#replaceregexp)
+- [Sinks](#sinks)
+	- [AppendFile](#appendfile)
+	- [Bytes](#bytes)
+	- [CountLines](#countlines)
+	- [Read](#read)
+	- [Stdout](#stdout)
+	- [String](#string)
+	- [WriteFile](#writefile)
+- [Examples](#examples)
+- [How can I contribute?](#how-can-i-contribute)
 
 # How does it work?
 
@@ -279,6 +281,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `grep`             | [`Match()`](#match) / [`MatchRegexp()`](#matchregexp)         |
 | `grep -v`          | [`Reject()`](#reject) / [`RejectRegexp()`](#rejectregexp)     |
 | `head`             | [`First()`](#first)                                           |
+| `ls`               | [`ListFiles()`](#listfiles)                                   |
 | `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
 | `uniq -c`          | [`Freq()`](#freq)                                             |
 | `wc -l`            | [`CountLines()`](#countlines)                                 |
@@ -376,6 +379,34 @@ p = script.File("test.txt")
 output, err := p.String()
 fmt.Println(output)
 // Output: contents of file
+```
+
+## ListFiles
+
+`ListFiles()` lists files, like Unix [`ls`](examples/ls/main.go). It creates a pipe containing all files and directories matching the supplied path specification, one per line. This can be the name of a directory (`/path/to/dir`), the name of a file (`/path/to/file`), or a _glob_ (wildcard expression) conforming to the syntax accepted by [filepath.Match()](https://golang.org/pkg/path/filepath/#Match) (`/path/to/*`).
+
+```go
+p := script.ListFiles("/tmp/*.php")
+files, err := p.String()
+if err != nil {
+	log.Fatal(err)
+}
+fmt.Println("found suspicious PHP files in /tmp:")
+fmt.Println(files)
+```
+
+## Slice
+
+`Slice()` creates a pipe from a slice of strings, one per line.
+
+```go
+p := Slice([]string{"1", "2", "3"})
+output, err := p.String()
+fmt.Println(output)
+// Output:
+1
+2
+3
 ```
 
 ## Stdin
@@ -703,6 +734,7 @@ Since `script` is designed to help you write system administration programs, a f
 * [head](examples/head/main.go)
 * [echo](examples/echo/main.go)
 * [visitors](examples/visitors/main.go)
+* [ls](examples/ls/main.go)
 
 [More examples would be welcome!](https://github.com/bitfield/script/pulls)
 

@@ -1,29 +1,31 @@
 package script
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
-func TestFile(t *testing.T) {
+func TestArgs(t *testing.T) {
 	t.Parallel()
-	wantRaw, _ := ioutil.ReadFile("testdata/test.txt") // ignoring error
-	want := string(wantRaw)
-	p := File("testdata/test.txt")
-	gotRaw, err := ioutil.ReadAll(p.Reader)
+	// dummy test to prove coverage
+	Args()
+	// now the real test
+	cmd := exec.Command(os.Args[0], "hello", "world")
+	cmd.Env = append(os.Environ(), "SCRIPT_TEST=args")
+	got, err := cmd.Output()
 	if err != nil {
 		t.Error(err)
 	}
-	got := string(gotRaw)
-	if got != want {
-		t.Errorf("want %q, got %q", want, got)
+	want := "hello\nworld\n"
+	if string(got) != want {
+		t.Errorf("want %q, got %q", want, string(got))
 	}
-	q := File("doesntexist")
-	if q.Error() == nil {
-		t.Errorf("want error status on opening non-existent file, but got nil")
-	}
+
 }
 
 func TestEcho(t *testing.T) {
@@ -76,6 +78,83 @@ func TestExec(t *testing.T) {
 	}
 }
 
+func TestFile(t *testing.T) {
+	t.Parallel()
+	wantRaw, _ := ioutil.ReadFile("testdata/test.txt") // ignoring error
+	want := string(wantRaw)
+	p := File("testdata/test.txt")
+	gotRaw, err := ioutil.ReadAll(p.Reader)
+	if err != nil {
+		t.Error(err)
+	}
+	got := string(gotRaw)
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+	q := File("doesntexist")
+	if q.Error() == nil {
+		t.Errorf("want error status on opening non-existent file, but got nil")
+	}
+}
+
+func TestListFilesMultipleFiles(t *testing.T) {
+	t.Parallel()
+	dir := "testdata/multiple_files"
+	want := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip\n", dir, dir, dir)
+	got, err := ListFiles(dir).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Errorf("Want %q, got %q", want, got)
+	}
+}
+
+func TestListFilesNonexistent(t *testing.T) {
+	t.Parallel()
+	p := ListFiles("nonexistentpath")
+	if p.Error() == nil {
+		t.Error("want error status on listing non-existent path, but got nil")
+	}
+}
+
+func TestListFilesSingle(t *testing.T) {
+	t.Parallel()
+	got, err := ListFiles("testdata/multiple_files/1.txt").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "testdata/multiple_files/1.txt"
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestListFilesGlob(t *testing.T) {
+	t.Parallel()
+	dir := "testdata/multiple_files"
+	want := fmt.Sprintf("%s/1.txt\n%s/2.txt\n", dir, dir)
+	got, err := ListFiles("testdata/multi?le_files/*.txt").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Errorf("Want %q, got %q", want, got)
+	}
+}
+
+func TestSlice(t *testing.T) {
+	t.Parallel()
+	want := "1\n2\n3\n"
+	got, err := Slice([]string{"1", "2", "3"}).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestStdin(t *testing.T) {
 	t.Parallel()
 	// dummy test to prove coverage
@@ -92,22 +171,4 @@ func TestStdin(t *testing.T) {
 	if string(got) != want {
 		t.Errorf("want %q, got %q", want, string(got))
 	}
-}
-
-func TestArgs(t *testing.T) {
-	t.Parallel()
-	// dummy test to prove coverage
-	Args()
-	// now the real test
-	cmd := exec.Command(os.Args[0], "hello", "world")
-	cmd.Env = append(os.Environ(), "SCRIPT_TEST=args")
-	got, err := cmd.Output()
-	if err != nil {
-		t.Error(err)
-	}
-	want := "hello\nworld\n"
-	if string(got) != want {
-		t.Errorf("want %q, got %q", want, string(got))
-	}
-
 }
