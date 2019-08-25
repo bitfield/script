@@ -17,6 +17,30 @@ func Args() *Pipe {
 	return Echo(s.String())
 }
 
+// Echo returns a pipe containing the supplied string.
+func Echo(s string) *Pipe {
+	return NewPipe().WithReader(strings.NewReader(s))
+}
+
+// Exec runs an external command and returns a pipe containing the output. If
+// the command had a non-zero exit status, the pipe's error status will also be
+// set to the string "exit status X", where X is the integer exit status.
+func Exec(s string) *Pipe {
+	return NewPipe().Exec(s)
+}
+
+// File returns a *Pipe associated with the specified file. This is useful for
+// starting pipelines. If there is an error opening the file, the pipe's error
+// status will be set.
+func File(name string) *Pipe {
+	p := NewPipe()
+	f, err := os.Open(name)
+	if err != nil {
+		return p.WithError(err)
+	}
+	return p.WithReader(f)
+}
+
 // ListFiles creates a pipe containing the files and directories matching the
 // supplied path, one per line. The path may be a glob, conforming to
 // filepath.Match syntax.
@@ -45,30 +69,6 @@ func ListFiles(path string) *Pipe {
 		fileNames[i] = filepath.Join(path, f.Name())
 	}
 	return Slice(fileNames)
-}
-
-// Echo returns a pipe containing the supplied string.
-func Echo(s string) *Pipe {
-	return NewPipe().WithReader(strings.NewReader(s))
-}
-
-// Exec runs an external command and returns a pipe containing the output. If
-// the command had a non-zero exit status, the pipe's error status will also be
-// set to the string "exit status X", where X is the integer exit status.
-func Exec(s string) *Pipe {
-	return NewPipe().Exec(s)
-}
-
-// File returns a *Pipe associated with the specified file. This is useful for
-// starting pipelines. If there is an error opening the file, the pipe's error
-// status will be set.
-func File(name string) *Pipe {
-	p := NewPipe()
-	f, err := os.Open(name)
-	if err != nil {
-		return p.WithError(err)
-	}
-	return p.WithReader(f)
 }
 
 // Slice returns a pipe containing each element of the supplied slice of strings, one per line.
