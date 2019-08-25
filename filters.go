@@ -93,6 +93,10 @@ func (p *Pipe) First(lines int) *Pipe {
 	if p == nil || p.Error() != nil {
 		return p
 	}
+	defer p.Close()
+	if lines == 0 {
+		return NewPipe()
+	}
 	scanner := bufio.NewScanner(p.Reader)
 	output := strings.Builder{}
 	for i := 0; i < lines; i++ {
@@ -102,7 +106,6 @@ func (p *Pipe) First(lines int) *Pipe {
 		output.WriteString(scanner.Text())
 		output.WriteRune('\n')
 	}
-	p.Close()
 	err := scanner.Err()
 	if err != nil {
 		p.SetError(err)
