@@ -638,7 +638,6 @@ p := script.File("test.txt").ReplaceRegexp(regexp.MustCompile("Gol[a-z]{1}ng"), 
 script.Stdin().Last(10).Stdout()
 ```
 
-
 # Sinks
 
 Sinks are operations which return some data from a pipe, ending the pipeline.
