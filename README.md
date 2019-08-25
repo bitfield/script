@@ -91,13 +91,13 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 	- [First](#first)
 	- [Freq](#freq)
 	- [Join](#join)
+	- [Last](#last)
 	- [Match](#match)
 	- [MatchRegexp](#matchregexp)
 	- [Reject](#reject)
 	- [RejectRegexp](#rejectregexp)
 	- [Replace](#replace)
 	- [ReplaceRegexp](#replaceregexp)
-	- [Last](#last)
 - [Sinks](#sinks)
 	- [AppendFile](#appendfile)
 	- [Bytes](#bytes)
@@ -582,6 +582,14 @@ fmt.Println(output)
 // Output: hello world\n
 ```
 
+## Last
+
+`Last()` reads its input and passes on the last N lines of it (like Unix [`tail`](examples/tail/main.go)):
+
+```go
+script.Stdin().Last(10).Stdout()
+```
+
 ## Match
 
 `Match()` returns a pipe containing only the input lines which match the supplied string:
@@ -628,14 +636,6 @@ p := script.File("test.txt").Replace("old", "new")
 
 ```go
 p := script.File("test.txt").ReplaceRegexp(regexp.MustCompile("Gol[a-z]{1}ng"), "Go")
-```
-
-## Last
-
-`Last()` reads its input and passes on the last N lines of it (like Unix [`tail`](examples/tail/main.go)):
-
-```go
-script.Stdin().Last(10).Stdout()
 ```
 
 # Sinks
