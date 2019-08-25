@@ -91,6 +91,7 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 	- [First](#first)
 	- [Freq](#freq)
 	- [Join](#join)
+	- [Last](#last)
 	- [Match](#match)
 	- [MatchRegexp](#matchregexp)
 	- [Reject](#reject)
@@ -283,6 +284,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `head`             | [`First()`](#first)                                           |
 | `ls`               | [`ListFiles()`](#listfiles)                                   |
 | `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
+| `tail`             | [`Last()`](#last)                                             |
 | `uniq -c`          | [`Freq()`](#freq)                                             |
 | `wc -l`            | [`CountLines()`](#countlines)                                 |
 
@@ -580,6 +582,14 @@ fmt.Println(output)
 // Output: hello world\n
 ```
 
+## Last
+
+`Last()` reads its input and passes on the last N lines of it (like Unix [`tail`](examples/tail/main.go)):
+
+```go
+script.Stdin().Last(10).Stdout()
+```
+
 ## Match
 
 `Match()` returns a pipe containing only the input lines which match the supplied string:
@@ -733,6 +743,8 @@ Since `script` is designed to help you write system administration programs, a f
 * [grep](examples/grep/main.go)
 * [head](examples/head/main.go)
 * [echo](examples/echo/main.go)
+* [tail](examples/tail/main.go)
+* [least_freq](examples/least_freq/main.go)
 * [visitors](examples/visitors/main.go)
 * [ls](examples/ls/main.go)
 
