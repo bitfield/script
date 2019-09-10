@@ -383,3 +383,98 @@ func TestColumn(t *testing.T) {
 		t.Errorf("want %q, got %q", want, got)
 	}
 }
+
+func TestBasename(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		testFileName string
+		testExt      string
+		want         string
+	}{
+		{"/", "", "/\n"},
+		{"/root", "", "root\n"},
+		{"/tmp/example.php", "", "example.php\n"},
+		{"/tmp/example.php", ".php", "example\n"},
+		{"/tmp/example.php", "php", "example.\n"},
+		{"./src/filters", "", "filters\n"},
+		{"/var/tmp/example.php", "php", "example.\n"},
+		{"/var/tmp/example.php", ".txt", "example.php\n"},
+		{"C:/Program Files", "", "Program Files\n"},
+		{"C:/Program Files/", "", "Program Files\n"},
+	}
+	for _, tc := range testCases {
+		got, err := Echo(tc.testFileName).Basename(tc.testExt).String()
+		if err != nil {
+			t.Error(err)
+		}
+		if got != tc.want {
+			t.Errorf("%q w/ ext %q: want %q, got %q", tc.testFileName, tc.testExt, tc.want, got)
+		}
+	}
+}
+
+func TestDirname(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		testFileName string
+		want         string
+	}{
+		{"/", "/\n"},
+		{"/root", "/\n"},
+		{"/tmp/example.php", "/tmp\n"},
+		{"/var/tmp/example.php", "/var/tmp\n"},
+		{"/var/tmp", "/var\n"},
+		{"/var/tmp/", "/var\n"},
+		{"./src/filters", "./src\n"},
+		{"./src/filters/", "./src\n"},
+		{"C:/Program Files/PHP", "C:/Program Files\n"},
+		{"C:/Program Files/PHP/", "C:/Program Files\n"},
+		{"C:/Program Files", "C:\n"},
+
+		// NOTE:
+		// there are no tests for Windows-style directory separators,
+		// because these are not supported by filepath at this time
+		//
+		// the following test data currently does not work with the
+		// Golang filepath library:
+		//
+		// {"C:\\Program Files\\PHP", "C:\\Program Files\n"},
+		// {"C:\\Program Files\\PHP\\", "C:\\Program Files\n"},
+	}
+	for _, tc := range testCases {
+		got, err := Echo(tc.testFileName).Dirname().String()
+		if err != nil {
+			t.Error(err)
+		}
+		if got != tc.want {
+			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
+		}
+	}
+}
+
+func TestTrimExt(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		testFileName string
+		testExt      string
+		want         string
+	}{
+		{"/", "", "/\n"},
+		{"/root", "", "/root\n"},
+		{"/tmp/example.php", "", "/tmp/example.php\n"},
+		{"/tmp/example.php", ".php", "/tmp/example\n"},
+		{"/tmp/example.php", "php", "/tmp/example.\n"},
+		{"/var/tmp/example.php", "php", "/var/tmp/example.\n"},
+		{"/var/tmp/example.php", ".txt", "/var/tmp/example.php\n"},
+		{"./src/test.go", ".go", "./src/test\n"},
+	}
+	for _, tc := range testCases {
+		got, err := Echo(tc.testFileName).TrimExt(tc.testExt).String()
+		if err != nil {
+			t.Error(err)
+		}
+		if got != tc.want {
+			t.Errorf("%q w/ ext %q: want %q, got %q", tc.testFileName, tc.testExt, tc.want, got)
+		}
+	}
+}

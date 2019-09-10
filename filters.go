@@ -8,11 +8,39 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 )
+
+// Basename reads a list of filenames from the pipe, one per line, and returns
+// a pipe which contains the last element of each filename.
+//
+// If a line is empty, Basename will return a '.' for that line
+// Trailing slashes are removed.
+//
+// Basename will also trim off any extension you provide (e.g. '.txt') if
+// the filename has one.
+func (p *Pipe) Basename(ext string) *Pipe {
+	// do we have anything to do?
+	if p == nil || p.Error() != nil {
+		return p
+	}
+
+	return p.EachLine(func(line string, out *strings.Builder) {
+		// let's get our basename
+		basename := filepath.Base(line)
+
+		// do we need to strip off the extension too?
+		if len(ext) > 0 {
+			basename = strings.TrimSuffix(basename, ext)
+		}
+		out.WriteString(basename)
+		out.WriteRune('\n')
+	})
+}
 
 // Column reads from the pipe, and returns a new pipe containing only the Nth
 // column of each line in the input, where '1' means the first column, and
@@ -47,6 +75,40 @@ func (p *Pipe) Concat() *Pipe {
 		readers = append(readers, NewReadAutoCloser(input))
 	})
 	return p.WithReader(io.MultiReader(readers...))
+}
+
+// Dirname reads a list of filenames from the pipe, one per line, and returns
+// a pipe which contains only the directory names of each filename.
+//
+// If a line is empty, Dirname will return a '.' for that line
+// Trailing slashes are removed, unless Dirname returns the root folder.
+func (p *Pipe) Dirname() *Pipe {
+	// do we have anything to do?
+	if p == nil || p.Error() != nil {
+		return p
+	}
+
+	return p.EachLine(func(line string, out *strings.Builder) {
+		// special case:
+		//
+		// filepath.Dir() does not handle trailing slashes correctly
+		// we have to strip the trailing slash ourselves
+		if len(line) > 1 && line[len(line)-1:] == "/" {
+			line = line[0 : len(line)-1]
+		}
+		dirname := filepath.Dir(line)
+
+		// special case:
+		//
+		// filepath.Dir() does not preserve any './' at the front of
+		// a path
+		if len(dirname) > 1 && len(line) > 1 && line[:2] == "./" {
+			dirname = "./" + dirname
+		}
+
+		out.WriteString(dirname)
+		out.WriteRune('\n')
+	})
 }
 
 // EachLine calls the specified function for each line of input, passing it the
@@ -271,6 +333,24 @@ func (p *Pipe) Replace(search, replace string) *Pipe {
 func (p *Pipe) ReplaceRegexp(re *regexp.Regexp, replace string) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		out.WriteString(re.ReplaceAllString(line, replace))
+		out.WriteRune('\n')
+	})
+}
+
+// TrimExt reads a list of filenames from the pipe, one per line, and returns
+// a pipe with the given file extension (e.g. '.txt') removed.
+//
+// File extensions are only removed if they match the one you provide.
+// Trailing dots '.' are only removed if you include it in your 'ext'.
+func (p *Pipe) TrimExt(ext string) *Pipe {
+	// do we have anything to do?
+	if p == nil || p.Error() != nil {
+		return p
+	}
+
+	return p.EachLine(func(line string, out *strings.Builder) {
+		newPath := strings.TrimSuffix(line, ext)
+		out.WriteString(newPath)
 		out.WriteRune('\n')
 	})
 }

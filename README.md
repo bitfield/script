@@ -84,8 +84,10 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 	- [Slice](#slice)
 	- [Stdin](#stdin)
 - [Filters](#filters)
+	- [Basename](#basename)
 	- [Column](#column)
 	- [Concat](#concat)
+	- [Dirname](#dirname)
 	- [EachLine](#eachline)
 	- [Exec](#exec-1)
 	- [First](#first)
@@ -98,6 +100,7 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 	- [RejectRegexp](#rejectregexp)
 	- [Replace](#replace)
 	- [ReplaceRegexp](#replaceregexp)
+	- [TrimExt](#trimext)
 - [Sinks](#sinks)
 	- [AppendFile](#appendfile)
 	- [Bytes](#bytes)
@@ -276,8 +279,10 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `>`                | [`WriteFile()`](#writefile)                                   |
 | `>>`               | [`AppendFile()`](#appendfile)                                 |
 | `$*`               | [`Args()`](#args)                                             |
+| `basename`         | [`Basename()`](#basename)                                     |
 | `cat`              | [`File()`](#file) / [`Concat()`](#concat)                     |
 | `cut`              | [`Column()`](#column)                                         |
+| `dirname`          | [`Dirname()`](#dirname)                                       |
 | `echo`             | [`Echo()`](#echo)                                             |
 | `grep`             | [`Match()`](#match) / [`MatchRegexp()`](#matchregexp)         |
 | `grep -v`          | [`Reject()`](#reject) / [`RejectRegexp()`](#rejectregexp)     |
@@ -426,6 +431,44 @@ fmt.Println(output)
 
 Filters are operations on an existing pipe that also return a pipe, allowing you to chain filters indefinitely.
 
+## Basename
+
+`Basename()` reads a list of filenames from the pipe, one per line, and returns a pipe that contains the last element of each line.
+
+If a line is empty, `Basename()` will return a `.`
+
+Trailing slashes are removed.
+
+`Basename()` will also trim off any extension that you provide, if the filename has one. Pass in an empty string if you don't want to trim any extensions.
+
+For example, given this input:
+
+```
+/
+/root
+/tmp/example.php
+/var/tmp/
+./src/filters
+C:/Program Files
+```
+
+and this program:
+
+```
+script.Stdin().Basename('.php').Stdout()
+```
+
+this will be the output:
+
+```
+
+root
+example
+tmp
+filters
+Program Files
+```
+
 ## Column
 
 `Column()` reads input tabulated by whitespace, and outputs only the Nth column of each input line (like Unix `cut`). Lines containing less than N columns will be ignored.
@@ -488,6 +531,42 @@ p := Exec("ls /var/app/config/").Concat().Stdout()
 ```
 
 Each input file will be closed once it has been fully read.
+
+## Dirname
+
+`Dirname()` reads a list of filenames from the pipe, one per line, and returns a pipe which contains only the directory names of each filename.
+
+If a line is empty, `Dirname()` will return a '.' for that line
+
+Trailing slashes are removed, unless `Dirname()` returns the root folder.
+
+For example, given this input:
+
+```
+/
+/root
+/tmp/example.php
+/var/tmp/
+./src/filters
+C:/Program Files/
+```
+
+and this program:
+
+```
+script.Stdin().Dirname().Stdout()
+```
+
+this will be the output:
+
+```
+/
+/
+/tmp
+/var
+./src
+C:
+```
 
 ## EachLine
 
@@ -636,6 +715,36 @@ p := script.File("test.txt").Replace("old", "new")
 
 ```go
 p := script.File("test.txt").ReplaceRegexp(regexp.MustCompile("Gol[a-z]{1}ng"), "Go")
+```
+
+## TrimExt
+
+`TrimExt()` reads a list of filenames from the pipe, one per line, and returns a pipe that contains each filename with the given file extension removed.
+
+File extensions are only removed if they match the one you provide.
+
+Trailing dots `.` are only removed if you include them in your given file extension.
+
+For example, given this input:
+
+```
+/tmp/example.php
+/tmp/example.txt
+./src/example.php
+```
+
+and this program:
+
+```
+script.Stdin().TrimExt('.php').Stdout()
+```
+
+this will be the output:
+
+```
+/tmp/example
+/tmp/example.txt
+./src/example
 ```
 
 # Sinks
