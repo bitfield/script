@@ -8,11 +8,39 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 )
+
+// Basename reads a list of filepaths from the pipe, one per line, and
+// removes any leading directory components from each line.
+//
+// If a line is empty, Basename will return an empty line.
+// Trailing slashes are removed.
+func (p *Pipe) Basename() *Pipe {
+	// do we have anything to do?
+	if p == nil || p.Error() != nil {
+		return p
+	}
+
+	return p.EachLine(func(line string, out *strings.Builder) {
+		var basename string
+
+		if len(strings.TrimSpace(line)) > 0 {
+			// let's get our basename
+			basename = filepath.Base(line)
+		} else {
+			// special case - preserve blank lines
+			basename = ""
+		}
+
+		out.WriteString(basename)
+		out.WriteRune('\n')
+	})
+}
 
 // Column reads from the pipe, and returns a new pipe containing only the Nth
 // column of each line in the input, where '1' means the first column, and
@@ -47,6 +75,40 @@ func (p *Pipe) Concat() *Pipe {
 		readers = append(readers, NewReadAutoCloser(input))
 	})
 	return p.WithReader(io.MultiReader(readers...))
+}
+
+// Dirname reads a list of pathnames from the pipe, one per line, and returns
+// a pipe which contains only the parent directories of each pathname.
+//
+// If a line is empty, Dirname will return a '.' for that line
+// Trailing slashes are removed, unless Dirname returns the root folder.
+func (p *Pipe) Dirname() *Pipe {
+	// do we have anything to do?
+	if p == nil || p.Error() != nil {
+		return p
+	}
+
+	return p.EachLine(func(line string, out *strings.Builder) {
+		// special case:
+		//
+		// filepath.Dir() does not handle trailing slashes correctly
+		// we have to strip the trailing slash ourselves
+		if len(line) > 1 && strings.HasSuffix(line, "/") {
+			line = line[0 : len(line)-1]
+		}
+		dirname := filepath.Dir(line)
+
+		// special case:
+		//
+		// filepath.Dir() does not preserve any './' at the front of
+		// a path
+		if len(dirname) > 1 && strings.HasPrefix(line, "./") {
+			dirname = "./" + dirname
+		}
+
+		out.WriteString(dirname)
+		out.WriteRune('\n')
+	})
 }
 
 // EachLine calls the specified function for each line of input, passing it the

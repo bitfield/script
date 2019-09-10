@@ -424,3 +424,71 @@ func TestColumn(t *testing.T) {
 		t.Errorf("want %q, got %q", want, got)
 	}
 }
+
+func TestBasename(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		testFileName string
+		want         string
+	}{
+		{"\n", "\n"},
+		{"/", "/\n"},
+		{"/root", "root\n"},
+		{"/tmp/example.php", "example.php\n"},
+		{"./src/filters", "filters\n"},
+		{"/var/tmp/example.php", "example.php\n"},
+		{"/tmp/script-21345.txt\n/tmp/script-5371253.txt", "script-21345.txt\nscript-5371253.txt\n"},
+		{"C:/Program Files", "Program Files\n"},
+		{"C:/Program Files/", "Program Files\n"},
+	}
+	for _, tc := range testCases {
+		got, err := Echo(tc.testFileName).Basename().String()
+		if err != nil {
+			t.Error(err)
+		}
+		if got != tc.want {
+			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
+		}
+	}
+}
+
+func TestDirname(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		testFileName string
+		want         string
+	}{
+		{"/", "/\n"},
+		{"\n", ".\n"},
+		{"/root", "/\n"},
+		{"/tmp/example.php", "/tmp\n"},
+		{"/var/tmp/example.php", "/var/tmp\n"},
+		{"/var/tmp", "/var\n"},
+		{"/var/tmp/", "/var\n"},
+		{"./src/filters", "./src\n"},
+		{"./src/filters/", "./src\n"},
+		{"/tmp/script-21345.txt\n/tmp/script-5371253.txt", "/tmp\n/tmp\n"},
+		{"C:/Program Files/PHP", "C:/Program Files\n"},
+		{"C:/Program Files/PHP/", "C:/Program Files\n"},
+		{"C:/Program Files", "C:\n"},
+
+		// NOTE:
+		// there are no tests for Windows-style directory separators,
+		// because these are not supported by filepath at this time
+		//
+		// the following test data currently does not work with the
+		// Golang filepath library:
+		//
+		// {"C:\\Program Files\\PHP", "C:\\Program Files\n"},
+		// {"C:\\Program Files\\PHP\\", "C:\\Program Files\n"},
+	}
+	for _, tc := range testCases {
+		got, err := Echo(tc.testFileName).Dirname().String()
+		if err != nil {
+			t.Error(err)
+		}
+		if got != tc.want {
+			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
+		}
+	}
+}
