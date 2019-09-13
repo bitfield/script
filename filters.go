@@ -15,10 +15,10 @@ import (
 	"strings"
 )
 
-// Basename reads a list of filenames from the pipe, one per line, and returns
-// a pipe which contains the last element of each filename.
+// Basename reads a list of filepaths from the pipe, one per line, and
+// removes any leading directory components from each line.
 //
-// If a line is empty, Basename will return a '.' for that line
+// If a line is empty, Basename will return a '.' for that line.
 // Trailing slashes are removed.
 //
 // Basename will also trim off any extension you provide (e.g. '.txt') if
@@ -77,8 +77,8 @@ func (p *Pipe) Concat() *Pipe {
 	return p.WithReader(io.MultiReader(readers...))
 }
 
-// Dirname reads a list of filenames from the pipe, one per line, and returns
-// a pipe which contains only the directory names of each filename.
+// Dirname reads a list of pathnames from the pipe, one per line, and returns
+// a pipe which contains only the parent directories of each pathname.
 //
 // If a line is empty, Dirname will return a '.' for that line
 // Trailing slashes are removed, unless Dirname returns the root folder.

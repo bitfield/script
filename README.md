@@ -433,7 +433,7 @@ Filters are operations on an existing pipe that also return a pipe, allowing you
 
 ## Basename
 
-`Basename()` reads a list of filenames from the pipe, one per line, and returns a pipe that contains the last element of each line.
+`Basename()` reads a list of filepaths from the pipe, one per line, and removes any leading directory components from each line.
 
 If a line is empty, `Basename()` will return a `.`
 
@@ -534,7 +534,7 @@ Each input file will be closed once it has been fully read.
 
 ## Dirname
 
-`Dirname()` reads a list of filenames from the pipe, one per line, and returns a pipe which contains only the directory names of each filename.
+`Dirname()` reads a list of pathnames from the pipe, one per line, and returns a pipe which contains only the parent directories of each pathname.
 
 If a line is empty, `Dirname()` will return a '.' for that line
 
