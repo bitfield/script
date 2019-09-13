@@ -20,10 +20,7 @@ import (
 //
 // If a line is empty, Basename will return an empty line.
 // Trailing slashes are removed.
-//
-// Basename will also trim off any extension you provide (e.g. '.txt') if
-// the filename has one.
-func (p *Pipe) Basename(ext string) *Pipe {
+func (p *Pipe) Basename() *Pipe {
 	// do we have anything to do?
 	if p == nil || p.Error() != nil {
 		return p
@@ -40,10 +37,6 @@ func (p *Pipe) Basename(ext string) *Pipe {
 			basename = ""
 		}
 
-		// do we need to strip off the extension too?
-		if len(ext) > 0 {
-			basename = strings.TrimSuffix(basename, ext)
-		}
 		out.WriteString(basename)
 		out.WriteRune('\n')
 	})

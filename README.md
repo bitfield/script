@@ -439,8 +439,6 @@ If a line is empty, `Basename()` will return an empty line.
 
 Trailing slashes are removed.
 
-`Basename()` will also trim off any extension that you provide, if the filename has one. Pass in an empty string if you don't want to trim any extensions.
-
 For example, given this input:
 
 ```
@@ -455,7 +453,7 @@ C:/Program Files
 and this program:
 
 ```
-script.Stdin().Basename('.php').Stdout()
+script.Stdin().Basename().Stdout()
 ```
 
 this will be the output:
@@ -463,7 +461,7 @@ this will be the output:
 ```
 
 root
-example
+example.php
 tmp
 filters
 Program Files

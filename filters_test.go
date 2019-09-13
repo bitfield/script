@@ -388,28 +388,24 @@ func TestBasename(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		testFileName string
-		testExt      string
 		want         string
 	}{
-		{"\n", "", "\n"},
-		{"/", "", "/\n"},
-		{"/root", "", "root\n"},
-		{"/tmp/example.php", "", "example.php\n"},
-		{"/tmp/example.php", ".php", "example\n"},
-		{"/tmp/example.php", "php", "example.\n"},
-		{"./src/filters", "", "filters\n"},
-		{"/var/tmp/example.php", "php", "example.\n"},
-		{"/var/tmp/example.php", ".txt", "example.php\n"},
-		{"C:/Program Files", "", "Program Files\n"},
-		{"C:/Program Files/", "", "Program Files\n"},
+		{"\n", "\n"},
+		{"/", "/\n"},
+		{"/root", "root\n"},
+		{"/tmp/example.php", "example.php\n"},
+		{"./src/filters", "filters\n"},
+		{"/var/tmp/example.php", "example.php\n"},
+		{"C:/Program Files", "Program Files\n"},
+		{"C:/Program Files/", "Program Files\n"},
 	}
 	for _, tc := range testCases {
-		got, err := Echo(tc.testFileName).Basename(tc.testExt).String()
+		got, err := Echo(tc.testFileName).Basename().String()
 		if err != nil {
 			t.Error(err)
 		}
 		if got != tc.want {
-			t.Errorf("%q w/ ext %q: want %q, got %q", tc.testFileName, tc.testExt, tc.want, got)
+			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
 		}
 	}
 }

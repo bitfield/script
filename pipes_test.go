@@ -92,7 +92,7 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	action = "AppendFile()"
 	p.AppendFile("testdata/bogus.txt")
 	action = "Basename()"
-	p.Basename("")
+	p.Basename()
 	action = "Bytes()"
 	p.Bytes()
 	action = "Close()"
