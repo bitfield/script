@@ -93,7 +93,7 @@ func (p *Pipe) Dirname() *Pipe {
 		//
 		// filepath.Dir() does not handle trailing slashes correctly
 		// we have to strip the trailing slash ourselves
-		if len(line) > 1 && line[len(line)-1:] == "/" {
+		if len(line) > 1 && strings.HasSuffix(line, "/") {
 			line = line[0 : len(line)-1]
 		}
 		dirname := filepath.Dir(line)
@@ -102,7 +102,7 @@ func (p *Pipe) Dirname() *Pipe {
 		//
 		// filepath.Dir() does not preserve any './' at the front of
 		// a path
-		if len(dirname) > 1 && len(line) > 1 && line[:2] == "./" {
+		if len(dirname) > 1 && strings.HasPrefix(line, "./") {
 			dirname = "./" + dirname
 		}
 
