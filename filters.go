@@ -18,7 +18,7 @@ import (
 // Basename reads a list of filepaths from the pipe, one per line, and
 // removes any leading directory components from each line.
 //
-// If a line is empty, Basename will return a '.' for that line.
+// If a line is empty, Basename will return an empty line.
 // Trailing slashes are removed.
 //
 // Basename will also trim off any extension you provide (e.g. '.txt') if
@@ -30,8 +30,15 @@ func (p *Pipe) Basename(ext string) *Pipe {
 	}
 
 	return p.EachLine(func(line string, out *strings.Builder) {
-		// let's get our basename
-		basename := filepath.Base(line)
+		var basename string
+
+		if len(strings.TrimSpace(line)) > 0 {
+			// let's get our basename
+			basename = filepath.Base(line)
+		} else {
+			// special case - preserve blank lines
+			basename = ""
+		}
 
 		// do we need to strip off the extension too?
 		if len(ext) > 0 {

@@ -435,7 +435,7 @@ Filters are operations on an existing pipe that also return a pipe, allowing you
 
 `Basename()` reads a list of filepaths from the pipe, one per line, and removes any leading directory components from each line.
 
-If a line is empty, `Basename()` will return a `.`
+If a line is empty, `Basename()` will return an empty line.
 
 Trailing slashes are removed.
 
