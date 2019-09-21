@@ -25,7 +25,7 @@ func TestString(t *testing.T) {
 	}
 	_, err = p.String() // result should be empty
 	if p.Error() == nil {
-		t.Errorf("want error status after read from closed pipe, got nil")
+		t.Error("want error status after read from closed pipe, got nil")
 	}
 	if err != p.Error() {
 		t.Errorf("got error %v but pipe error status was %v", err, p.Error())
@@ -115,7 +115,7 @@ func TestCountLines(t *testing.T) {
 	}
 	_, err = p.CountLines() // result should be zero
 	if p.Error() == nil {
-		t.Errorf("want error reading closed pipe, got nil")
+		t.Error("want error reading closed pipe, got nil")
 	}
 	if err != p.Error() {
 		t.Errorf("got error %v but pipe error status was %v", err, p.Error())

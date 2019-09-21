@@ -29,6 +29,18 @@ func Exec(s string) *Pipe {
 	return NewPipe().Exec(s)
 }
 
+// IfExists tests whether the specified file exists, and returns a pipe whose
+// error status reflects the result. If the file doesn't exist, the pipe's error
+// status will be set, and if the file does exist, the pipe will have no error
+// status.
+func IfExists(filename string) *Pipe {
+	_, err := os.Stat(filename)
+	if err != nil {
+		return NewPipe().WithError(err)
+	}
+	return NewPipe()
+}
+
 // File returns a *Pipe associated with the specified file. This is useful for
 // starting pipelines. If there is an error opening the file, the pipe's error
 // status will be set.

@@ -28,7 +28,7 @@ func TestError(t *testing.T) {
 	t.Parallel()
 	p := File("testdata/nonexistent.txt")
 	if p.Error() == nil {
-		t.Errorf("want error status reading nonexistent file, but got nil")
+		t.Error("want error status reading nonexistent file, but got nil")
 	}
 	defer func() {
 		// Reading an erroneous pipe should not panic.
