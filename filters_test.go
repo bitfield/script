@@ -38,7 +38,48 @@ func doFiltersOnPipe(t *testing.T, p *Pipe, kind string) {
 	if output != "" {
 		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
 	}
+	action = "Concat()"
+	output, err = p.Concat().String()
+	if err != nil {
+		t.Errorf("%s on %s pipe: %v", action, kind, err)
+	}
+	if output != "" {
+		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
+	}
+	action = "First()"
+	output, err = p.First(1).String()
+	if err != nil {
+		t.Errorf("%s on %s pipe: %v", action, kind, err)
+	}
+	if output != "" {
+		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
+	}
+	action = "Freq()"
+	output, err = p.Freq().String()
+	if err != nil {
+		t.Errorf("%s on %s pipe: %v", action, kind, err)
+	}
+	if output != "" {
+		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
+	}
+	action = "Join()"
+	output, err = p.Join().String()
+	if err != nil {
+		t.Errorf("%s on %s pipe: %v", action, kind, err)
+	}
+	if output != "" {
+		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
+	}
+	action = "Last()"
+	output, err = p.Last(1).String()
+	if err != nil {
+		t.Errorf("%s on %s pipe: %v", action, kind, err)
+	}
+	if output != "" {
+		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
+	}
 }
+
 func TestNilPipeFilters(t *testing.T) {
 	t.Parallel()
 	doFiltersOnPipe(t, nil, "nil")
