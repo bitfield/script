@@ -32,6 +32,6 @@ func TestReadAutoCloser(t *testing.T) {
 	}
 	_, err = ioutil.ReadAll(acr)
 	if err == nil {
-		t.Errorf("input not closed after reading")
+		t.Error("input not closed after reading")
 	}
 }

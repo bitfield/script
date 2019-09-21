@@ -80,6 +80,7 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 		- [Exit status](#exit-status)
 		- [Error output](#error-output)
 	- [File](#file)
+	- [IfExists](#ifexists)
 	- [ListFiles](#listfiles)
 	- [Slice](#slice)
 	- [Stdin](#stdin)
@@ -273,6 +274,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | Unix / shell       | `script` equivalent                                           |
 | ------------------ | ------------------------------------------------------------- |
 | (any program name) | [`Exec()`](#exec)                                             |
+| `[ -f FILE ]`      | [`IfExists()`](#ifexists)                                     |
 | `>`                | [`WriteFile()`](#writefile)                                   |
 | `>>`               | [`AppendFile()`](#appendfile)                                 |
 | `$*`               | [`Args()`](#args)                                             |
@@ -381,6 +383,23 @@ p = script.File("test.txt")
 output, err := p.String()
 fmt.Println(output)
 // Output: contents of file
+```
+
+## IfExists
+
+`IfExists()` tests whether the specified file exists. If so, the returned pipe will have no error status. If it doesn't exist, the returned pipe will have an appropriate error set.
+
+```go
+p = script.IfExists("doesntexist.txt")
+output, err := p.String()
+fmt.Println(err)
+// Output: stat doesntexist.txt: no such file or directory
+```
+
+This can be used to create pipes which take some action only if a certain file exists:
+
+```go
+script.IfExists("/foo/bar").Exec("/usr/bin/yada")
 ```
 
 ## ListFiles

@@ -65,7 +65,7 @@ func TestExec(t *testing.T) {
 	}
 	q := Exec("doesntexist")
 	if q.Error() == nil {
-		t.Errorf("want error executing non-existent program, but got nil")
+		t.Error("want error executing non-existent program, but got nil")
 	}
 	// ignoring error because we already checked it
 	output, _ = q.String()
@@ -93,7 +93,19 @@ func TestFile(t *testing.T) {
 	}
 	q := File("doesntexist")
 	if q.Error() == nil {
-		t.Errorf("want error status on opening non-existent file, but got nil")
+		t.Error("want error status on opening non-existent file, but got nil")
+	}
+}
+
+func TestIfExists(t *testing.T) {
+	t.Parallel()
+	p := IfExists("testdata/doesntexist")
+	if p.Error() == nil {
+		t.Errorf("want error from IfExists on non-existent file, but got nil")
+	}
+	p = IfExists("testdata/empty.txt")
+	if p.Error() != nil {
+		t.Errorf("want no error from IfExists on existing file, but got %v", p.Error())
 	}
 }
 
