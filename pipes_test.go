@@ -133,8 +133,6 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.Stdout()
 	action = "String()"
 	p.String()
-	action = "TrimExt()"
-	p.TrimExt("")
 	action = "WithError()"
 	p.WithError(nil)
 	action = "WithReader()"

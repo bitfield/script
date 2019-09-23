@@ -336,21 +336,3 @@ func (p *Pipe) ReplaceRegexp(re *regexp.Regexp, replace string) *Pipe {
 		out.WriteRune('\n')
 	})
 }
-
-// TrimExt reads a list of filenames from the pipe, one per line, and returns
-// a pipe with the given file extension (e.g. '.txt') removed.
-//
-// File extensions are only removed if they match the one you provide.
-// Trailing dots '.' are only removed if you include it in your 'ext'.
-func (p *Pipe) TrimExt(ext string) *Pipe {
-	// do we have anything to do?
-	if p == nil || p.Error() != nil {
-		return p
-	}
-
-	return p.EachLine(func(line string, out *strings.Builder) {
-		newPath := strings.TrimSuffix(line, ext)
-		out.WriteString(newPath)
-		out.WriteRune('\n')
-	})
-}

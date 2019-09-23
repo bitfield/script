@@ -448,30 +448,3 @@ func TestDirname(t *testing.T) {
 		}
 	}
 }
-
-func TestTrimExt(t *testing.T) {
-	t.Parallel()
-	testCases := []struct {
-		testFileName string
-		testExt      string
-		want         string
-	}{
-		{"/", "", "/\n"},
-		{"/root", "", "/root\n"},
-		{"/tmp/example.php", "", "/tmp/example.php\n"},
-		{"/tmp/example.php", ".php", "/tmp/example\n"},
-		{"/tmp/example.php", "php", "/tmp/example.\n"},
-		{"/var/tmp/example.php", "php", "/var/tmp/example.\n"},
-		{"/var/tmp/example.php", ".txt", "/var/tmp/example.php\n"},
-		{"./src/test.go", ".go", "./src/test\n"},
-	}
-	for _, tc := range testCases {
-		got, err := Echo(tc.testFileName).TrimExt(tc.testExt).String()
-		if err != nil {
-			t.Error(err)
-		}
-		if got != tc.want {
-			t.Errorf("%q w/ ext %q: want %q, got %q", tc.testFileName, tc.testExt, tc.want, got)
-		}
-	}
-}
