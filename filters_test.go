@@ -396,6 +396,7 @@ func TestBasename(t *testing.T) {
 		{"/tmp/example.php", "example.php\n"},
 		{"./src/filters", "filters\n"},
 		{"/var/tmp/example.php", "example.php\n"},
+		{"/tmp/script-21345.txt\n/tmp/script-5371253.txt", "script-21345.txt\nscript-5371253.txt\n"},
 		{"C:/Program Files", "Program Files\n"},
 		{"C:/Program Files/", "Program Files\n"},
 	}
@@ -424,6 +425,7 @@ func TestDirname(t *testing.T) {
 		{"/var/tmp/", "/var\n"},
 		{"./src/filters", "./src\n"},
 		{"./src/filters/", "./src\n"},
+		{"/tmp/script-21345.txt\n/tmp/script-5371253.txt", "/tmp\n/tmp\n"},
 		{"C:/Program Files/PHP", "C:/Program Files\n"},
 		{"C:/Program Files/PHP/", "C:/Program Files\n"},
 		{"C:/Program Files", "C:\n"},
