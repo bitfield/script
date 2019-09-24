@@ -100,7 +100,6 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 	- [RejectRegexp](#rejectregexp)
 	- [Replace](#replace)
 	- [ReplaceRegexp](#replaceregexp)
-	- [TrimExt](#trimext)
 - [Sinks](#sinks)
 	- [AppendFile](#appendfile)
 	- [Bytes](#bytes)
@@ -713,36 +712,6 @@ p := script.File("test.txt").Replace("old", "new")
 
 ```go
 p := script.File("test.txt").ReplaceRegexp(regexp.MustCompile("Gol[a-z]{1}ng"), "Go")
-```
-
-## TrimExt
-
-`TrimExt()` reads a list of filenames from the pipe, one per line, and returns a pipe that contains each filename with the given file extension removed.
-
-File extensions are only removed if they match the one you provide.
-
-Trailing dots `.` are only removed if you include them in your given file extension.
-
-For example, given this input:
-
-```
-/tmp/example.php
-/tmp/example.txt
-./src/example.php
-```
-
-and this program:
-
-```
-script.Stdin().TrimExt('.php').Stdout()
-```
-
-this will be the output:
-
-```
-/tmp/example
-/tmp/example.txt
-./src/example
 ```
 
 # Sinks
