@@ -451,7 +451,7 @@ C:/Program Files
 
 and this program:
 
-```
+```go
 script.Stdin().Basename().Stdout()
 ```
 
