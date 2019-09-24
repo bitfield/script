@@ -418,6 +418,7 @@ func TestDirname(t *testing.T) {
 		want         string
 	}{
 		{"/", "/\n"},
+		{"\n", ".\n"},
 		{"/root", "/\n"},
 		{"/tmp/example.php", "/tmp\n"},
 		{"/var/tmp/example.php", "/var/tmp\n"},
