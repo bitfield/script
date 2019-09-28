@@ -431,7 +431,7 @@ func TestBasename(t *testing.T) {
 		testFileName string
 		want         string
 	}{
-		{"\n", "\n"},
+		{"\n", ".\n"},
 		{"/", "/\n"},
 		{"/root", "root\n"},
 		{"/tmp/example.php", "example.php\n"},

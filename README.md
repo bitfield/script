@@ -451,39 +451,21 @@ Filters are operations on an existing pipe that also return a pipe, allowing you
 
 ## Basename
 
-`Basename()` reads a list of filepaths from the pipe, one per line, and removes any leading directory components from each line.
+`Basename()` reads a list of filepaths from the pipe, one per line, and removes any leading directory components from each line (so, for example, `/usr/local/bin/foo` would become just `foo`). This is the complement of [Dirname](#dirname).
 
-If a line is empty, `Basename()` will return an empty line.
+If a line is empty, `Basename()` will produce a single dot: `.`. Trailing slashes are removed.
 
-Trailing slashes are removed.
+Examples:
 
-For example, given this input:
-
-```
-/
-/root
-/tmp/example.php
-/var/tmp/
-./src/filters
-C:/Program Files
-```
-
-and this program:
-
-```go
-script.Stdin().Basename().Stdout()
-```
-
-this will be the output:
-
-```
-
-root
-example.php
-tmp
-filters
-Program Files
-```
+| Input              | `Basename` output |
+| ------------------ | ----------------- |
+|                    | `.`               |
+| `/`                | `.`               |
+| `/root`            | `root`            |
+| `/tmp/example.php` | `example.php`     |
+| `/var/tmp/`        | `tmp`             |
+| `./src/filters`    | `filters`         |
+| `C:/Program Files` | `Program Files`   |
 
 ## Column
 
@@ -550,39 +532,23 @@ Each input file will be closed once it has been fully read.
 
 ## Dirname
 
-`Dirname()` reads a list of pathnames from the pipe, one per line, and returns a pipe which contains only the parent directories of each pathname.
+`Dirname()` reads a list of pathnames from the pipe, one per line, and returns a pipe which contains only the parent directories of each pathname (so, for example, `/usr/local/bin/foo` would become just `/usr/local/bin`). This is the complement of [Basename](#basename).
 
-If a line is empty, `Dirname()` will return a '.' for that line
+If a line is empty, `Dirname()` will convert it to a single dot: `.` (this is the behaviour of Unix `dirname` and the Go standard library's `filepath.Dir`).
 
 Trailing slashes are removed, unless `Dirname()` returns the root folder.
 
-For example, given this input:
+Examples:
 
-```
-/
-/root
-/tmp/example.php
-/var/tmp/
-./src/filters
-C:/Program Files/
-```
-
-and this program:
-
-```
-script.Stdin().Dirname().Stdout()
-```
-
-this will be the output:
-
-```
-/
-/
-/tmp
-/var
-./src
-C:
-```
+| Input              | `Dirname` output |
+| ------------------ | ---------------- |
+|                    | `.`              |
+| `/`                | `/`              |
+| `/root`            | `/`              |
+| `/tmp/example.php` | `/tmp`           |
+| `/var/tmp/`        | `/var`           |
+| `./src/filters`    | `./src`          |
+| `C:/Program Files` | `C:`             |
 
 ## EachLine
 
