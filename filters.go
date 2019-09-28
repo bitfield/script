@@ -8,11 +8,25 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 )
+
+// Basename reads a list of filepaths from the pipe, one per line, and removes
+// any leading directory components from each line. If a line is empty, Basename
+// will produce '.'. Trailing slashes are removed.
+func (p *Pipe) Basename() *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	return p.EachLine(func(line string, out *strings.Builder) {
+		out.WriteString(filepath.Base(line))
+		out.WriteRune('\n')
+	})
+}
 
 // Column reads from the pipe, and returns a new pipe containing only the Nth
 // column of each line in the input, where '1' means the first column, and
@@ -47,6 +61,29 @@ func (p *Pipe) Concat() *Pipe {
 		readers = append(readers, NewReadAutoCloser(input))
 	})
 	return p.WithReader(io.MultiReader(readers...))
+}
+
+// Dirname reads a list of pathnames from the pipe, one per line, and returns a
+// pipe which contains only the parent directories of each pathname. If a line
+// is empty, Dirname will produce a '.'. Trailing slashes are removed, unless
+// Dirname returns the root folder.
+func (p *Pipe) Dirname() *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	return p.EachLine(func(line string, out *strings.Builder) {
+		// filepath.Dir() does not handle trailing slashes correctly
+		if len(line) > 1 && strings.HasSuffix(line, "/") {
+			line = line[0 : len(line)-1]
+		}
+		dirname := filepath.Dir(line)
+		// filepath.Dir() does not preserve a leading './'
+		if len(dirname) > 1 && strings.HasPrefix(line, "./") {
+			dirname = "./" + dirname
+		}
+		out.WriteString(dirname)
+		out.WriteRune('\n')
+	})
 }
 
 // EachLine calls the specified function for each line of input, passing it the

@@ -91,6 +91,8 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	defer os.Remove("testdata/bogus.txt")
 	action = "AppendFile()"
 	p.AppendFile("testdata/bogus.txt")
+	action = "Basename()"
+	p.Basename()
 	action = "Bytes()"
 	p.Bytes()
 	action = "Close()"
@@ -101,6 +103,10 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.Concat()
 	action = "CountLines()"
 	p.CountLines()
+	action = "Dirname()"
+	p.Dirname()
+	action = "EachLine()"
+	p.EachLine(func(string, *strings.Builder) {})
 	action = "Error()"
 	p.Error()
 	action = "Exec()"
@@ -113,6 +119,8 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.Freq()
 	action = "Join()"
 	p.Join()
+	action = "Last()"
+	p.Last(1)
 	action = "Match()"
 	p.Match("foo")
 	action = "MatchRegexp()"

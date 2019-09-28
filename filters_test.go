@@ -9,87 +9,6 @@ import (
 	"testing"
 )
 
-// doFiltersOnPipe calls every kind of filter method on the supplied pipe and
-// tries to trigger a panic.
-func doFiltersOnPipe(t *testing.T, p *Pipe, kind string) {
-	var action string
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("panic: %s on %s pipe", action, kind)
-		}
-	}()
-	// also tests methods that wrap EachLine, such as Match*/Reject*
-	action = "EachLine()"
-	output, err := p.EachLine(func(string, *strings.Builder) {}).String()
-	if err != nil {
-		t.Error(err)
-	}
-	if output != "" {
-		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
-	}
-	action = "Exec()"
-	output, err = p.Exec("bogus").String()
-	if err != nil && kind == "nil" {
-		t.Errorf("%s on %s pipe: %v", action, kind, err)
-	}
-	if err == nil && kind == "zero" {
-		t.Errorf("want error from %s on %s pipe, but got nil", action, kind)
-	}
-	if output != "" {
-		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
-	}
-	action = "Concat()"
-	output, err = p.Concat().String()
-	if err != nil {
-		t.Errorf("%s on %s pipe: %v", action, kind, err)
-	}
-	if output != "" {
-		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
-	}
-	action = "First()"
-	output, err = p.First(1).String()
-	if err != nil {
-		t.Errorf("%s on %s pipe: %v", action, kind, err)
-	}
-	if output != "" {
-		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
-	}
-	action = "Freq()"
-	output, err = p.Freq().String()
-	if err != nil {
-		t.Errorf("%s on %s pipe: %v", action, kind, err)
-	}
-	if output != "" {
-		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
-	}
-	action = "Join()"
-	output, err = p.Join().String()
-	if err != nil {
-		t.Errorf("%s on %s pipe: %v", action, kind, err)
-	}
-	if output != "" {
-		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
-	}
-	action = "Last()"
-	output, err = p.Last(1).String()
-	if err != nil {
-		t.Errorf("%s on %s pipe: %v", action, kind, err)
-	}
-	if output != "" {
-		t.Errorf("want zero output from %s on %s pipe, but got %q", action, kind, output)
-	}
-}
-
-func TestNilPipeFilters(t *testing.T) {
-	t.Parallel()
-	doFiltersOnPipe(t, nil, "nil")
-}
-
-func TestZeroPipeFilters(t *testing.T) {
-	t.Parallel()
-	doFiltersOnPipe(t, &Pipe{}, "zero")
-}
-
 func TestMatch(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
@@ -422,5 +341,73 @@ func TestColumn(t *testing.T) {
 	}
 	if !bytes.Equal(got, want) {
 		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestBasename(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		testFileName string
+		want         string
+	}{
+		{"\n", ".\n"},
+		{"/", "/\n"},
+		{"/root", "root\n"},
+		{"/tmp/example.php", "example.php\n"},
+		{"./src/filters", "filters\n"},
+		{"/var/tmp/example.php", "example.php\n"},
+		{"/tmp/script-21345.txt\n/tmp/script-5371253.txt", "script-21345.txt\nscript-5371253.txt\n"},
+		{"C:/Program Files", "Program Files\n"},
+		{"C:/Program Files/", "Program Files\n"},
+	}
+	for _, tc := range testCases {
+		got, err := Echo(tc.testFileName).Basename().String()
+		if err != nil {
+			t.Error(err)
+		}
+		if got != tc.want {
+			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
+		}
+	}
+}
+
+func TestDirname(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		testFileName string
+		want         string
+	}{
+		{"/", "/\n"},
+		{"\n", ".\n"},
+		{"/root", "/\n"},
+		{"/tmp/example.php", "/tmp\n"},
+		{"/var/tmp/example.php", "/var/tmp\n"},
+		{"/var/tmp", "/var\n"},
+		{"/var/tmp/", "/var\n"},
+		{"./src/filters", "./src\n"},
+		{"./src/filters/", "./src\n"},
+		{"/tmp/script-21345.txt\n/tmp/script-5371253.txt", "/tmp\n/tmp\n"},
+		{"C:/Program Files/PHP", "C:/Program Files\n"},
+		{"C:/Program Files/PHP/", "C:/Program Files\n"},
+		{"C:/Program Files", "C:\n"},
+
+		// NOTE:
+		// there are no tests for Windows-style directory separators,
+		// because these are not supported by filepath at this time
+		//
+		// the following test data currently does not work with the
+		// Golang filepath library:
+		//
+		// {"C:\\Program Files\\PHP", "C:\\Program Files\n"},
+		// {"C:\\Program Files\\PHP\\", "C:\\Program Files\n"},
+	}
+	for _, tc := range testCases {
+		got, err := Echo(tc.testFileName).Dirname().String()
+		if err != nil {
+			t.Error(err)
+		}
+		if got != tc.want {
+			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
+		}
 	}
 }
