@@ -105,6 +105,8 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.CountLines()
 	action = "Dirname()"
 	p.Dirname()
+	action = "EachLine()"
+	p.EachLine(func(string, *strings.Builder) {})
 	action = "Error()"
 	p.Error()
 	action = "Exec()"
@@ -117,6 +119,8 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.Freq()
 	action = "Join()"
 	p.Join()
+	action = "Last()"
+	p.Last(1)
 	action = "Match()"
 	p.Match("foo")
 	action = "MatchRegexp()"
