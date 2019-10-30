@@ -155,6 +155,40 @@ func TestListFilesGlob(t *testing.T) {
 	}
 }
 
+func TestFindFilesMultipleFiles(t *testing.T) {
+	t.Parallel()
+	dir := "testdata/multiple_files"
+	want := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip\n", dir, dir, dir)
+	got, err := ListFiles(dir).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Errorf("Want %q, got %q", want, got)
+	}
+}
+
+func TestFindFilesMultipleFilesWithSubdirectory(t *testing.T) {
+	t.Parallel()
+	dir := "testdata/multiple_files_with_subdirectory"
+	want := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip\n%s/dir/1.txt\n%s/dir/2.txt\n", dir, dir, dir, dir, dir)
+	got, err := FindFiles(dir).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Errorf("Want %q, got %q", want, got)
+	}
+}
+
+func TestFindFilesNonexistent(t *testing.T) {
+	t.Parallel()
+	p := FindFiles("nonexistentpath")
+	if p.Error() == nil {
+		t.Error("want error status on listing non-existent path, but got nil")
+	}
+}
+
 func TestSlice(t *testing.T) {
 	t.Parallel()
 	want := "1\n2\n3\n"
