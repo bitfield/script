@@ -83,9 +83,8 @@ func ListFiles(path string) *Pipe {
 	return Slice(fileNames)
 }
 
-// FindFiles creates a pipe containing the files inside a directory and it directory
-// matching the supplied path, one per line. The path may be a glob, conforming to
-// filepath.Match syntax.
+// FindFiles creates a pipe containing the files inside a directory and all its subdirectories
+// matching the supplied path, one per line.
 func FindFiles(path string) *Pipe {
 
 	fileNames := make([]string, 0)
