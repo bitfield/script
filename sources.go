@@ -1,7 +1,6 @@
 package script
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -92,6 +91,10 @@ func FindFiles(path string) *Pipe {
 	fileNames := make([]string, 0)
 
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
 		if !info.IsDir() {
 			fileNames = append(fileNames, path)
 		}
@@ -101,11 +104,6 @@ func FindFiles(path string) *Pipe {
 
 	if err != nil {
 		return NewPipe().WithError(err)
-	}
-
-	// workaround, make it beta
-	if len(fileNames) == 0 {
-		return NewPipe().WithError(fmt.Errorf("Empty Directory"))
 	}
 
 	return Slice(fileNames)
