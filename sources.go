@@ -57,7 +57,7 @@ func File(name string) *Pipe {
 // subdirectories matching the supplied path, one per line.
 func FindFiles(path string) *Pipe {
 
-	var fileNames = make([]string, 0)
+	var fileNames []string
 
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
