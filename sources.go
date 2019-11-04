@@ -53,6 +53,31 @@ func File(name string) *Pipe {
 	return p.WithReader(f)
 }
 
+// FindFiles creates a pipe containing the files inside a directory and all its
+// subdirectories matching the supplied path, one per line.
+func FindFiles(path string) *Pipe {
+
+	var fileNames = make([]string, 0)
+
+	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() {
+			fileNames = append(fileNames, path)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return NewPipe().WithError(err)
+	}
+
+	return Slice(fileNames)
+}
+
 // ListFiles creates a pipe containing the files and directories matching the
 // supplied path, one per line. The path may be a glob, conforming to
 // filepath.Match syntax.
@@ -80,31 +105,6 @@ func ListFiles(path string) *Pipe {
 	for i, f := range files {
 		fileNames[i] = filepath.Join(path, f.Name())
 	}
-	return Slice(fileNames)
-}
-
-// FindFiles creates a pipe containing the files inside a directory and all its subdirectories
-// matching the supplied path, one per line.
-func FindFiles(path string) *Pipe {
-
-	fileNames := make([]string, 0)
-
-	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !info.IsDir() {
-			fileNames = append(fileNames, path)
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return NewPipe().WithError(err)
-	}
-
 	return Slice(fileNames)
 }
 
