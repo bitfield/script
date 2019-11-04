@@ -105,7 +105,7 @@ func TestFindFilesMultipleFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != want {
+	if !cmp.Equal(want, got) {
 		t.Errorf("Want %q, got %q", want, got)
 	}
 }
@@ -118,7 +118,7 @@ func TestFindFilesMultipleFilesWithSubdirectory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != want {
+	if !cmp.Equal(want, got) {
 		t.Errorf("Want %q, got %q", want, got)
 	}
 }
