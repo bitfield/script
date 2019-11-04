@@ -113,7 +113,7 @@ func TestFindFilesMultipleFiles(t *testing.T) {
 func TestFindFilesMultipleFilesWithSubdirectory(t *testing.T) {
 	t.Parallel()
 	dir := "testdata/multiple_files_with_subdirectory"
-	want := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip\n%s/dir/1.txt\n%s/dir/2.txt\n", dir, dir, dir, dir, dir)
+	want := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip\n%s/dir/.hidden\n%s/dir/1.txt\n%s/dir/2.txt\n", dir, dir, dir, dir, dir, dir)
 	got, err := FindFiles(dir).String()
 	if err != nil {
 		t.Fatal(err)
