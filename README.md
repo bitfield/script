@@ -81,6 +81,7 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 		- [Error output](#error-output)
 	- [File](#file)
 	- [IfExists](#ifexists)
+	- [FindFiles](#findfiles)
 	- [ListFiles](#listfiles)
 	- [Slice](#slice)
 	- [Stdin](#stdin)
