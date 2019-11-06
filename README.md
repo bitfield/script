@@ -406,6 +406,20 @@ This can be used to create pipes which take some action only if a certain file e
 script.IfExists("/foo/bar").Exec("/usr/bin/yada")
 ```
 
+## FindFiles
+
+`FindFiles()` finds all files in a directory and its subdirectories, like Unix [`find`](examples/find/main.go). It creates a pipe containing all files inside a given directory and its subdirectories, one per line.
+
+```go
+p := script.FindFiles("/tmp")
+files, err := p.String()
+if err != nil {
+	log.Fatal(err)
+}
+fmt.Println("The /tmp directory contains the following:")
+fmt.Println(files)
+```
+
 ## ListFiles
 
 `ListFiles()` lists files, like Unix [`ls`](examples/ls/main.go). It creates a pipe containing all files and directories matching the supplied path specification, one per line. This can be the name of a directory (`/path/to/dir`), the name of a file (`/path/to/file`), or a _glob_ (wildcard expression) conforming to the syntax accepted by [filepath.Match()](https://golang.org/pkg/path/filepath/#Match) (`/path/to/*`).
