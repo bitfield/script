@@ -22,7 +22,6 @@ func main() {
 		lineNumber := 1
 		// keep track of comments0
 		isInsideACommentBlock := false // track for multiline comments
-		previousLineHasTodo := false   // if previous line has todo, and next line has another todo, treat them as separate todos
 		p.EachLine(func(str string, build *strings.Builder) {
 			if isInsideACommentBlock {
 				// in this case, just look for todos until the multiline comment is closed
@@ -35,7 +34,7 @@ func main() {
 					log.Fatal(err)
 				}
 				if findTodo {
-					builderFile.WriteString(fmt.Sprintf("%s\t%d\t%s", strings.TrimSpace(str), lineNumber, filePath))
+					builderFile.WriteString(fmt.Sprintf("%s %d %s\n", filePath, lineNumber, strings.TrimSpace(str)))
 				}
 				// probably check for text before closer and append it to be part of todo
 				// comment block was just closed
@@ -56,7 +55,6 @@ func main() {
 			isInsideACommentBlock = isBlockComment
 			// no comment continue
 			if !hasComment {
-				previousLineHasTodo = false
 				lineNumber++
 				return
 			}
@@ -64,18 +62,9 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			if previousLineHasTodo && !findTodo {
-				// append content of this comment to the last todo created
-				// previousLineHasTodo = findTodo
-				// index := len(foundTodos) - 1
-				// foundTodos[index].todo = fmt.Sprintf("%s\n%s", foundTodos[index].todo, strings.TrimSpace(str))
-				// lineNumber++
-				return
-			}
 			if findTodo {
-				builderFile.WriteString(fmt.Sprintf("%s\t%d\t%s\n", strings.TrimSpace(str), lineNumber, filePath))
+				builderFile.WriteString(fmt.Sprintf("%s %d %s\n", filePath, lineNumber, strings.TrimSpace(str)))
 			}
-			previousLineHasTodo = findTodo
 			lineNumber++
 		})
 		// for each file do something like finding todos
@@ -95,14 +84,14 @@ func lineHasComment(content []byte) (bool, bool, error) {
 	// - #
 	hasOneLineComment, err := regexp.Match(`\/\/.*|\#.*|\/\*.*\*\/`, content)
 	if err != nil {
-		return false, false, fmt.Errorf("An error occurred while finding todo: %v", err)
+		return false, false, fmt.Errorf("An error occurred while finding todo: %w", err)
 	}
 	if hasOneLineComment {
 		return true, false, nil
 	}
 	hasCommentBlockOpener, err := regexp.Match(`\/\*.*`, content)
 	if err != nil {
-		return false, false, fmt.Errorf("An error occurred while finding todo: %v", err)
+		return false, false, fmt.Errorf("An error occurred while finding todo: %w", err)
 	}
 	if hasCommentBlockOpener {
 		return true, true, nil
@@ -115,7 +104,7 @@ func lineHasComment(content []byte) (bool, bool, error) {
 func findCommentBlockCloser(content []byte) (bool, error) {
 	hasCommentBlockCloser, err := regexp.Match(`(?i)\*\/.*`, content)
 	if err != nil {
-		return false, fmt.Errorf("An error occurred while finding todo: %v", err)
+		return false, fmt.Errorf("An error occurred while finding todo: %w", err)
 	}
 	return hasCommentBlockCloser, nil
 }
@@ -124,7 +113,7 @@ func findCommentBlockCloser(content []byte) (bool, error) {
 func hasTodo(content []byte) (bool, error) {
 	findTodo, err := regexp.Match(`(?i)todo.*`, content)
 	if err != nil {
-		return false, fmt.Errorf("An error occurred while finding todo: %v", err)
+		return false, fmt.Errorf("An error occurred while finding todo: %w", err)
 	}
 	return findTodo, nil
 }
