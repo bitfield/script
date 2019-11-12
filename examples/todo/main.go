@@ -34,7 +34,8 @@ func main() {
 					log.Fatal(err)
 				}
 				if findTodo {
-					builderFile.WriteString(fmt.Sprintf("%s %d %s\n", filePath, lineNumber, strings.TrimSpace(str)))
+					username := getUserToBlame(filePath, lineNumber)
+					builderFile.WriteString(fmt.Sprintf("%s:%d (%s) %s \n", filePath, lineNumber, username, strings.TrimSpace(str)))
 				}
 				// probably check for text before closer and append it to be part of todo
 				// comment block was just closed
@@ -63,7 +64,8 @@ func main() {
 				log.Fatal(err)
 			}
 			if findTodo {
-				builderFile.WriteString(fmt.Sprintf("%s %d %s\n", filePath, lineNumber, strings.TrimSpace(str)))
+				username := getUserToBlame(filePath, lineNumber)
+				builderFile.WriteString(fmt.Sprintf("%s:%d (%s) %s \n", filePath, lineNumber, username, strings.TrimSpace(str)))
 			}
 			lineNumber++
 		})
@@ -116,4 +118,22 @@ func hasTodo(content []byte) (bool, error) {
 		return false, fmt.Errorf("An error occurred while finding todo: %w", err)
 	}
 	return findTodo, nil
+}
+
+// getUserToBlame determine the user who left the todo by using git blame
+func getUserToBlame(filePath string, lineNumber int) string {
+	// git blame
+	cmd := fmt.Sprintf("git blame -L %d,%d %s", lineNumber, lineNumber, filePath)
+	gitBlame := script.Exec(cmd)
+	if gitBlame.Error() != nil {
+		log.Fatal(gitBlame.Error())
+	}
+	gitBlameOutput, err := gitBlame.String()
+	if err != nil {
+		log.Fatal(err)
+	}
+	var rgx = regexp.MustCompile(`\((.*?)\)`)
+	reducedGitBlameOutput := rgx.FindStringSubmatch(gitBlameOutput)
+	content := strings.Split(reducedGitBlameOutput[0], " ")
+	return fmt.Sprintf("%s %s", strings.Replace(content[0], "(", "", -1), content[1])
 }
