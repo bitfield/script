@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -22,10 +21,7 @@ func main() {
 		p := script.File(filePath)
 		lineNumber := 1
 		p.EachLine(func(str string, build *strings.Builder) {
-			findTodo, err := hasTodo([]byte(str))
-			if err != nil {
-				log.Fatal(err)
-			}
+			findTodo := strings.Contains(str, "todo")
 			if findTodo {
 				builderFile.WriteString(fmt.Sprintf("%s:%d %s \n", filePath, lineNumber, strings.TrimSpace(str)))
 			}
@@ -33,15 +29,4 @@ func main() {
 		})
 	})
 	content.Stdout()
-}
-
-// hasTodo finds whether content passed contains a todo
-func hasTodo(content []byte) (bool, error) {
-	// find todo or TODO existence as an independent word
-	regex := `(?i)\stodo\s.*`
-	findTodo, err := regexp.Match(regex, content)
-	if err != nil {
-		return false, fmt.Errorf("An error occurred while finding todo: %w", err)
-	}
-	return findTodo, nil
 }
