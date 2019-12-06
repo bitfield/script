@@ -22,8 +22,7 @@ func main() {
 		lineNumber := 1
 		p.EachLine(func(str string, build *strings.Builder) {
 			if strings.Contains(str, "todo") {
-			if findTodo {
-				fmt.Fprintf(builderFile, "%s:%d %s \n", filePath, lineNumber, strings.TrimSpace(str)))
+				builderFile.WriteString(fmt.Sprintf("%s:%d %s \n", filePath, lineNumber, strings.TrimSpace(str)))
 			}
 			lineNumber++
 		})
