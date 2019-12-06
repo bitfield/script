@@ -189,6 +189,27 @@ func TestExecFilter(t *testing.T) {
 	if out != "" {
 		t.Error("want exec on erroneous pipe to be a no-op, but it wasn't")
 	}
+
+	// Testing cases with double quotes wrapped in single quoutes.
+	testPipe := NewPipe()
+	testQuotes := []struct {
+		testStrings string
+		want        string
+	}{
+		{`echo 'test'`, "test"},
+		{`echo "a 'b c' d"`, `a 'b c' d`},
+		{`bash -c "echo 'test two'"`, `test two`},
+	}
+	for _, tc := range testQuotes {
+		p = testPipe.Exec(tc.testStrings)
+		got, err = p.String()
+		if err != nil {
+			t.Error(err)
+		}
+		if got != tc.want {
+			t.Errorf("Testing single quotes:\nwant %q, got %q", tc.want, got)
+		}
+	}
 }
 
 func TestJoin(t *testing.T) {

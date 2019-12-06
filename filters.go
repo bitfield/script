@@ -113,16 +113,17 @@ func (p *Pipe) Exec(s string) *Pipe {
 		return p
 	}
 	q := NewPipe()
+	var first int
 	args := strings.Fields(s)
-	cmd := exec.Command(args[0], args[1:]...)
 
 	// Check if the command contains a single quote.
-	// such as "bash -c 'echo 10'"
 	if strings.Contains(s, "'") {
-		first := strings.Index(s, "'")
-		last := strings.LastIndex(s, "'")
-		cmd = exec.Command(args[0], args[1], s[first:last+1])
+		first = strings.Index(s, "'")
+		args = strings.Fields(s[0:first])
+		args = append(args, s[first:])
 	}
+
+	cmd := exec.Command(args[0], args[1:]...)
 
 	cmd.Stdin = p.Reader
 	output, err := cmd.CombinedOutput()
