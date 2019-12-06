@@ -21,7 +21,7 @@ func main() {
 		p := script.File(filePath)
 		lineNumber := 1
 		p.EachLine(func(str string, build *strings.Builder) {
-			findTodo := strings.Contains(str, "todo")
+			if strings.Contains(str, "todo") {
 			if findTodo {
 				builderFile.WriteString(fmt.Sprintf("%s:%d %s \n", filePath, lineNumber, strings.TrimSpace(str)))
 			}
