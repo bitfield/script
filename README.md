@@ -58,10 +58,20 @@ What's that? You want to append that output to a file instead of printing it to 
 script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt")
 ```
 
+# Want some help with Go—or anything else?
+
+Not content with maintaining this library, John Arundel, of [Bitfield Consulting](https://bitfieldconsulting.com), is a highly experienced Go trainer and mentor who can teach you Go from scratch, take you beyond the basics, or even help you reach complete mastery of the Go programming language. See [Learn Go with Bitfield](https://bitfieldconsulting.com/golang) for details, or email go@bitfieldconsulting.com to find out more.
+
+> John's Golang mentoring has helped me build confidence and fill in gaps in my knowledge. It has provided an immeasurable amount of help and guidance, and as a result I'm applying for my dream job as an SRE!<br />
+—Melina Boutierou
+
+John is also a [Kubernetes and cloud infrastructure consultant](https://bitfieldconsulting.com/kubernetes) and the author of the book [Cloud Native DevOps with Kubernetes](https://amzn.to/2PEPTjc). If John can help you with your infrastructure or DevOps projects, [get in touch](https://bitfieldconsulting.com/contact)! He'd love to hear from you.
+
 # Table of contents<!-- omit in toc -->
 - [What is `script`?](#what-is-script)
 - [How do I import it?](#how-do-i-import-it)
 - [What can I do with it?](#what-can-i-do-with-it)
+- [Want some help with Go—or anything else?](#want-some-help-with-goor-anything-else)
 - [How does it work?](#how-does-it-work)
 - [Everything is a pipe](#everything-is-a-pipe)
 - [What use is a pipe?](#what-use-is-a-pipe)
