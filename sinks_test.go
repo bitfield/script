@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
-	"sync"
 	"testing"
 )
 
@@ -56,17 +55,20 @@ func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
 		t.Error(err)
 	}
 	action = "WriteFile()"
-	_, err = p.WriteFile("testdata/tmp")
-	defer os.Remove("testdata/tmp")
+	_, err = p.WriteFile("testdata/tmp" + kind)
+	defer os.Remove("testdata/tmp" + kind)
 	if err != nil {
 		t.Error(err)
 	}
 	action = "AppendFile()"
-	_, err = p.AppendFile("testdata/tmp")
+	_, err = p.AppendFile("testdata/tmp" + kind)
 	if err != nil {
 		t.Error(err)
 	}
 	action = "Stdout()"
+	// Ensure we don't clash with TestStdout
+	stdoutM.Lock()
+	defer stdoutM.Unlock()
 	_, err = p.Stdout()
 	if err != nil {
 		t.Error(err)
@@ -172,7 +174,6 @@ func TestStdout(t *testing.T) {
 	t.Parallel()
 	// Temporarily point os.Stdout to a file so that we can capture it for
 	// testing purposes.
-	var stdoutM sync.Mutex
 	stdoutM.Lock()
 	realStdout := os.Stdout
 	stdoutM.Unlock()

@@ -8,8 +8,12 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 )
+
+// Some tests require monkeying with stdout. Make this concurrency-safe.
+var stdoutM sync.Mutex
 
 func TestWithReader(t *testing.T) {
 	t.Parallel()
@@ -134,6 +138,9 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	action = "SetError()"
 	p.SetError(nil)
 	action = "Stdout()"
+	// Ensure we don't clash with TestStdout
+	stdoutM.Lock()
+	defer stdoutM.Unlock()
 	p.Stdout()
 	action = "String()"
 	p.String()
