@@ -731,6 +731,15 @@ var data []byte
 data, err := script.File("test.bin").Bytes()
 ```
 
+## CheckSum
+
+`CheckSum()`, as the name suggests, returns the checksum of the file as a string, plus an error:
+
+```go
+var checkSum string
+checkSum, err := script.File("test.txt").CheckSum()
+```
+
 ## CountLines
 
 `CountLines()`, as the name suggests, counts lines in its input, and returns the number of lines as an integer, plus an error:
