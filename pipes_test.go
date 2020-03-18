@@ -107,8 +107,8 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.Concat()
 	action = "CountLines()"
 	p.CountLines()
-	action = "CheckSum()"
-	p.CheckSum()
+	action = "SHA256()"
+	p.SHA256()
 	action = "Dirname()"
 	p.Dirname()
 	action = "EachLine()"

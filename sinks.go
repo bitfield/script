@@ -32,10 +32,10 @@ func (p *Pipe) Bytes() ([]byte, error) {
 	return res, nil
 }
 
-// CheckSum create the SHA-256 of the file from the pipe's reader, and returns the
+// SHA256 create the SHA-256 of the file from the pipe's reader, and returns the
 // string result, or an error. If there is an error reading the pipe, the pipe's
 // error status is also set.
-func (p *Pipe) CheckSum() (string, error) {
+func (p *Pipe) SHA256() (string, error) {
 	if p == nil || p.Error() != nil {
 		return "", p.Error()
 	}

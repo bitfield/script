@@ -57,8 +57,8 @@ func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
 	if err != nil {
 		t.Error(err)
 	}
-	action = "CheckSum()"
-	_, err = p.CheckSum()
+	action = "SHA256()"
+	_, err = p.SHA256()
 	if err != nil {
 		t.Error(err)
 	}
@@ -98,7 +98,7 @@ func TestCheckSum(t *testing.T) {
 	// empty file
 	testFile := "testdata/empty.txt"
 	p := File(testFile)
-	got, err := p.CheckSum()
+	got, err := p.SHA256()
 	if err != nil {
 		t.Error(err)
 	}
@@ -110,7 +110,7 @@ func TestCheckSum(t *testing.T) {
 	// not empty file
 	testFile = "testdata/test.txt"
 	p = File(testFile)
-	got, err = p.CheckSum()
+	got, err = p.SHA256()
 	if err != nil {
 		t.Error(err)
 	}
@@ -122,7 +122,7 @@ func TestCheckSum(t *testing.T) {
 	// bin file
 	testFile = "testdata/bytes.bin"
 	p = File(testFile)
-	got, err = p.CheckSum()
+	got, err = p.SHA256()
 	if err != nil {
 		t.Error(err)
 	}
