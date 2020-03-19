@@ -411,3 +411,25 @@ func TestDirname(t *testing.T) {
 		}
 	}
 }
+
+func TestSHA256Sum(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		testFileName string
+		want         string
+	}{
+		// To get the checksum run: openssl dgst -sha256 <file_name>
+		{"testdata/sha256Sum.input.txt", "1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e\n"},
+		{"testdata/hello.txt", "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9\n"},
+		{"testdata/multiple_files", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"},
+	}
+	for _, tc := range testCases {
+		got, err := ListFiles(tc.testFileName).SHA256Sum().String()
+		if err != nil {
+			t.Error(err)
+		}
+		if got != tc.want {
+			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
+		}
+	}
+}

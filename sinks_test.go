@@ -2,9 +2,6 @@ package script
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
-	"io"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -57,8 +54,6 @@ func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
 	if err != nil {
 		t.Error(err)
 	}
-	action = "SHA256()"
-	_, err = p.SHA256()
 	if err != nil {
 		t.Error(err)
 	}
@@ -90,46 +85,6 @@ func TestNilPipeSinks(t *testing.T) {
 func TestZeroPipeSinks(t *testing.T) {
 	t.Parallel()
 	doSinksOnPipe(t, &Pipe{}, "zero")
-}
-
-func TestCheckSum(t *testing.T) {
-	t.Parallel()
-
-	// empty file
-	testFile := "testdata/empty.txt"
-	p := File(testFile)
-	got, err := p.SHA256()
-	if err != nil {
-		t.Error(err)
-	}
-	want := CheckSumOfFile(testFile)
-	if got != want {
-		t.Errorf("want %s checksum, got %x", want[:], got[:])
-	}
-
-	// not empty file
-	testFile = "testdata/test.txt"
-	p = File(testFile)
-	got, err = p.SHA256()
-	if err != nil {
-		t.Error(err)
-	}
-	want = CheckSumOfFile(testFile)
-	if got != want {
-		t.Errorf("want %s checksum, got %x", want[:], got[:])
-	}
-
-	// bin file
-	testFile = "testdata/bytes.bin"
-	p = File(testFile)
-	got, err = p.SHA256()
-	if err != nil {
-		t.Error(err)
-	}
-	want = CheckSumOfFile(testFile)
-	if got != want {
-		t.Errorf("want %s checksum, got %x", want[:], got[:])
-	}
 }
 
 func TestCountLines(t *testing.T) {
@@ -274,18 +229,4 @@ func TestBytes(t *testing.T) {
 	if !bytes.Equal(got, want) {
 		t.Errorf("want %q, got %q", want, got)
 	}
-}
-
-func CheckSumOfFile(path string) string {
-	f, err := os.Open(path)
-	if err != nil {
-		return ""
-	}
-	defer f.Close()
-
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return ""
-	}
-	return hex.EncodeToString(h.Sum(nil)[:])
 }

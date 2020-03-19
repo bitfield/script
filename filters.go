@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"container/ring"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -308,6 +310,31 @@ func (p *Pipe) Replace(search, replace string) *Pipe {
 func (p *Pipe) ReplaceRegexp(re *regexp.Regexp, replace string) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		out.WriteString(re.ReplaceAllString(line, replace))
+		out.WriteRune('\n')
+	})
+}
+
+// SHA256Sum reads a list of path names from the pipe, one per line, and returns a
+// pipe which contains the SHA-256 checksum of each pathname. If a line
+// is empty, SHA256Sum will set an error to the pipe.
+func (p *Pipe) SHA256Sum() *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+
+	return p.EachLine(func(line string, out *strings.Builder) {
+		f, err := os.Open(line)
+		if err != nil {
+			p.SetError(err)
+		}
+		defer f.Close()
+
+		h := sha256.New()
+		if _, err := io.Copy(h, f); err != nil {
+			p.SetError(err)
+		}
+
+		out.WriteString(hex.EncodeToString(h.Sum(nil)[:]))
 		out.WriteRune('\n')
 	})
 }

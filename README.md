@@ -111,6 +111,7 @@ John is also a [Kubernetes and cloud infrastructure consultant](https://bitfield
 	- [RejectRegexp](#rejectregexp)
 	- [Replace](#replace)
 	- [ReplaceRegexp](#replaceregexp)
+	- [SHA256Sum](#sha256Sum)
 - [Sinks](#sinks)
 	- [AppendFile](#appendfile)
 	- [Bytes](#bytes)
@@ -283,26 +284,27 @@ func main() {
 
 If you're already familiar with shell scripting and the Unix toolset, here is a rough guide to the equivalent `script` operation for each listed Unix command.
 
-| Unix / shell       | `script` equivalent                                           |
-| ------------------ | ------------------------------------------------------------- |
-| (any program name) | [`Exec()`](#exec)                                             |
-| `[ -f FILE ]`      | [`IfExists()`](#ifexists)                                     |
-| `>`                | [`WriteFile()`](#writefile)                                   |
-| `>>`               | [`AppendFile()`](#appendfile)                                 |
-| `$*`               | [`Args()`](#args)                                             |
-| `basename`         | [`Basename()`](#basename)                                     |
-| `cat`              | [`File()`](#file) / [`Concat()`](#concat)                     |
-| `cut`              | [`Column()`](#column)                                         |
-| `dirname`          | [`Dirname()`](#dirname)                                       |
-| `echo`             | [`Echo()`](#echo)                                             |
-| `grep`             | [`Match()`](#match) / [`MatchRegexp()`](#matchregexp)         |
-| `grep -v`          | [`Reject()`](#reject) / [`RejectRegexp()`](#rejectregexp)     |
-| `head`             | [`First()`](#first)                                           |
-| `ls`               | [`ListFiles()`](#listfiles)                                   |
-| `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
-| `tail`             | [`Last()`](#last)                                             |
-| `uniq -c`          | [`Freq()`](#freq)                                             |
-| `wc -l`            | [`CountLines()`](#countlines)                                 |
+| Unix / shell          | `script` equivalent                                           |
+| --------------------- | ------------------------------------------------------------- |
+| (any program name)    | [`Exec()`](#exec)                                             |
+| `[ -f FILE ]`         | [`IfExists()`](#ifexists)                                     |
+| `>`                   | [`WriteFile()`](#writefile)                                   |
+| `>>`                  | [`AppendFile()`](#appendfile)                                 |
+| `$*`                  | [`Args()`](#args)                                             |
+| `basename`            | [`Basename()`](#basename)                                     |
+| `cat`                 | [`File()`](#file) / [`Concat()`](#concat)                     |
+| `cut`                 | [`Column()`](#column)                                         |
+| `dirname`             | [`Dirname()`](#dirname)                                       |
+| `echo`                | [`Echo()`](#echo)                                             |
+| `grep`                | [`Match()`](#match) / [`MatchRegexp()`](#matchregexp)         |
+| `grep -v`             | [`Reject()`](#reject) / [`RejectRegexp()`](#rejectregexp)     |
+| `head`                | [`First()`](#first)                                           |
+| `ls`                  | [`ListFiles()`](#listfiles)                                   |
+| `sed`                 | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
+| `openssl dgst -sha256`| [`SHA256Sum()`](#replace)                    |
+| `tail`                | [`Last()`](#last)                                             |
+| `uniq -c`             | [`Freq()`](#freq)                                             |
+| `wc -l`               | [`CountLines()`](#countlines)                                 |
 
 # Sources, filters, and sinks
 
@@ -709,6 +711,17 @@ p := script.File("test.txt").Replace("old", "new")
 p := script.File("test.txt").ReplaceRegexp(regexp.MustCompile("Gol[a-z]{1}ng"), "Go")
 ```
 
+## SHA256Sum
+`SHA256Sum()` reads a list of path names from the pipe, one per line, and returns a pipe which contains the SHA-256 checksum of each pathname.
+If a line is empty, SHA256Sum will set an error to the pipe.
+
+Examples:
+
+| Input                             | `SHA256Sum` output                                                                                                                                                                                             |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `testdata/sha256Sum.input.txt`    | `1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e`                                                                                                                                             |
+| `testdata/multiple_files/`        | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`<br>`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`<br>`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+
 # Sinks
 
 Sinks are operations which return some data from a pipe, ending the pipeline.
@@ -729,15 +742,6 @@ wrote, err := script.Echo("Got this far!").AppendFile("logfile.txt")
 ```go
 var data []byte
 data, err := script.File("test.bin").Bytes()
-```
-
-## CheckSum
-
-`CheckSum()`, as the name suggests, returns the checksum of the file as a string, plus an error:
-
-```go
-var checkSum string
-checkSum, err := script.File("test.txt").CheckSum()
 ```
 
 ## CountLines
@@ -827,6 +831,7 @@ Since `script` is designed to help you write system administration programs, a f
 * [least_freq](examples/least_freq/main.go)
 * [visitors](examples/visitors/main.go)
 * [ls](examples/ls/main.go)
+* [sha256Sum](examples/sha256sum/main.go)
 
 [More examples would be welcome!](https://github.com/bitfield/script/pulls)
 
