@@ -54,9 +54,6 @@ func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
 	if err != nil {
 		t.Error(err)
 	}
-	if err != nil {
-		t.Error(err)
-	}
 	action = "WriteFile()"
 	_, err = p.WriteFile("testdata/tmp" + kind)
 	defer os.Remove("testdata/tmp" + kind)
