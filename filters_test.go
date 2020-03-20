@@ -424,7 +424,7 @@ func TestSHA256Sum(t *testing.T) {
 		{"testdata/multiple_files", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"},
 	}
 	for _, tc := range testCases {
-		got, err := ListFiles(tc.testFileName).SHA256Sum().String()
+		got, err := ListFiles(tc.testFileName).SHA256Sums().String()
 		if err != nil {
 			t.Error(err)
 		}

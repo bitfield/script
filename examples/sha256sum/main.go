@@ -6,8 +6,8 @@ import (
 )
 
 func main() {
-	hashFile1, _ := script.ListFiles("./testdata/multiple_files/1.txt").SHA256Sum().String()
-	hashFile2, _ := script.ListFiles("./testdata/multiple_files/2.txt").SHA256Sum().String()
+	hashFile1, _ := script.ListFiles("./testdata/multiple_files/1.txt").SHA256Sums().String()
+	hashFile2, _ := script.ListFiles("./testdata/multiple_files/2.txt").SHA256Sums().String()
 
 	if hashFile1 == hashFile2 {
 		fmt.Print("Same file.")

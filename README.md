@@ -111,12 +111,13 @@ John is also a [Kubernetes and cloud infrastructure consultant](https://bitfield
 	- [RejectRegexp](#rejectregexp)
 	- [Replace](#replace)
 	- [ReplaceRegexp](#replaceregexp)
-	- [SHA256Sum](#sha256Sum)
+	- [SHA256Sums](#sha256Sums)
 - [Sinks](#sinks)
 	- [AppendFile](#appendfile)
 	- [Bytes](#bytes)
 	- [CountLines](#countlines)
 	- [Read](#read)
+	- [SHA256Sum](#sha256Sum)
 	- [Stdout](#stdout)
 	- [String](#string)
 	- [WriteFile](#writefile)
@@ -301,7 +302,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `head`             | [`First()`](#first)                                           |
 | `ls`               | [`ListFiles()`](#listfiles)                                   |
 | `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
-| `sha256sum`        | [`SHA256Sum()`](#sha256sum)                                   |
+| `sha256sum`        | [`SHA256Sums()`](#sha256sums)                                   |
 | `tail`             | [`Last()`](#last)                                             |
 | `uniq -c`          | [`Freq()`](#freq)                                             |
 | `wc -l`            | [`CountLines()`](#countlines)                                 |
@@ -711,13 +712,13 @@ p := script.File("test.txt").Replace("old", "new")
 p := script.File("test.txt").ReplaceRegexp(regexp.MustCompile("Gol[a-z]{1}ng"), "Go")
 ```
 
-## SHA256Sum
-`SHA256Sum()` reads a list of file path names from the pipe, one per line, and returns a pipe which contains the SHA-256 checksum of each pathname.
-If a line is empty, SHA256Sum will set an error to the pipe.
+## SHA256Sums
+`SHA256Sus()` reads a list of file path names from the pipe, one per line, and returns a pipe which contains the SHA-256 checksum of each pathname.
+If a line is empty, `SHA256Sums()` will set an error to the pipe.
 
 Examples:
 
-| Input                                                                                                    | `SHA256Sum` output                                                                                                                                                                                             |
+| Input                                                                                                    | `SHA256Sums` output                                                                                                                                                                                             |
 | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `testdata/sha256Sum.input.txt`                                                                           | `1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e`                                                                                                                                             |
 | `testdata/multiple_files/1.txt`<br>`testdata/multiple_files/2.txt`<br>`testdata/multiple_files/3.tar.gz` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`<br>`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`<br>`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
@@ -751,6 +752,15 @@ data, err := script.File("test.bin").Bytes()
 ```go
 var numLines int
 numLines, err := script.File("test.txt").CountLines()
+```
+
+## SHA256Sum
+
+`SHA256Sum()`, as the name suggests, returns the SHA256 check sum of the file as a string, plus an error::
+
+```go
+var sha256Sum string
+sha256Sum, err := script.File("test.txt").SHA256Sum()
 ```
 
 ## Read

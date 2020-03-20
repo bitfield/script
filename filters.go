@@ -314,10 +314,10 @@ func (p *Pipe) ReplaceRegexp(re *regexp.Regexp, replace string) *Pipe {
 	})
 }
 
-// SHA256Sum reads a list of path names from the pipe, one per line, and returns a
+// SHA256Sums reads a list of path names from the pipe, one per line, and returns a
 // pipe which contains the SHA-256 checksum of each pathname. If a line
-// is empty, SHA256Sum will set an error to the pipe.
-func (p *Pipe) SHA256Sum() *Pipe {
+// is empty, SHA256Sums will set an error to the pipe.
+func (p *Pipe) SHA256Sums() *Pipe {
 	if p == nil || p.Error() != nil {
 		return p
 	}
