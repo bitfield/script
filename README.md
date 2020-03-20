@@ -756,7 +756,7 @@ numLines, err := script.File("test.txt").CountLines()
 
 ## SHA256Sum
 
-`SHA256Sum()`, as the name suggests, returns the SHA256 check sum of the file as a string, plus an error::
+`SHA256Sum()`, as the name suggests, returns the SHA256 check sum of the file as a string, plus an error:
 
 ```go
 var sha256Sum string
