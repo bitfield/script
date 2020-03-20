@@ -1,14 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"github.com/bitfield/script"
-	"os"
 )
 
 func main() {
-	listPath := "."
-	if len(os.Args) > 1 {
-		listPath = os.Args[1]
+	hashFile1, _ := script.ListFiles("./testdata/multiple_files/1.txt").SHA256Sum().String()
+	hashFile2, _ := script.ListFiles("./testdata/multiple_files/2.txt").SHA256Sum().String()
+
+	if hashFile1 == hashFile2 {
+		fmt.Print("Same file.")
+	} else {
+		fmt.Print("Files are different.")
 	}
-	script.ListFiles(listPath).SHA256Sum().Stdout()
 }
