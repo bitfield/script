@@ -284,27 +284,27 @@ func main() {
 
 If you're already familiar with shell scripting and the Unix toolset, here is a rough guide to the equivalent `script` operation for each listed Unix command.
 
-| Unix / shell          | `script` equivalent                                           |
-| --------------------- | ------------------------------------------------------------- |
-| (any program name)    | [`Exec()`](#exec)                                             |
-| `[ -f FILE ]`         | [`IfExists()`](#ifexists)                                     |
-| `>`                   | [`WriteFile()`](#writefile)                                   |
-| `>>`                  | [`AppendFile()`](#appendfile)                                 |
-| `$*`                  | [`Args()`](#args)                                             |
-| `basename`            | [`Basename()`](#basename)                                     |
-| `cat`                 | [`File()`](#file) / [`Concat()`](#concat)                     |
-| `cut`                 | [`Column()`](#column)                                         |
-| `dirname`             | [`Dirname()`](#dirname)                                       |
-| `echo`                | [`Echo()`](#echo)                                             |
-| `grep`                | [`Match()`](#match) / [`MatchRegexp()`](#matchregexp)         |
-| `grep -v`             | [`Reject()`](#reject) / [`RejectRegexp()`](#rejectregexp)     |
-| `head`                | [`First()`](#first)                                           |
-| `ls`                  | [`ListFiles()`](#listfiles)                                   |
-| `sed`                 | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
-| `openssl dgst -sha256`| [`SHA256Sum()`](#replace)                    |
-| `tail`                | [`Last()`](#last)                                             |
-| `uniq -c`             | [`Freq()`](#freq)                                             |
-| `wc -l`               | [`CountLines()`](#countlines)                                 |
+| Unix / shell       | `script` equivalent                                           |
+| ------------------ | ------------------------------------------------------------- |
+| (any program name) | [`Exec()`](#exec)                                             |
+| `[ -f FILE ]`      | [`IfExists()`](#ifexists)                                     |
+| `>`                | [`WriteFile()`](#writefile)                                   |
+| `>>`               | [`AppendFile()`](#appendfile)                                 |
+| `$*`               | [`Args()`](#args)                                             |
+| `basename`         | [`Basename()`](#basename)                                     |
+| `cat`              | [`File()`](#file) / [`Concat()`](#concat)                     |
+| `cut`              | [`Column()`](#column)                                         |
+| `dirname`          | [`Dirname()`](#dirname)                                       |
+| `echo`             | [`Echo()`](#echo)                                             |
+| `grep`             | [`Match()`](#match) / [`MatchRegexp()`](#matchregexp)         |
+| `grep -v`          | [`Reject()`](#reject) / [`RejectRegexp()`](#rejectregexp)     |
+| `head`             | [`First()`](#first)                                           |
+| `ls`               | [`ListFiles()`](#listfiles)                                   |
+| `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
+| `sha256sum`        | [`SHA256Sum()`](#sha256sum)                                   |
+| `tail`             | [`Last()`](#last)                                             |
+| `uniq -c`          | [`Freq()`](#freq)                                             |
+| `wc -l`            | [`CountLines()`](#countlines)                                 |
 
 # Sources, filters, and sinks
 
@@ -544,7 +544,7 @@ Each input file will be closed once it has been fully read.
 
 ## Dirname
 
-`Dirname()` reads a list of pathnames from the pipe, one per line, and returns a pipe which contains only the parent directories of each pathname (so, for example, `/usr/local/bin/foo` would become just `/usr/local/bin`). This is the complement of [Basename](#basename).
+`Dirname()` reads a list of file paths from the pipe, one per line, and returns a pipe which contains only the parent directories of each pathname (so, for example, `/usr/local/bin/foo` would become just `/usr/local/bin`). This is the complement of [Basename](#basename).
 
 If a line is empty, `Dirname()` will convert it to a single dot: `.` (this is the behaviour of Unix `dirname` and the Go standard library's `filepath.Dir`).
 
@@ -712,15 +712,15 @@ p := script.File("test.txt").ReplaceRegexp(regexp.MustCompile("Gol[a-z]{1}ng"), 
 ```
 
 ## SHA256Sum
-`SHA256Sum()` reads a list of path names from the pipe, one per line, and returns a pipe which contains the SHA-256 checksum of each pathname.
+`SHA256Sum()` reads a list of file path names from the pipe, one per line, and returns a pipe which contains the SHA-256 checksum of each pathname.
 If a line is empty, SHA256Sum will set an error to the pipe.
 
 Examples:
 
-| Input                             | `SHA256Sum` output                                                                                                                                                                                             |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `testdata/sha256Sum.input.txt`    | `1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e`                                                                                                                                             |
-| `testdata/multiple_files/`        | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`<br>`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`<br>`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| Input                                                                                                    | `SHA256Sum` output                                                                                                                                                                                             |
+| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `testdata/sha256Sum.input.txt`                                                                           | `1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e`                                                                                                                                             |
+| `testdata/multiple_files/1.txt`<br>`testdata/multiple_files/2.txt`<br>`testdata/multiple_files/3.tar.gz` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`<br>`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`<br>`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 
 # Sinks
 
