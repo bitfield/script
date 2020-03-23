@@ -5,20 +5,20 @@ import (
 	"io/ioutil"
 )
 
-// ReadAutoCloser wraps an io.Reader, and closes it automatically, if closable,
-// once it has been completely read.
+// ReadAutoCloser represents a pipe source which will be automatically closed
+// once it has been fully read.
 type ReadAutoCloser struct {
-	r io.Reader
+	r io.ReadCloser
 }
 
-// Read reads up to len(b) bytes from the data source into b. It returns the
+// Read reads up to len(buf) bytes from the data source into buf. It returns the
 // number of bytes read and any error encountered. At end of file, Read returns
 // 0, io.EOF. In the EOF case, the data source will be closed.
-func (a ReadAutoCloser) Read(b []byte) (n int, err error) {
+func (a ReadAutoCloser) Read(buf []byte) (n int, err error) {
 	if a.r == nil {
 		return 0, io.EOF
 	}
-	n, err = a.r.Read(b)
+	n, err = a.r.Read(buf)
 	if err == io.EOF {
 		a.Close()
 	}
@@ -41,5 +41,10 @@ func NewReadAutoCloser(r io.Reader) ReadAutoCloser {
 	if _, ok := r.(io.Closer); !ok {
 		return ReadAutoCloser{ioutil.NopCloser(r)}
 	}
-	return ReadAutoCloser{r}
+	rc, ok := r.(io.ReadCloser)
+	if !ok {
+		// This can never happen, but just in case it does...
+		panic("internal error: type assertion to io.ReadCloser failed")
+	}
+	return ReadAutoCloser{rc}
 }
