@@ -13,6 +13,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"bitbucket.org/creachadair/shell"
 )
 
 // Basename reads a list of filepaths from the pipe, one per line, and removes
@@ -108,12 +110,15 @@ func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 // Exec runs an external command and returns a pipe containing the output. If
 // the command had a non-zero exit status, the pipe's error status will also be
 // set to the string "exit status X", where X is the integer exit status.
-func (p *Pipe) Exec(s string) *Pipe {
+func (p *Pipe) Exec(cmdLine string) *Pipe {
 	if p == nil || p.Error() != nil {
 		return p
 	}
 	q := NewPipe()
-	args := strings.Fields(s)
+	args, ok := shell.Split(cmdLine) // strings.Fields doesn't handle quotes
+	if !ok {
+		return p.WithError(fmt.Errorf("unbalanced quotes or backslashes in [%s]", cmdLine))
+	}
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdin = p.Reader
 	output, err := cmd.CombinedOutput()
