@@ -51,22 +51,40 @@ func TestExec(t *testing.T) {
 		WantOutputContain string
 	}{
 		{
-			Command:           "go",
-			ErrExpected:       true,
-			WantErrContain:    "exit status 2",
-			WantOutputContain: "Usage",
-		},
-		{
 			Command:           "doesntexist",
 			ErrExpected:       true,
 			WantErrContain:    "file not found",
 			WantOutputContain: "",
 		},
 		{
+			Command:           "go",
+			ErrExpected:       true,
+			WantErrContain:    "exit status 2",
+			WantOutputContain: "Usage",
+		},
+		{
 			Command:           "go help",
 			ErrExpected:       false,
 			WantErrContain:    "",
 			WantOutputContain: "Usage",
+		},
+		{
+			Command:           "sh -c 'echo hello'",
+			ErrExpected:       false,
+			WantErrContain:    "",
+			WantOutputContain: "hello\n",
+		},
+		{
+			Command:           "sh -c 'echo oh no",
+			ErrExpected:       true,
+			WantErrContain:    "",
+			WantOutputContain: "",
+		},
+		{
+			Command:           "sh -c 'sh -c \"echo inception\"'",
+			ErrExpected:       false,
+			WantErrContain:    "",
+			WantOutputContain: "inception\n",
 		},
 	}
 	for _, tc := range tcs {

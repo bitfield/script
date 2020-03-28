@@ -347,7 +347,7 @@ fmt.Println(output)
 `Exec()` runs a given command and creates a pipe containing its combined output (`stdout` and `stderr`). If there was an error running the command, the pipe's error status will be set.
 
 ```go
-p := script.Exec("echo hello")
+p := script.Exec("bash -c 'echo hello'")
 output, err := p.String()
 fmt.Println(output)
 // Output: hello
@@ -827,6 +827,7 @@ Since `script` is designed to help you write system administration programs, a f
 
 * [cat](examples/cat/main.go) (copies stdin to stdout)
 * [cat 2](examples/cat2/main.go) (takes a list of files on the command line and concatenates their contents to stdout)
+* [execute](examples/execute/main.go)
 * [grep](examples/grep/main.go)
 * [head](examples/head/main.go)
 * [echo](examples/echo/main.go)
