@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -43,38 +44,49 @@ func TestEcho(t *testing.T) {
 
 func TestExec(t *testing.T) {
 	t.Parallel()
-	want := "Usage"
-	p := Exec("go")
-	if p.Error() == nil {
-		t.Error("want error from command, but got nil")
+	tcs := []struct {
+		Command           string
+		ErrExpected       bool
+		WantErrContain    string
+		WantOutputContain string
+	}{
+		{
+			Command:           "go",
+			ErrExpected:       true,
+			WantErrContain:    "exit status 2",
+			WantOutputContain: "Usage",
+		},
+		{
+			Command:           "doesntexist",
+			ErrExpected:       true,
+			WantErrContain:    "file not found",
+			WantOutputContain: "",
+		},
+		{
+			Command:           "go help",
+			ErrExpected:       false,
+			WantErrContain:    "",
+			WantOutputContain: "Usage",
+		},
 	}
-	if p.Error().Error() != "exit status 2" {
-		t.Errorf("want error 'exit status 2' but got %v", p.Error())
-	}
-	p.SetError(nil)
-	output, err := p.String()
-	if err != nil {
-		t.Error(err)
-	}
-	matches, err := Echo(output).Match(want).CountLines()
-	if err != nil {
-		t.Error(err)
-	}
-	if matches == 0 {
-		t.Errorf("want output of command to match %q, but no matches in %q", want, output)
-	}
-	q := Exec("doesntexist")
-	if q.Error() == nil {
-		t.Error("want error executing non-existent program, but got nil")
-	}
-	// ignoring error because we already checked it
-	output, _ = q.String()
-	if output != "" {
-		t.Errorf("want zero output from running non-existent program, but got %q", output)
-	}
-	r := Exec("go help")
-	if r.Error() != nil {
-		t.Errorf("want no error running 'go help', but got %v", r.Error())
+	for _, tc := range tcs {
+		t.Run(tc.Command, func(t *testing.T) {
+			p := Exec(tc.Command)
+			if tc.ErrExpected != (p.Error() != nil) {
+				t.Fatalf("unexpected error value: %v", p.Error())
+			}
+			if p.Error() != nil && !strings.Contains(p.Error().Error(), tc.WantErrContain) {
+				t.Fatalf("want error string %q to contain %q", p.Error().Error(), tc.WantErrContain)
+			}
+			p.SetError(nil) // else p.String() would be a no-op
+			output, err := p.String()
+			if err != nil {
+				t.Fatalf("unexpected error %v", err)
+			}
+			if !strings.Contains(output, tc.WantOutputContain) {
+				t.Fatalf("want output %q to contain %q", output, tc.WantOutputContain)
+			}
+		})
 	}
 }
 
