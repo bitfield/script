@@ -47,21 +47,25 @@ func (p *Pipe) Column(col int) *Pipe {
 
 // Concat reads a list of filenames from the pipe, one per line, and returns a
 // pipe which reads all those files in sequence. If there are any errors (for
-// example, non-existent files), the pipe's error status will be set to the
-// first error encountered, but execution will continue.
+// example, non-existent files), these will be ignored, execution will continue,
+// and the pipe's error status will not be set.
 func (p *Pipe) Concat() *Pipe {
 	if p == nil || p.Error() != nil {
 		return p
 	}
 	var readers []io.Reader
-	p.EachLine(func(line string, out *strings.Builder) {
-		input, err := os.Open(line)
+	scanner := bufio.NewScanner(p.Reader)
+	for scanner.Scan() {
+		input, err := os.Open(scanner.Text())
 		if err != nil {
-			p.SetError(err)
-			return
+			continue // Concat() ignores errors
 		}
 		readers = append(readers, NewReadAutoCloser(input))
-	})
+	}
+	err := scanner.Err()
+	if err != nil {
+		p.SetError(err)
+	}
 	return p.WithReader(io.MultiReader(readers...))
 }
 
