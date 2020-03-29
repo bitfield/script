@@ -219,9 +219,9 @@ func TestConcat(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := Echo("testdata/test.txt\ntestdata/hello.txt").Concat().Bytes()
+	got, err := Echo("testdata/test.txt\ntestdata/doesntexist.txt\ntestdata/hello.txt").Concat().Bytes()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if !bytes.Equal(got, want) {
 		t.Errorf("want %q, got %q", want, got)
