@@ -12,7 +12,7 @@ func main() {
 	if len(os.Args) > 1 {
 		listPath = os.Args[1]
 	}
-	_, err := script.FindFiles(listPath).Stdout()
+	script.FindFiles(listPath).Stdout()
 	if err != nil {
 		log.Fatal(err)
 	}
