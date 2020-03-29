@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -97,37 +98,67 @@ func TestFile(t *testing.T) {
 	}
 }
 
-func TestFindFilesMultipleFiles(t *testing.T) {
-	t.Parallel()
-	dir := "testdata/multiple_files"
-	want := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip\n", dir, dir, dir)
-	got, err := FindFiles(dir).String()
-	if err != nil {
-		t.Fatal(err)
+func TestFindFiles(t *testing.T) {
+	type args struct {
+		path string
 	}
-	if !cmp.Equal(want, got) {
-		t.Error(cmp.Diff(want, got))
+	test1Path := "testdata/multiple_files"
+	test2Path := "testdata/multiple_files_with_subdirectory"
+	test1Output := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip\n", test1Path, test1Path, test1Path)
+	test2Output := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip\n%s/dir/.hidden\n%s/dir/1.txt\n%s/dir/2.txt\n", test2Path, test2Path, test2Path, test2Path, test2Path, test2Path)
+	tests := []struct {
+		name              string
+		args              args
+		errExpected       bool
+		wantErrContain    string
+		wantOutputContain string
+	}{
+		{
+			name: "Multiple Files",
+			args: args{
+				path: test1Path,
+			},
+			errExpected:       false,
+			wantErrContain:    "",
+			wantOutputContain: test1Output,
+		},
+		{
+			name: "Multiple Files with Subdirectories",
+			args: args{
+				path: test2Path,
+			},
+			errExpected:       false,
+			wantErrContain:    "",
+			wantOutputContain: test2Output,
+		},
+		{
+			name: "Non Existent File Path",
+			args: args{
+				path: "noneexistentpath",
+			},
+			errExpected:       true,
+			wantErrContain:    "no such file or directory",
+			wantOutputContain: "",
+		},
 	}
-}
-
-func TestFindFilesMultipleFilesWithSubdirectory(t *testing.T) {
-	t.Parallel()
-	dir := "testdata/multiple_files_with_subdirectory"
-	want := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip\n%s/dir/.hidden\n%s/dir/1.txt\n%s/dir/2.txt\n", dir, dir, dir, dir, dir, dir)
-	got, err := FindFiles(dir).String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !cmp.Equal(want, got) {
-		t.Error(cmp.Diff(want, got))
-	}
-}
-
-func TestFindFilesNonexistent(t *testing.T) {
-	t.Parallel()
-	p := FindFiles("nonexistentpath")
-	if p.Error() == nil {
-		t.Error("want error status on listing non-existent path, but got nil")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := FindFiles(tt.args.path)
+			if tt.errExpected != (p.Error() != nil) {
+				t.Fatalf("unexpected error value: %v", p.Error())
+			}
+			if p.Error() != nil && !strings.Contains(p.Error().Error(), tt.wantErrContain) {
+				t.Fatalf("want error string %q to contain %q", p.Error().Error(), tt.wantErrContain)
+			}
+			p.SetError(nil) // else p.String() would be a no-op
+			output, err := p.String()
+			if err != nil {
+				t.Fatalf("unexpected error %v", err)
+			}
+			if !strings.Contains(output, tt.wantOutputContain) {
+				t.Fatalf("want output %q to contain %q", output, tt.wantOutputContain)
+			}
+		})
 	}
 }
 

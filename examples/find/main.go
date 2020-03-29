@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	"github.com/bitfield/script"
@@ -13,7 +12,4 @@ func main() {
 		listPath = os.Args[1]
 	}
 	script.FindFiles(listPath).Stdout()
-	if err != nil {
-		log.Fatal(err)
-	}
 }
