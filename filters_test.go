@@ -228,6 +228,57 @@ func TestConcat(t *testing.T) {
 	}
 }
 
+func TestExecForEach(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		Input       []string
+		Command     string
+		ErrExpected bool
+		WantOutput  string
+	}{
+		{
+			Command:     "bash -c 'echo {{.}}'",
+			Input:       []string{"a", "b", "c"},
+			ErrExpected: false,
+			WantOutput:  "a\nb\nc\n",
+		},
+		{
+			Command:     "bash -c 'echo {{if not .}}DEFAULT{{else}}{{.}}{{end}}'",
+			Input:       []string{"a", "", "c"},
+			ErrExpected: false,
+			WantOutput:  "a\nDEFAULT\nc\n",
+		},
+		{
+			Command:     "bash -c 'echo {{bogus template syntax}}'",
+			Input:       []string{"a", "", "c"},
+			ErrExpected: true,
+			WantOutput:  "",
+		},
+		{
+			Command:     "bogus {{.}}",
+			Input:       []string{"a", "b", "c"},
+			ErrExpected: true,
+			WantOutput:  "",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.Command, func(t *testing.T) {
+			p := Slice(tc.Input).ExecForEach(tc.Command)
+			if tc.ErrExpected != (p.Error() != nil) {
+				t.Fatalf("unexpected error value: %v", p.Error())
+			}
+			p.SetError(nil) // else p.String() would be a no-op
+			output, err := p.String()
+			if err != nil {
+				t.Fatalf("unexpected error %v", err)
+			}
+			if !strings.Contains(output, tc.WantOutput) {
+				t.Fatalf("want output %q to contain %q", output, tc.WantOutput)
+			}
+		})
+	}
+}
+
 func TestFirst(t *testing.T) {
 	t.Parallel()
 	want, err := ioutil.ReadFile("testdata/first10.golden.txt")

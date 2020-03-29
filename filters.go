@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"bitbucket.org/creachadair/shell"
 )
@@ -103,6 +104,9 @@ func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 	output := strings.Builder{}
 	for scanner.Scan() {
 		process(scanner.Text(), &output)
+		if p.Error() != nil {
+			return p
+		}
 	}
 	err := scanner.Err()
 	if err != nil {
@@ -130,6 +134,36 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		q.SetError(err)
 	}
 	return q.WithReader(bytes.NewReader(output))
+}
+
+// ExecForEach runs the supplied command once for each line of input, and
+// returns a pipe containing the output. The command string is interpreted as a
+// Go template, so `{{.}}` will be replaced with the input value, for example.
+// If any command resulted in a non-zero exit status, the pipe's error status
+// will also be set to the string "exit status X", where X is the integer exit
+// status.
+func (p *Pipe) ExecForEach(cmdTpl string) *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	tpl, err := template.New("").Parse(cmdTpl)
+	if err != nil {
+		return p.WithError(err)
+	}
+	return p.EachLine(func(line string, out *strings.Builder) {
+		cmdLine := strings.Builder{}
+		err := tpl.Execute(&cmdLine, line)
+		if err != nil {
+			p.SetError(err)
+			return
+		}
+		cmdOutput, err := Exec(cmdLine.String()).String()
+		if err != nil {
+			p.SetError(err)
+			return
+		}
+		out.WriteString(cmdOutput)
+	})
 }
 
 // First reads from the pipe, and returns a new pipe containing only the first N

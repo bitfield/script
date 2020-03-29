@@ -101,6 +101,7 @@ John is also a [Kubernetes and cloud infrastructure consultant](https://bitfield
 	- [Dirname](#dirname)
 	- [EachLine](#eachline)
 	- [Exec](#exec-1)
+	- [ExecForEach](#execforeach)
 	- [First](#first)
 	- [Freq](#freq)
 	- [Join](#join)
@@ -303,6 +304,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `tail`             | [`Last()`](#last)                                             |
 | `uniq -c`          | [`Freq()`](#freq)                                             |
 | `wc -l`            | [`CountLines()`](#countlines)                                 |
+| `xargs`            | [`ExecForEach()`](#execforeach)                               |
 
 # Sources, filters, and sinks
 
@@ -587,6 +589,19 @@ fmt.Println(output)
 // Output: hello world
 ```
 
+## ExecForEach
+
+ExecForEach runs the supplied command once for each line of input, and returns a pipe containing the output, like Unix `xargs`.
+
+The command string is interpreted as a Go template, so `{{.}}` will be replaced with the input value, for example.
+
+The first command which results in an error will set the pipe's error status accordingly, and no subsequent commands will be run.
+
+```go
+// Execute all PHP files in current directory and print output
+script.ListFiles("*.php").Exec("php {{.}}").Stdout()
+```
+
 ## First
 
 `First()` reads its input and passes on the first N lines of it (like Unix [`head`](examples/head/main.go)):
@@ -811,6 +826,7 @@ Since `script` is designed to help you write system administration programs, a f
 
 * [cat](examples/cat/main.go) (copies stdin to stdout)
 * [cat 2](examples/cat2/main.go) (takes a list of files on the command line and concatenates their contents to stdout)
+* [execforeach](examples/execforeach/main.go)
 * [execute](examples/execute/main.go)
 * [grep](examples/grep/main.go)
 * [head](examples/head/main.go)
