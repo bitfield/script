@@ -91,6 +91,7 @@ John is also a [Kubernetes and cloud infrastructure consultant](https://bitfield
 		- [Error output](#error-output)
 	- [File](#file)
 	- [IfExists](#ifexists)
+	- [FindFiles](#findfiles)
 	- [ListFiles](#listfiles)
 	- [Slice](#slice)
 	- [Stdin](#stdin)
@@ -299,6 +300,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `grep`             | [`Match()`](#match) / [`MatchRegexp()`](#matchregexp)         |
 | `grep -v`          | [`Reject()`](#reject) / [`RejectRegexp()`](#rejectregexp)     |
 | `head`             | [`First()`](#first)                                           |
+| `find`             | [`FindFiles`](#findfiles)                                     |
 | `ls`               | [`ListFiles()`](#listfiles)                                   |
 | `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
 | `tail`             | [`Last()`](#last)                                             |
@@ -416,6 +418,15 @@ This can be used to create pipes which take some action only if a certain file e
 
 ```go
 script.IfExists("/foo/bar").Exec("/usr/bin/yada")
+```
+
+## FindFiles
+
+`FindFiles()` lists all files in a directory and its subdirectories recursively, like Unix [`find -type f`](examples/find/main.go).
+
+```go
+script.FindFiles("/tmp").Stdout()
+// lists all files in /tmp and its subtrees
 ```
 
 ## ListFiles

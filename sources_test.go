@@ -127,6 +127,47 @@ func TestFile(t *testing.T) {
 	}
 }
 
+func TestFindFiles(t *testing.T) {
+	tcs := []struct {
+		Path           string
+		ErrExpected    bool
+		wantErrContain string
+		Want           string
+	}{
+		{
+			Path:        "testdata/multiple_files",
+			ErrExpected: false,
+			Want:        "testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip\n",
+		},
+		{
+			Path:        "testdata/multiple_files_with_subdirectory",
+			ErrExpected: false,
+			Want:        "testdata/multiple_files_with_subdirectory/1.txt\ntestdata/multiple_files_with_subdirectory/2.txt\ntestdata/multiple_files_with_subdirectory/3.tar.zip\ntestdata/multiple_files_with_subdirectory/dir/.hidden\ntestdata/multiple_files_with_subdirectory/dir/1.txt\ntestdata/multiple_files_with_subdirectory/dir/2.txt\n",
+		},
+		{
+			Path:        "noneexistentpath",
+			ErrExpected: true,
+			Want:        "",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.Path, func(t *testing.T) {
+			p := FindFiles(tc.Path)
+			if tc.ErrExpected != (p.Error() != nil) {
+				t.Fatalf("unexpected error value: %v", p.Error())
+			}
+			p.SetError(nil) // else p.String() would be a no-op
+			got, err := p.String()
+			if err != nil {
+				t.Fatalf("unexpected error %v", err)
+			}
+			if !cmp.Equal(tc.Want, got) {
+				t.Fatalf("want %q, got %q", tc.Want, got)
+			}
+		})
+	}
+}
+
 func TestIfExists(t *testing.T) {
 	t.Parallel()
 	p := IfExists("testdata/doesntexist")
