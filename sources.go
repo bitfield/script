@@ -53,8 +53,10 @@ func File(name string) *Pipe {
 	return p.WithReader(f)
 }
 
-// FindFiles creates a pipe containing the files inside a directory and all its
-// subdirectories matching the supplied path, one per line.
+// FindFiles takes a directory path and returns a pipe listing all the files in
+// the directory and its subdirectories recursively, one per line, like Unix
+// `find -type f`. If the path doesn't exist or can't be read, the pipe's error
+// status will be set.
 func FindFiles(path string) *Pipe {
 	var fileNames []string
 	walkFn := func(path string, info os.FileInfo, err error) error {

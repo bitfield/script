@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -128,64 +127,41 @@ func TestFile(t *testing.T) {
 }
 
 func TestFindFiles(t *testing.T) {
-	type args struct {
-		path string
-	}
-	test1Path := "testdata/multiple_files"
-	test2Path := "testdata/multiple_files_with_subdirectory"
-	test1Output := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip\n", test1Path, test1Path, test1Path)
-	test2Output := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip\n%s/dir/.hidden\n%s/dir/1.txt\n%s/dir/2.txt\n", test2Path, test2Path, test2Path, test2Path, test2Path, test2Path)
-	tests := []struct {
-		name              string
-		args              args
-		errExpected       bool
-		wantErrContain    string
-		wantOutputContain string
+	tcs := []struct {
+		Path           string
+		ErrExpected    bool
+		wantErrContain string
+		Want           string
 	}{
 		{
-			name: "Multiple Files",
-			args: args{
-				path: test1Path,
-			},
-			errExpected:       false,
-			wantErrContain:    "",
-			wantOutputContain: test1Output,
+			Path:        "testdata/multiple_files",
+			ErrExpected: false,
+			Want:        "testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip\n",
 		},
 		{
-			name: "Multiple Files with Subdirectories",
-			args: args{
-				path: test2Path,
-			},
-			errExpected:       false,
-			wantErrContain:    "",
-			wantOutputContain: test2Output,
+			Path:        "testdata/multiple_files_with_subdirectory",
+			ErrExpected: false,
+			Want:        "testdata/multiple_files_with_subdirectory/1.txt\ntestdata/multiple_files_with_subdirectory/2.txt\ntestdata/multiple_files_with_subdirectory/3.tar.zip\ntestdata/multiple_files_with_subdirectory/dir/.hidden\ntestdata/multiple_files_with_subdirectory/dir/1.txt\ntestdata/multiple_files_with_subdirectory/dir/2.txt\n",
 		},
 		{
-			name: "Non Existent File Path",
-			args: args{
-				path: "noneexistentpath",
-			},
-			errExpected:       true,
-			wantErrContain:    "no such file or directory",
-			wantOutputContain: "",
+			Path:        "noneexistentpath",
+			ErrExpected: true,
+			Want:        "",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p := FindFiles(tt.args.path)
-			if tt.errExpected != (p.Error() != nil) {
+	for _, tc := range tcs {
+		t.Run(tc.Path, func(t *testing.T) {
+			p := FindFiles(tc.Path)
+			if tc.ErrExpected != (p.Error() != nil) {
 				t.Fatalf("unexpected error value: %v", p.Error())
 			}
-			if p.Error() != nil && !strings.Contains(p.Error().Error(), tt.wantErrContain) {
-				t.Fatalf("want error string %q to contain %q", p.Error().Error(), tt.wantErrContain)
-			}
 			p.SetError(nil) // else p.String() would be a no-op
-			output, err := p.String()
+			got, err := p.String()
 			if err != nil {
 				t.Fatalf("unexpected error %v", err)
 			}
-			if !strings.Contains(output, tt.wantOutputContain) {
-				t.Fatalf("want output %q to contain %q", output, tt.wantOutputContain)
+			if !cmp.Equal(tc.Want, got) {
+				t.Fatalf("want %q, got %q", tc.Want, got)
 			}
 		})
 	}
