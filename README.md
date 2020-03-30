@@ -422,16 +422,11 @@ script.IfExists("/foo/bar").Exec("/usr/bin/yada")
 
 ## FindFiles
 
-`FindFiles()` finds all files in a directory and its subdirectories, like Unix [`find`](examples/find/main.go). It creates a pipe containing all files inside a given directory and its subdirectories, one per line.
+`FindFiles()` lists all files in a directory and its subdirectories recursively, like Unix [`find -type f`](examples/find/main.go).
 
 ```go
-p := script.FindFiles("/tmp")
-files, err := p.String()
-if err != nil {
-	log.Fatal(err)
-}
-fmt.Println("The /tmp directory contains the following:")
-fmt.Println(files)
+script.FindFiles("/tmp").Stdout()
+// lists all files in /tmp and its subtrees
 ```
 
 ## ListFiles
