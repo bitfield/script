@@ -3,15 +3,25 @@ package main
 import (
 	"fmt"
 	"github.com/bitfield/script"
+	"log"
+	"os"
+	"strings"
 )
 
 func main() {
-	hashFile1, _ := script.ListFiles("./testdata/multiple_files/1.txt").SHA256Sums().String()
-	hashFile2, _ := script.ListFiles("./testdata/multiple_files/2.txt").SHA256Sums().String()
+	// Read the first 2 args, and calculate the checksum of the files.
+	hashFiles, err := script.Args().First(2).SHA256Sums().String()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	if hashFile1 == hashFile2 {
+	// Compare the SHA256 checksum to check if files are identical.
+	checkSums := strings.Split(hashFiles,"\n")
+	if checkSums[0] == checkSums[1]{
 		fmt.Println("Hashes are identical")
+		os.Exit(0)
 	} else {
-		fmt.Printf("Hashes are different: %q vs %q\n", hashFile1, hashFile2)
+		fmt.Printf("Hashes are different: %q vs %q\n", checkSums[0], checkSums[1])
+		os.Exit(1)
 	}
 }
