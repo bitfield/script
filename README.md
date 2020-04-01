@@ -302,7 +302,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `head`             | [`First()`](#first)                                           |
 | `ls`               | [`ListFiles()`](#listfiles)                                   |
 | `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
-| `sha256sum`        | [`SHA256Sums()`](#sha256sums)                                   |
+| `sha256sum`        | [`SHA256Sum()`](#sha256Sum) / [`SHA256Sums()`](#sha256sums)   |
 | `tail`             | [`Last()`](#last)                                             |
 | `uniq -c`          | [`Freq()`](#freq)                                             |
 | `wc -l`            | [`CountLines()`](#countlines)                                 |
@@ -757,7 +757,7 @@ numLines, err := script.File("test.txt").CountLines()
 ## SHA256Sum
 
 `SHA256Sum()`, as the name suggests, returns the [SHA256 checksum](https://en.wikipedia.org/wiki/SHA-2) of the file as a hexadecimal number stored in a string, plus an error:
-| `sha256sum`        |[SHA256Sum](#sha256Sum) / [`SHA256Sums()`]   
+| `sha256sum`        |[`SHA256Sum`](#sha256Sum) / [`SHA256Sums()`]   
 ```go
 var sha256Sum string
 sha256Sum, err := script.File("test.txt").SHA256Sum()
