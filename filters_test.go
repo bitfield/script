@@ -412,7 +412,7 @@ func TestDirname(t *testing.T) {
 	}
 }
 
-func TestSHA256Sum(t *testing.T) {
+func TestSHA256Sums(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		testFileName string

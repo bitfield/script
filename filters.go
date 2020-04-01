@@ -314,9 +314,11 @@ func (p *Pipe) ReplaceRegexp(re *regexp.Regexp, replace string) *Pipe {
 	})
 }
 
-// SHA256Sums reads a list of path names from the pipe, one per line, and returns a
-// pipe which contains the SHA-256 checksum of each pathname. If a line
-// is empty, SHA256Sums will set an error to the pipe.
+// SHA256Sums reads a list of file paths from the pipe, one per line, and returns a
+// pipe which contains the SHA-256 checksum of each pathname.
+// If there are any errors (for
+// example, non-existent files), the pipe's error status will be set to the
+// first error encountered, but execution will continue.``
 func (p *Pipe) SHA256Sums() *Pipe {
 	if p == nil || p.Error() != nil {
 		return p
@@ -326,12 +328,14 @@ func (p *Pipe) SHA256Sums() *Pipe {
 		f, err := os.Open(line)
 		if err != nil {
 			p.SetError(err)
+			return
 		}
 		defer f.Close()
 
 		h := sha256.New()
 		if _, err := io.Copy(h, f); err != nil {
 			p.SetError(err)
+			return
 		}
 
 		out.WriteString(hex.EncodeToString(h.Sum(nil)[:]))

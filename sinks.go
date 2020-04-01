@@ -46,7 +46,7 @@ func (p *Pipe) CountLines() (int, error) {
 	return lines, p.Error()
 }
 
-// SHA256Sum create the SHA-256 of the file from the pipe's reader, and returns the
+// SHA256Sum calculates the SHA-256 of the file from the pipe's reader, and returns the
 // string result, or an error. If there is an error reading the pipe, the pipe's
 // error status is also set.
 func (p *Pipe) SHA256Sum() (string, error) {
@@ -62,7 +62,7 @@ func (p *Pipe) SHA256Sum() (string, error) {
 
 	sum := sha256.Sum256(bytes)
 	encodedCheckSum := hex.EncodeToString(sum[:])
-	return encodedCheckSum, p.Error()
+	return encodedCheckSum, nil
 }
 
 // Stdout writes the contents of the pipe to the program's standard output. It

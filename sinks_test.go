@@ -89,9 +89,8 @@ func TestZeroPipeSinks(t *testing.T) {
 	doSinksOnPipe(t, &Pipe{}, "zero")
 }
 
-func TestSHA256Sums(t *testing.T) {
+func TestSHA256Sum(t *testing.T) {
 	t.Parallel()
-
 	testCases := []struct {
 		testFileName string
 		want         string
@@ -108,7 +107,7 @@ func TestSHA256Sums(t *testing.T) {
 			t.Error(err)
 		}
 		if got != tc.want {
-			t.Errorf("want %s checksum, got %x", tc.want[:], got[:])
+			t.Errorf("want %q, got %q", tc.want, got)
 		}
 	}
 }

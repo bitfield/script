@@ -10,8 +10,8 @@ func main() {
 	hashFile2, _ := script.ListFiles("./testdata/multiple_files/2.txt").SHA256Sums().String()
 
 	if hashFile1 == hashFile2 {
-		fmt.Print("Same file.")
+		fmt.Println("Hashes are identical")
 	} else {
-		fmt.Print("Files are different.")
+		fmt.Printf("Hashes are different: %q vs %q\n", hashFile1, hashFile2)
 	}
 }

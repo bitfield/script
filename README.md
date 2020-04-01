@@ -545,7 +545,7 @@ Each input file will be closed once it has been fully read.
 
 ## Dirname
 
-`Dirname()` reads a list of file paths from the pipe, one per line, and returns a pipe which contains only the parent directories of each pathname (so, for example, `/usr/local/bin/foo` would become just `/usr/local/bin`). This is the complement of [Basename](#basename).
+`Dirname()` reads a list of pathnames from the pipe, one per line, and returns a pipe which contains only the parent directories of each pathname (so, for example, `/usr/local/bin/foo` would become just `/usr/local/bin`). This is the complement of [Basename](#basename).
 
 If a line is empty, `Dirname()` will convert it to a single dot: `.` (this is the behaviour of Unix `dirname` and the Go standard library's `filepath.Dir`).
 
@@ -713,8 +713,8 @@ p := script.File("test.txt").ReplaceRegexp(regexp.MustCompile("Gol[a-z]{1}ng"), 
 ```
 
 ## SHA256Sums
-`SHA256Sus()` reads a list of file path names from the pipe, one per line, and returns a pipe which contains the SHA-256 checksum of each pathname.
-If a line is empty, `SHA256Sums()` will set an error to the pipe.
+`SHA256Sums()` reads a list of file paths from the pipe, one per line, and returns a pipe which contains the SHA-256 checksum of each file.
+If there are any errors (for example, non-existent files), the pipe's error status will be set to the first error encountered, but execution will continue.
 
 Examples:
 
@@ -756,12 +756,15 @@ numLines, err := script.File("test.txt").CountLines()
 
 ## SHA256Sum
 
-`SHA256Sum()`, as the name suggests, returns the SHA256 check sum of the file as a string, plus an error:
-
+`SHA256Sum()`, as the name suggests, returns the [SHA256 checksum](https://en.wikipedia.org/wiki/SHA-2) of the file as a hexadecimal number stored in a string, plus an error:
+| `sha256sum`        |[SHA256Sum](#sha256Sum) / [`SHA256Sums()`]   
 ```go
 var sha256Sum string
 sha256Sum, err := script.File("test.txt").SHA256Sum()
 ```
+### Why not MD5? 
+
+[MD5 is insecure](https://en.wikipedia.org/wiki/MD5#Security).
 
 ## Read
 
