@@ -54,6 +54,11 @@ func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
 	if err != nil {
 		t.Error(err)
 	}
+	action = "SHA256Sum()"
+	_, err = p.SHA256Sum()
+	if err != nil {
+		t.Error(err)
+	}
 	action = "WriteFile()"
 	_, err = p.WriteFile("testdata/tmp" + kind)
 	defer os.Remove("testdata/tmp" + kind)
@@ -82,6 +87,29 @@ func TestNilPipeSinks(t *testing.T) {
 func TestZeroPipeSinks(t *testing.T) {
 	t.Parallel()
 	doSinksOnPipe(t, &Pipe{}, "zero")
+}
+
+func TestSHA256Sum(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		testFileName string
+		want         string
+	}{
+		{"testdata/empty.txt", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+		{"testdata/test.txt", "a562c9c95e2ff3403e7ffcd8508c6b54d47d5f251387758d3e63dbaaa8296341"},
+		{"testdata/bytes.bin", "b267dc7e66ee428bc8b51b1114bd0e05bde5c8c5d20ce828fbc95b83060c2f17"},
+	}
+
+	for _, tc := range testCases {
+		p := File(tc.testFileName)
+		got, err := p.SHA256Sum()
+		if err != nil {
+			t.Error(err)
+		}
+		if got != tc.want {
+			t.Errorf("want %q, got %q", tc.want, got)
+		}
+	}
 }
 
 func TestCountLines(t *testing.T) {

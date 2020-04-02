@@ -113,11 +113,13 @@ John is also a [Kubernetes and cloud infrastructure consultant](https://bitfield
 	- [RejectRegexp](#rejectregexp)
 	- [Replace](#replace)
 	- [ReplaceRegexp](#replaceregexp)
+	- [SHA256Sums](#sha256Sums)
 - [Sinks](#sinks)
 	- [AppendFile](#appendfile)
 	- [Bytes](#bytes)
 	- [CountLines](#countlines)
 	- [Read](#read)
+	- [SHA256Sum](#sha256Sum)
 	- [Stdout](#stdout)
 	- [String](#string)
 	- [WriteFile](#writefile)
@@ -303,6 +305,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `find`             | [`FindFiles`](#findfiles)                                     |
 | `ls`               | [`ListFiles()`](#listfiles)                                   |
 | `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
+| `sha256sum`        | [`SHA256Sum()`](#sha256Sum) / [`SHA256Sums()`](#sha256sums)   |
 | `tail`             | [`Last()`](#last)                                             |
 | `uniq -c`          | [`Freq()`](#freq)                                             |
 | `wc -l`            | [`CountLines()`](#countlines)                                 |
@@ -735,6 +738,17 @@ p := script.File("test.txt").Replace("old", "new")
 p := script.File("test.txt").ReplaceRegexp(regexp.MustCompile("Gol[a-z]{1}ng"), "Go")
 ```
 
+## SHA256Sums
+`SHA256Sums()` reads a list of file paths from the pipe, one per line, and returns a pipe which contains the SHA-256 checksum of each file.
+If there are any errors (for example, non-existent files), the pipe's error status will be set to the first error encountered, but execution will continue.
+
+Examples:
+
+| Input                                                                                                    | `SHA256Sums` output                                                                                                                                                                                             |
+| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `testdata/sha256Sum.input.txt`                                                                           | `1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e`                                                                                                                                             |
+| `testdata/multiple_files/1.txt`<br>`testdata/multiple_files/2.txt`<br>`testdata/multiple_files/3.tar.gz` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`<br>`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`<br>`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+
 # Sinks
 
 Sinks are operations which return some data from a pipe, ending the pipeline.
@@ -765,6 +779,17 @@ data, err := script.File("test.bin").Bytes()
 var numLines int
 numLines, err := script.File("test.txt").CountLines()
 ```
+
+## SHA256Sum
+
+`SHA256Sum()`, as the name suggests, returns the [SHA256 checksum](https://en.wikipedia.org/wiki/SHA-2) of the file as a hexadecimal number stored in a string, plus an error:
+```go
+var sha256Sum string
+sha256Sum, err := script.File("test.txt").SHA256Sum()
+```
+### Why not MD5? 
+
+[MD5 is insecure](https://en.wikipedia.org/wiki/MD5#Security).
 
 ## Read
 
@@ -846,6 +871,7 @@ Since `script` is designed to help you write system administration programs, a f
 * [least_freq](examples/least_freq/main.go)
 * [visitors](examples/visitors/main.go)
 * [ls](examples/ls/main.go)
+* [sha256Sum](examples/sha256sum/main.go)
 
 [More examples would be welcome!](https://github.com/bitfield/script/pulls)
 

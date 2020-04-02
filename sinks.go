@@ -1,6 +1,8 @@
 package script
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -42,6 +44,25 @@ func (p *Pipe) CountLines() (int, error) {
 		lines++
 	})
 	return lines, p.Error()
+}
+
+// SHA256Sum calculates the SHA-256 of the file from the pipe's reader, and returns the
+// string result, or an error. If there is an error reading the pipe, the pipe's
+// error status is also set.
+func (p *Pipe) SHA256Sum() (string, error) {
+	if p == nil || p.Error() != nil {
+		return "", p.Error()
+	}
+
+	bytes, err := p.Bytes()
+	if err != nil {
+		p.SetError(err)
+		return "", p.Error()
+	}
+
+	sum := sha256.Sum256(bytes)
+	encodedCheckSum := hex.EncodeToString(sum[:])
+	return encodedCheckSum, nil
 }
 
 // Stdout writes the contents of the pipe to the program's standard output. It
