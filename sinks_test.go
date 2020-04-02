@@ -7,34 +7,6 @@ import (
 	"testing"
 )
 
-func TestString(t *testing.T) {
-	t.Parallel()
-	wantRaw, err := ioutil.ReadFile("testdata/test.txt")
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := string(wantRaw)
-	p := File("testdata/test.txt")
-	got, err := p.String()
-	if err != nil {
-		t.Error(err)
-	}
-	if got != want {
-		t.Errorf("want %q, got %q", want, got)
-	}
-	_, err = p.String() // result should be empty
-	if p.Error() == nil {
-		t.Error("want error status after read from closed pipe, got nil")
-	}
-	if err != p.Error() {
-		t.Errorf("got error %v but pipe error status was %v", err, p.Error())
-	}
-	_, err = p.String()
-	if err == nil {
-		t.Error("input not closed after reading")
-	}
-}
-
 // doSinksOnPipe calls every kind of sink method on the supplied pipe and
 // tries to trigger a panic.
 func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
@@ -79,36 +51,45 @@ func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
 		t.Error(err)
 	}
 }
-func TestNilPipeSinks(t *testing.T) {
-	t.Parallel()
-	doSinksOnPipe(t, nil, "nil")
-}
 
-func TestZeroPipeSinks(t *testing.T) {
+func TestAppendFile(t *testing.T) {
 	t.Parallel()
-	doSinksOnPipe(t, &Pipe{}, "zero")
-}
-
-func TestSHA256Sum(t *testing.T) {
-	t.Parallel()
-	testCases := []struct {
-		testFileName string
-		want         string
-	}{
-		{"testdata/empty.txt", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
-		{"testdata/test.txt", "a562c9c95e2ff3403e7ffcd8508c6b54d47d5f251387758d3e63dbaaa8296341"},
-		{"testdata/bytes.bin", "b267dc7e66ee428bc8b51b1114bd0e05bde5c8c5d20ce828fbc95b83060c2f17"},
+	orig := "Hello, world"
+	testFile := "testdata/appendfile.txt"
+	defer os.Remove(testFile)
+	// ignore results; we're testing AppendFile, not WriteFile
+	_, _ = Echo(orig).WriteFile(testFile)
+	extra := " and goodbye"
+	wrote, err := Echo(extra).AppendFile(testFile)
+	if err != nil {
+		t.Error(err)
 	}
+	if int(wrote) != len(extra) {
+		t.Errorf("want %d bytes written, got %d", len(extra), int(wrote))
+	}
+	// check file contains both contents
+	got, err := File(testFile).String()
+	if err != nil {
+		t.Error(err)
+	}
+	if got != orig+extra {
+		t.Errorf("want %q, got %q", orig+extra, got)
+	}
+}
 
-	for _, tc := range testCases {
-		p := File(tc.testFileName)
-		got, err := p.SHA256Sum()
-		if err != nil {
-			t.Error(err)
-		}
-		if got != tc.want {
-			t.Errorf("want %q, got %q", tc.want, got)
-		}
+func TestBytes(t *testing.T) {
+	t.Parallel()
+	inFile := "testdata/bytes.bin"
+	got, err := File(inFile).Bytes()
+	if err != nil {
+		t.Error(err)
+	}
+	want, err := ioutil.ReadFile(inFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Errorf("want %q, got %q", want, got)
 	}
 }
 
@@ -152,49 +133,36 @@ func TestCountLines(t *testing.T) {
 	}
 }
 
-func TestWriteFile(t *testing.T) {
+func TestSinksOnNilPipes(t *testing.T) {
 	t.Parallel()
-	want := "Hello, world"
-	testFile := "testdata/writefile.txt"
-	defer os.Remove(testFile)
-	wrote, err := Echo(want).WriteFile(testFile)
-	if err != nil {
-		t.Error(err)
-	}
-	if int(wrote) != len(want) {
-		t.Errorf("want %d bytes written, got %d", len(want), int(wrote))
-	}
-	got, err := File(testFile).String()
-	if err != nil {
-		t.Error(err)
-	}
-	if got != want {
-		t.Errorf("want %q, got %q", want, got)
-	}
+	doSinksOnPipe(t, nil, "nil")
 }
 
-func TestAppendFile(t *testing.T) {
+func TestSinksOnZeroPipes(t *testing.T) {
 	t.Parallel()
-	orig := "Hello, world"
-	testFile := "testdata/appendfile.txt"
-	defer os.Remove(testFile)
-	// ignore results; we're testing AppendFile, not WriteFile
-	_, _ = Echo(orig).WriteFile(testFile)
-	extra := " and goodbye"
-	wrote, err := Echo(extra).AppendFile(testFile)
-	if err != nil {
-		t.Error(err)
+	doSinksOnPipe(t, &Pipe{}, "zero")
+}
+
+func TestSHA256Sum(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		testFileName string
+		want         string
+	}{
+		{"testdata/empty.txt", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+		{"testdata/test.txt", "a562c9c95e2ff3403e7ffcd8508c6b54d47d5f251387758d3e63dbaaa8296341"},
+		{"testdata/bytes.bin", "b267dc7e66ee428bc8b51b1114bd0e05bde5c8c5d20ce828fbc95b83060c2f17"},
 	}
-	if int(wrote) != len(extra) {
-		t.Errorf("want %d bytes written, got %d", len(extra), int(wrote))
-	}
-	// check file contains both contents
-	got, err := File(testFile).String()
-	if err != nil {
-		t.Error(err)
-	}
-	if got != orig+extra {
-		t.Errorf("want %q, got %q", orig+extra, got)
+
+	for _, tc := range testCases {
+		p := File(tc.testFileName)
+		got, err := p.SHA256Sum()
+		if err != nil {
+			t.Error(err)
+		}
+		if got != tc.want {
+			t.Errorf("want %q, got %q", tc.want, got)
+		}
 	}
 }
 
@@ -240,18 +208,51 @@ func TestStdout(t *testing.T) {
 	}
 }
 
-func TestBytes(t *testing.T) {
+func TestString(t *testing.T) {
 	t.Parallel()
-	inFile := "testdata/bytes.bin"
-	got, err := File(inFile).Bytes()
-	if err != nil {
-		t.Error(err)
-	}
-	want, err := ioutil.ReadFile(inFile)
+	wantRaw, err := ioutil.ReadFile("testdata/test.txt")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Equal(got, want) {
+	want := string(wantRaw)
+	p := File("testdata/test.txt")
+	got, err := p.String()
+	if err != nil {
+		t.Error(err)
+	}
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+	_, err = p.String() // result should be empty
+	if p.Error() == nil {
+		t.Error("want error status after read from closed pipe, got nil")
+	}
+	if err != p.Error() {
+		t.Errorf("got error %v but pipe error status was %v", err, p.Error())
+	}
+	_, err = p.String()
+	if err == nil {
+		t.Error("input not closed after reading")
+	}
+}
+
+func TestWriteFile(t *testing.T) {
+	t.Parallel()
+	want := "Hello, world"
+	testFile := "testdata/writefile.txt"
+	defer os.Remove(testFile)
+	wrote, err := Echo(want).WriteFile(testFile)
+	if err != nil {
+		t.Error(err)
+	}
+	if int(wrote) != len(want) {
+		t.Errorf("want %d bytes written, got %d", len(want), int(wrote))
+	}
+	got, err := File(testFile).String()
+	if err != nil {
+		t.Error(err)
+	}
+	if got != want {
 		t.Errorf("want %q, got %q", want, got)
 	}
 }

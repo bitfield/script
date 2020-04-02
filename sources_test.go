@@ -26,7 +26,6 @@ func TestArgs(t *testing.T) {
 	if string(got) != want {
 		t.Errorf("want %q, got %q", want, string(got))
 	}
-
 }
 
 func TestEcho(t *testing.T) {

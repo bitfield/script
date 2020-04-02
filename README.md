@@ -113,13 +113,14 @@ John is also a [Kubernetes and cloud infrastructure consultant](https://bitfield
 	- [RejectRegexp](#rejectregexp)
 	- [Replace](#replace)
 	- [ReplaceRegexp](#replaceregexp)
-	- [SHA256Sums](#sha256Sums)
+	- [SHA256Sums](#sha256sums)
 - [Sinks](#sinks)
 	- [AppendFile](#appendfile)
 	- [Bytes](#bytes)
 	- [CountLines](#countlines)
 	- [Read](#read)
-	- [SHA256Sum](#sha256Sum)
+	- [SHA256Sum](#sha256sum)
+		- [Why not MD5?](#why-not-md5)
 	- [Stdout](#stdout)
 	- [String](#string)
 	- [WriteFile](#writefile)
@@ -744,7 +745,7 @@ If there are any errors (for example, non-existent files), the pipe's error stat
 
 Examples:
 
-| Input                                                                                                    | `SHA256Sums` output                                                                                                                                                                                             |
+| Input                                                                                                    | `SHA256Sums` output                                                                                                                                                                                            |
 | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `testdata/sha256Sum.input.txt`                                                                           | `1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e`                                                                                                                                             |
 | `testdata/multiple_files/1.txt`<br>`testdata/multiple_files/2.txt`<br>`testdata/multiple_files/3.tar.gz` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`<br>`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`<br>`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
@@ -780,17 +781,6 @@ var numLines int
 numLines, err := script.File("test.txt").CountLines()
 ```
 
-## SHA256Sum
-
-`SHA256Sum()`, as the name suggests, returns the [SHA256 checksum](https://en.wikipedia.org/wiki/SHA-2) of the file as a hexadecimal number stored in a string, plus an error:
-```go
-var sha256Sum string
-sha256Sum, err := script.File("test.txt").SHA256Sum()
-```
-### Why not MD5? 
-
-[MD5 is insecure](https://en.wikipedia.org/wiki/MD5#Security).
-
 ## Read
 
 `Read()` behaves just like the standard `Read()` method on any `io.Reader`:
@@ -803,6 +793,17 @@ n, err := r.Read(buf)
 Because a Pipe is an `io.Reader`, you can use it anywhere you would use a file, network connection, and so on. You can pass it to `ioutil.ReadAll`, `io.Copy`, `json.NewDecoder`, and anything else which takes an `io.Reader`.
 
 Unlike most sinks, `Read()` does not read the whole contents of the pipe (unless the supplied buffer is big enough to hold them).
+
+## SHA256Sum
+
+`SHA256Sum()`, as the name suggests, returns the [SHA256 checksum](https://en.wikipedia.org/wiki/SHA-2) of the file as a hexadecimal number stored in a string, plus an error:
+```go
+var sha256Sum string
+sha256Sum, err := script.File("test.txt").SHA256Sum()
+```
+### Why not MD5?
+
+[MD5 is insecure](https://en.wikipedia.org/wiki/MD5#Security).
 
 ## Stdout
 
@@ -862,16 +863,16 @@ Since `script` is designed to help you write system administration programs, a f
 
 * [cat](examples/cat/main.go) (copies stdin to stdout)
 * [cat 2](examples/cat2/main.go) (takes a list of files on the command line and concatenates their contents to stdout)
+* [echo](examples/echo/main.go)
 * [execforeach](examples/execforeach/main.go)
 * [execute](examples/execute/main.go)
 * [grep](examples/grep/main.go)
 * [head](examples/head/main.go)
-* [echo](examples/echo/main.go)
-* [tail](examples/tail/main.go)
 * [least_freq](examples/least_freq/main.go)
-* [visitors](examples/visitors/main.go)
 * [ls](examples/ls/main.go)
-* [sha256Sum](examples/sha256sum/main.go)
+* [sha256sum](examples/sha256sum/main.go)
+* [tail](examples/tail/main.go)
+* [visitors](examples/visitors/main.go)
 
 [More examples would be welcome!](https://github.com/bitfield/script/pulls)
 
