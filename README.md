@@ -119,6 +119,7 @@ John is also a [Kubernetes and cloud infrastructure consultant](https://bitfield
 	- [Bytes](#bytes)
 	- [CountLines](#countlines)
 	- [Read](#read)
+	- [Slice](#slice)
 	- [SHA256Sum](#sha256sum)
 		- [Why not MD5?](#why-not-md5)
 	- [Stdout](#stdout)
@@ -793,6 +794,14 @@ n, err := r.Read(buf)
 Because a Pipe is an `io.Reader`, you can use it anywhere you would use a file, network connection, and so on. You can pass it to `ioutil.ReadAll`, `io.Copy`, `json.NewDecoder`, and anything else which takes an `io.Reader`.
 
 Unlike most sinks, `Read()` does not read the whole contents of the pipe (unless the supplied buffer is big enough to hold them).
+
+## Slice
+
+`Slice()`, returns each line of the pipe as a Slice item, plus an error:
+```go
+var slice []string
+slice, err := script.Args().Slice()
+```
 
 ## SHA256Sum
 

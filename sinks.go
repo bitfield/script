@@ -46,6 +46,20 @@ func (p *Pipe) CountLines() (int, error) {
 	return lines, p.Error()
 }
 
+// Slice return each lines of the pipe in a Slice or an error.
+// If there is an error reading the pipe, the pipe's error status
+// is also set.
+func (p *Pipe) Slice() ([]string, error) {
+	if p == nil || p.Error() != nil {
+		return nil, p.Error()
+	}
+	var slice []string
+	p.EachLine(func(line string, out *strings.Builder) {
+		slice = append(slice, line)
+	})
+	return slice, p.Error()
+}
+
 // SHA256Sum calculates the SHA-256 of the file from the pipe's reader, and returns the
 // string result, or an error. If there is an error reading the pipe, the pipe's
 // error status is also set.

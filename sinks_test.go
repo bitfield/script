@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -23,6 +24,11 @@ func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
 	}
 	action = "CountLines()"
 	_, err = p.CountLines()
+	if err != nil {
+		t.Error(err)
+	}
+	action = "Slice()"
+	_, err = p.Slice()
 	if err != nil {
 		t.Error(err)
 	}
@@ -164,6 +170,25 @@ func TestSHA256Sum(t *testing.T) {
 			t.Errorf("want %q, got %q", tc.want, got)
 		}
 	}
+}
+
+func TestSinkSlice(t *testing.T) {
+	t.Parallel()
+
+	want := []string {
+		"testdata/multiple_files/1.txt",
+		"testdata/multiple_files/2.txt",
+		"testdata/multiple_files/3.tar.zip",
+	}
+	got, err := ListFiles("testdata/multiple_files").Slice()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want %q, got %q", want, got)
+	}
+
 }
 
 func TestStdout(t *testing.T) {
