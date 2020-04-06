@@ -189,6 +189,11 @@ func TestSinkSlice(t *testing.T) {
 		t.Errorf("want %q, got %q", want, got)
 	}
 
+	// Empty pipe, should return empty slice
+	got, _ = File("testdata/empty.txt").Slice()
+	if len(got) != 0 {
+		t.Errorf("want %q, got %q", 0, len(got))
+	}
 }
 
 func TestStdout(t *testing.T) {
