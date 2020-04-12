@@ -174,13 +174,17 @@ func TestSHA256Sum(t *testing.T) {
 
 func TestSliceSink(t *testing.T) {
 	t.Parallel()
+	input := Echo(
+		"testdata/multiple_files/1.txt\n" +
+		"testdata/multiple_files/2.txt\n" +
+		"testdata/multiple_files/3.tar.zip")
 
 	want := []string {
 		"testdata/multiple_files/1.txt",
 		"testdata/multiple_files/2.txt",
 		"testdata/multiple_files/3.tar.zip",
 	}
-	got, err := ListFiles("testdata/multiple_files").Slice()
+	got, err := input.Slice()
 	if err != nil {
 		t.Error(err)
 	}
