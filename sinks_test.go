@@ -172,7 +172,7 @@ func TestSHA256Sum(t *testing.T) {
 	}
 }
 
-func TestSinkSlice(t *testing.T) {
+func TestSliceSink(t *testing.T) {
 	t.Parallel()
 
 	want := []string {

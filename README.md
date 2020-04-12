@@ -797,7 +797,7 @@ Unlike most sinks, `Read()` does not read the whole contents of the pipe (unless
 
 ## Slice
 
-`Slice()`, returns each line of the pipe as a Slice item, plus an error:
+`Slice()`, returns the contents of the pipe as a slice of strings, one element per line, plus an error:
 ```go
 var slice []string
 slice, err := script.Args().Slice()
