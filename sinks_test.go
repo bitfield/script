@@ -2,9 +2,9 @@ package script
 
 import (
 	"bytes"
+	"github.com/google/go-cmp/cmp"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"testing"
 )
 
@@ -185,7 +185,7 @@ func TestSliceSink(t *testing.T) {
 		t.Error(err)
 	}
 
-	if !reflect.DeepEqual(got, want) {
+	if !cmp.Equal(got, want) {
 		t.Errorf("want %q, got %q", want, got)
 	}
 
