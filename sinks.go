@@ -53,11 +53,11 @@ func (p *Pipe) Slice() ([]string, error) {
 	if p == nil || p.Error() != nil {
 		return nil, p.Error()
 	}
-	var slice []string
+	var result []string
 	p.EachLine(func(line string, out *strings.Builder) {
-		slice = append(slice, line)
+		result = append(result, line)
 	})
-	return slice, p.Error()
+	return result, p.Error()
 }
 
 // SHA256Sum calculates the SHA-256 of the file from the pipe's reader, and returns the
