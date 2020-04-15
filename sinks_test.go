@@ -194,9 +194,38 @@ func TestSliceSink(t *testing.T) {
 	}
 
 	// Empty pipe, should return empty slice
-	got, _ = File("testdata/empty.txt").Slice()
+	got, err = Echo("").Slice()
+	if err != nil {
+		t.Error(err)
+	}
 	if len(got) != 0 {
-		t.Errorf("want %q, got %q", 0, len(got))
+		t.Errorf("want %d, got %d", 1, len(got))
+	}
+
+	// Pipe consists of a single newline, should return 1 element
+	want = []string {""}
+	got, err = Echo("\n").Slice()
+	if err != nil {
+		t.Error(err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Errorf("want %q, got %q", want, got)
+	}
+
+	// Empty line between two existing line
+	input = Echo("testdata/multiple_files/1.txt\n\ntestdata/multiple_files/3.tar.zip")
+
+	want = []string {
+		"testdata/multiple_files/1.txt",
+		"",
+		"testdata/multiple_files/3.tar.zip",
+	}
+	got, err = input.Slice()
+	if err != nil {
+		t.Error(err)
+	}
+	if !cmp.Equal(got, want) {
+		t.Errorf("want %q, got %q", want, got)
 	}
 }
 
