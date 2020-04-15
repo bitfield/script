@@ -7,11 +7,11 @@ import (
 )
 
 func main() {
-	// Read args, and return it in a Slice.
-	params, err := script.Args().Slice()
+	// Get a Slice with all the running process PID
+	pids, err := script.Exec("ps -ea").Column(1).Slice()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Input params are %q", params)
+	fmt.Printf("Running process PIDs are:  %q", pids)
 }
