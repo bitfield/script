@@ -614,7 +614,7 @@ The first command which results in an error will set the pipe's error status acc
 
 ```go
 // Execute all PHP files in current directory and print output
-script.ListFiles("*.php").Exec("php {{.}}").Stdout()
+script.ListFiles("*.php").ExecForEach("php {{.}}").Stdout()
 ```
 
 ## First
