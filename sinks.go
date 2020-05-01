@@ -54,14 +54,13 @@ func (p *Pipe) SHA256Sum() (string, error) {
 		return "", p.Error()
 	}
 
-	bytes, err := p.Bytes()
-	if err != nil {
+	h := sha256.New()
+	if _, err := io.Copy(h, p.Reader); err != nil {
 		p.SetError(err)
 		return "", p.Error()
 	}
 
-	sum := sha256.Sum256(bytes)
-	encodedCheckSum := hex.EncodeToString(sum[:])
+	encodedCheckSum := hex.EncodeToString(h.Sum(nil)[:])
 	return encodedCheckSum, nil
 }
 
