@@ -254,3 +254,48 @@ func TestStdin(t *testing.T) {
 		t.Errorf("want %q, got %q", want, string(got))
 	}
 }
+
+func TestPrompt(t *testing.T) {
+	tcs := []struct {
+		Name        string
+		Input       string
+		Default     string
+		Want        string
+		ErrExpected bool
+	}{
+		{"User Input OK", "123", "notused", "123", false},
+		{"No User Input", "", "default", "default", false},
+		{"Complex Input", "/user/test @@@ testing one two three", "default", "/user/test @@@ testing one two three", false},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.Name, func(t *testing.T) {
+			want := []byte(tc.Input)
+
+			tmp, err := ioutil.TempFile("", tc.Name)
+			if err != nil {
+				t.Error(err)
+			}
+			defer os.Remove(tmp.Name())
+			if _, err := tmp.Write(want); err != nil {
+				t.Error(err)
+			}
+
+			if _, err := tmp.Seek(0, 0); err != nil {
+				t.Error(err)
+			}
+			oldStdin := os.Stdin
+			defer func() { os.Stdin = oldStdin }() // Restore original Stdin
+
+			os.Stdin = tmp
+
+			//dummy test
+			got, err := Prompt("Prompting \t", tc.Default).String()
+			if tc.ErrExpected != (err != nil) {
+				t.Error(err)
+			}
+			if got != string(tc.Want) {
+				t.Errorf("want %q, got %q", tc.Want, got)
+			}
+		})
+	}
+}

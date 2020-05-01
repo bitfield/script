@@ -1,6 +1,7 @@
 package script
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -112,4 +113,19 @@ func Slice(s []string) *Pipe {
 // Stdin returns a pipe which reads from the program's standard input.
 func Stdin() *Pipe {
 	return NewPipe().WithReader(os.Stdin)
+}
+
+// Prompt presents a message to the user and returns a pipe containing user input or defaultValue provided.
+func Prompt(message, defaultValue string) *Pipe {
+	fmt.Print(message)
+
+	in, err := Stdin().First(1).String()
+	if err != nil {
+		return NewPipe().WithError(err)
+	}
+	in = strings.TrimSpace(in)
+	if in == "" {
+		in = defaultValue
+	}
+	return NewPipe().WithReader(strings.NewReader(in))
 }
