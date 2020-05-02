@@ -1,7 +1,6 @@
 package script
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -117,9 +116,10 @@ func Stdin() *Pipe {
 
 // Prompt presents a message to the user and returns a pipe containing user input or defaultValue provided.
 func Prompt(message, defaultValue string) *Pipe {
-	fmt.Print(message)
 
-	in, err := Stdin().First(1).String()
+	Echo(message).Stdout()
+	p := Stdin().First(1)
+	in, err := p.String()
 	if err != nil {
 		return NewPipe().WithError(err)
 	}
@@ -127,5 +127,5 @@ func Prompt(message, defaultValue string) *Pipe {
 	if in == "" {
 		in = defaultValue
 	}
-	return NewPipe().WithReader(strings.NewReader(in))
+	return Echo(in)
 }

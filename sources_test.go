@@ -271,6 +271,7 @@ func TestPrompt(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			want := []byte(tc.Input)
 
+			// Prepare Stdin before calling prompt.
 			tmp, err := ioutil.TempFile("", tc.Name)
 			if err != nil {
 				t.Error(err)
@@ -283,12 +284,12 @@ func TestPrompt(t *testing.T) {
 			if _, err := tmp.Seek(0, 0); err != nil {
 				t.Error(err)
 			}
-			oldStdin := os.Stdin
-			defer func() { os.Stdin = oldStdin }() // Restore original Stdin
 
+			// Restore original Stdin.
+			oldStdin := os.Stdin
+			defer func() { os.Stdin = oldStdin }()
 			os.Stdin = tmp
 
-			//dummy test
 			got, err := Prompt("Prompting \t", tc.Default).String()
 			if tc.ErrExpected != (err != nil) {
 				t.Error(err)
