@@ -104,16 +104,6 @@ func ListFiles(path string) *Pipe {
 	return Slice(fileNames)
 }
 
-// Slice returns a pipe containing each element of the supplied slice of strings, one per line.
-func Slice(s []string) *Pipe {
-	return Echo(strings.Join(s, "\n") + "\n")
-}
-
-// Stdin returns a pipe which reads from the program's standard input.
-func Stdin() *Pipe {
-	return NewPipe().WithReader(os.Stdin)
-}
-
 // Prompt presents a message to the user and returns a pipe containing user input or defaultValue provided.
 func Prompt(message, defaultValue string) *Pipe {
 	Echo(message).Stdout()
@@ -127,4 +117,14 @@ func Prompt(message, defaultValue string) *Pipe {
 		in = defaultValue
 	}
 	return Echo(in)
+}
+
+// Slice returns a pipe containing each element of the supplied slice of strings, one per line.
+func Slice(s []string) *Pipe {
+	return Echo(strings.Join(s, "\n") + "\n")
+}
+
+// Stdin returns a pipe which reads from the program's standard input.
+func Stdin() *Pipe {
+	return NewPipe().WithReader(os.Stdin)
 }
