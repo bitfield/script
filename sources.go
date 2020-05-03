@@ -116,7 +116,6 @@ func Stdin() *Pipe {
 
 // Prompt presents a message to the user and returns a pipe containing user input or defaultValue provided.
 func Prompt(message, defaultValue string) *Pipe {
-
 	Echo(message).Stdout()
 	p := Stdin().First(1)
 	in, err := p.String()
