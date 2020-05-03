@@ -115,7 +115,7 @@ func Prompt(message, defaultValue string) *Pipe {
 	}
 	in = strings.TrimSpace(in)
 	if in == "" {
-		in = defaultValue
+		return Echo(defaultValue)
 	}
 	return Echo(in)
 }
