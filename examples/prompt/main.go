@@ -13,7 +13,7 @@ func main() {
 		panic(err)
 	}
 
-	script.Prompt("Choose install location: ", strings.TrimSpace(curDir)).
+	script.Prompt("Choose install location", strings.TrimSpace(curDir)).
 		ExecForEach("touch {{.}}/fake_install.sh").Stdout()
 
 	script.Echo("Installation of Fake Product complete").Stdout()
