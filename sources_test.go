@@ -263,9 +263,27 @@ func TestPrompt(t *testing.T) {
 		Want        string
 		ErrExpected bool
 	}{
-		{"User Input OK", "123", "notused", "123", false},
-		{"No User Input", "", "default", "default", false},
-		{"Complex Input", "/user/test @@@ testing one two three", "default", "/user/test @@@ testing one two three", false},
+		{
+			Name:        "User Input OK",
+			Input:       "123",
+			Default:     "notused",
+			Want:        "123",
+			ErrExpected: false,
+		},
+		{
+			Name:        "No User Input",
+			Input:       "",
+			Default:     "default",
+			Want:        "default",
+			ErrExpected: false,
+		},
+		{
+			Name:        "Complex Input",
+			Input:       "/user/test @@@ testing one two three",
+			Default:     "default",
+			Want:        "/user/test @@@ testing one two three",
+			ErrExpected: false,
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.Name, func(t *testing.T) {
