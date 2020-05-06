@@ -1,6 +1,7 @@
 package script
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -108,12 +109,13 @@ func ListFiles(path string) *Pipe {
 // Prompt presents a message to the user and returns a pipe containing user input or defaultValue provided.
 func Prompt(message, defaultValue string) *Pipe {
 	Echo(fmt.Sprintf("%s [%s]: ", message, defaultValue)).Stdout()
-	p := Stdin().First(1)
-	in, err := p.String()
-	if err != nil {
-		return NewPipe().WithError(err)
+	p := Stdin()
+	scanner := bufio.NewScanner(p.Reader)
+	ok := scanner.Scan()
+	if !ok && scanner.Err() != nil {
+		return NewPipe().WithError(scanner.Err())
 	}
-	in = strings.TrimSpace(in)
+	in := scanner.Text()
 	if in == "" {
 		return Echo(defaultValue)
 	}
