@@ -209,7 +209,7 @@ func TestSliceSink(t *testing.T) {
 		t.Error(cmp.Diff(want, got))
 	}
 
-	// Empty line between two existing line
+	// Empty line between two existing lines
 	input = Echo("testdata/multiple_files/1.txt\n\ntestdata/multiple_files/3.tar.zip")
 
 	want = []string{
