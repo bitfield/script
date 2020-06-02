@@ -190,7 +190,7 @@ func TestSliceSink(t *testing.T) {
 	}
 
 	if !cmp.Equal(got, want) {
-		t.Errorf("want %q, got %q", want, got)
+		t.Error(cmp.Diff(want, got))
 	}
 
 	// Empty pipe, should return empty slice
@@ -209,7 +209,7 @@ func TestSliceSink(t *testing.T) {
 		t.Error(err)
 	}
 	if !cmp.Equal(want, got) {
-		t.Errorf("want %q, got %q", want, got)
+		t.Error(cmp.Diff(want, got))
 	}
 
 	// Empty line between two existing line
@@ -225,7 +225,7 @@ func TestSliceSink(t *testing.T) {
 		t.Error(err)
 	}
 	if !cmp.Equal(got, want) {
-		t.Errorf("want %q, got %q", want, got)
+		t.Error(cmp.Diff(want, got))
 	}
 }
 
