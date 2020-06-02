@@ -176,7 +176,7 @@ func TestSliceSink(t *testing.T) {
 	t.Parallel()
 	input := Echo("testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip\n")
 
-	want := []string {
+	want := []string{
 		"testdata/multiple_files/1.txt",
 		"testdata/multiple_files/2.txt",
 		"testdata/multiple_files/3.tar.zip",
@@ -200,7 +200,7 @@ func TestSliceSink(t *testing.T) {
 	}
 
 	// Pipe consists of a single newline, should return 1 element
-	want = []string {""}
+	want = []string{""}
 	got, err = Echo("\n").Slice()
 	if err != nil {
 		t.Error(err)
@@ -212,7 +212,7 @@ func TestSliceSink(t *testing.T) {
 	// Empty line between two existing line
 	input = Echo("testdata/multiple_files/1.txt\n\ntestdata/multiple_files/3.tar.zip")
 
-	want = []string {
+	want = []string{
 		"testdata/multiple_files/1.txt",
 		"",
 		"testdata/multiple_files/3.tar.zip",
