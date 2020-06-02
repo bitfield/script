@@ -196,7 +196,7 @@ func TestSliceSink(t *testing.T) {
 		t.Error(err)
 	}
 	if len(got) != 0 {
-		t.Errorf("want %d, got %d", 1, len(got))
+		t.Errorf("want zero-length slice, got %v", got)
 	}
 
 	// Pipe consists of a single newline, should return 1 element
