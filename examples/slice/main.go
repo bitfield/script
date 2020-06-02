@@ -14,7 +14,7 @@ func main() {
 	}
 
 	fmt.Printf("Running process PIDs are:")
-	for _, pid := range pids{
+	for _, pid := range pids {
 		fmt.Println(pid)
 	}
 }
