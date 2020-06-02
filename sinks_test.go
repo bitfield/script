@@ -177,7 +177,7 @@ func TestSliceSink(t *testing.T) {
 	input := Echo(
 		"testdata/multiple_files/1.txt\n" +
 		"testdata/multiple_files/2.txt\n" +
-		"testdata/multiple_files/3.tar.zip")
+		"testdata/multiple_files/3.tar.zip\n")
 
 	want := []string {
 		"testdata/multiple_files/1.txt",
