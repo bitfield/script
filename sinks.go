@@ -72,22 +72,10 @@ func (p *Pipe) Slice() ([]string, error) {
 	if p == nil || p.Error() != nil {
 		return nil, p.Error()
 	}
-	value, err := p.String()
-	if err != nil {
-		return []string{}, err
-	}
-
-	const LineSeparator = "\n"
-
-	// Empty pipe should return an empty Slice.
-	if len(value) == 0 {
-		return []string{}, nil
-	}
-
-	// Remove trailing line break
-	value = strings.TrimSuffix(value, LineSeparator)
-
-	result := strings.Split(value, LineSeparator)
+	var result []string
+	p.EachLine(func(line string, out *strings.Builder) {
+		result = append(result, line)
+	})
 	return result, p.Error()
 }
 
