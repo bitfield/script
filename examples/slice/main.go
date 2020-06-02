@@ -7,14 +7,12 @@ import (
 )
 
 func main() {
-	// Get a Slice with all the running process PID
-	pids, err := script.Exec("ps -ea").Column(1).Slice()
+	errors, err := script.Args().Concat().Match("Error").First(10).Slice()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Running process PIDs are:")
-	for _, pid := range pids {
-		fmt.Println(pid)
+	for _, e := range errors {
+		fmt.Printf("ERROR: %s", e)
 	}
 }
