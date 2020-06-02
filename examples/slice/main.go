@@ -13,5 +13,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Running process PIDs are:  %q", pids)
+	fmt.Printf("Running process PIDs are:")
+	for _, pid := range pids{
+		fmt.Println(pid)
+	}
 }
