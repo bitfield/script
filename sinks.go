@@ -65,7 +65,7 @@ func (p *Pipe) SHA256Sum() (string, error) {
 	return encodedCheckSum, nil
 }
 
-// Slice return each lines of the pipe in a Slice or an error.
+// Slice returns the contents of the pipe as a slice of strings, one element per line, or an error.
 // If there is an error reading the pipe, the pipe's error status
 // is also set.
 func (p *Pipe) Slice() ([]string, error) {
