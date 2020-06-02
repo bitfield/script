@@ -66,8 +66,7 @@ func (p *Pipe) SHA256Sum() (string, error) {
 }
 
 // Slice returns the contents of the pipe as a slice of strings, one element per line, or an error.
-// If there is an error reading the pipe, the pipe's error status
-// is also set.
+// If there is an error reading the pipe, the pipe's error status is also set.
 func (p *Pipe) Slice() ([]string, error) {
 	if p == nil || p.Error() != nil {
 		return nil, p.Error()

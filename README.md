@@ -119,9 +119,9 @@ John is also a [Kubernetes and cloud infrastructure consultant](https://bitfield
 	- [Bytes](#bytes)
 	- [CountLines](#countlines)
 	- [Read](#read)
-	- [Slice](#slice)
 	- [SHA256Sum](#sha256sum)
 		- [Why not MD5?](#why-not-md5)
+	- [Slice](#slice)
 	- [Stdout](#stdout)
 	- [String](#string)
 	- [WriteFile](#writefile)
@@ -795,14 +795,6 @@ Because a Pipe is an `io.Reader`, you can use it anywhere you would use a file, 
 
 Unlike most sinks, `Read()` does not read the whole contents of the pipe (unless the supplied buffer is big enough to hold them).
 
-## Slice
-
-`Slice()` returns the contents of the pipe as a slice of strings, one element per line, plus an error:
-```go
-var slice []string
-slice, err := script.Args().Slice()
-```
-
 ## SHA256Sum
 
 `SHA256Sum()`, as the name suggests, returns the [SHA256 checksum](https://en.wikipedia.org/wiki/SHA-2) of the file as a hexadecimal number stored in a string, plus an error:
@@ -813,6 +805,14 @@ sha256Sum, err := script.File("test.txt").SHA256Sum()
 ### Why not MD5?
 
 [MD5 is insecure](https://en.wikipedia.org/wiki/MD5#Security).
+
+## Slice
+
+`Slice()` returns the contents of the pipe as a slice of strings, one element per line, plus an error:
+```go
+var slice []string
+slice, err := script.Args().Slice()
+```
 
 ## Stdout
 

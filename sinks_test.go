@@ -27,13 +27,13 @@ func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
 	if err != nil {
 		t.Error(err)
 	}
-	action = "Slice()"
-	_, err = p.Slice()
+	action = "SHA256Sum()"
+	_, err = p.SHA256Sum()
 	if err != nil {
 		t.Error(err)
 	}
-	action = "SHA256Sum()"
-	_, err = p.SHA256Sum()
+	action = "Slice()"
+	_, err = p.Slice()
 	if err != nil {
 		t.Error(err)
 	}
