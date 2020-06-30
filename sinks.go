@@ -71,7 +71,7 @@ func (p *Pipe) Slice() ([]string, error) {
 	if p == nil || p.Error() != nil {
 		return nil, p.Error()
 	}
-	var result []string
+	result := []string{}
 	p.EachLine(func(line string, out *strings.Builder) {
 		result = append(result, line)
 	})
