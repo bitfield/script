@@ -220,7 +220,7 @@ func TestSliceSink(t *testing.T) {
 				t.Errorf("Slice() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !cmp.Equal(got, tt.want) {
+			if !cmp.Equal(tt.want, got) {
 				t.Error(cmp.Diff(tt.want, got))
 			}
 		})
