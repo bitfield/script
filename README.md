@@ -60,7 +60,7 @@ script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt"
 
 # Want some help with Go—or anything else?
 
-Not content with maintaining this library, John Arundel, of [Bitfield Consulting](https://bitfieldconsulting.com), is a highly experienced Go trainer and mentor who can teach you Go from scratch, take you beyond the basics, or even help you reach complete mastery of the Go programming language. See [Learn Go with Bitfield](https://bitfieldconsulting.com/golang) for details, or email go@bitfieldconsulting.com to find out more.
+Not content with maintaining this library, John Arundel, of [Bitfield Consulting](https://bitfieldconsulting.com), is a highly experienced Go trainer and mentor who can teach you Go from scratch, take you beyond the basics, or even help you reach complete mastery of the Go programming language. See [Learn Go with Bitfield](https://bitfieldconsulting.com/golang/learn) for details, or email go@bitfieldconsulting.com to find out more.
 
 > John's Golang mentoring has helped me build confidence and fill in gaps in my knowledge. It has provided an immeasurable amount of help and guidance, and as a result I'm applying for my dream job as an SRE!<br />
 —Melina Boutierou
