@@ -107,10 +107,6 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.Concat()
 	action = "CountLines()"
 	p.CountLines()
-	action = "SHA256Sums()"
-	p.SHA256Sums()
-	action = "SHA256Sum()"
-	p.SHA256Sum()
 	action = "Dirname()"
 	p.Dirname()
 	action = "EachLine()"
@@ -141,6 +137,12 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.ReplaceRegexp(regexp.MustCompile(".*"), "")
 	action = "SetError()"
 	p.SetError(nil)
+	action = "SHA256Sums()"
+	p.SHA256Sums()
+	action = "SHA256Sum()"
+	p.SHA256Sum()
+	action = "Slice()"
+	p.Slice()
 	action = "Stdout()"
 	// Ensure we don't clash with TestStdout
 	stdoutM.Lock()

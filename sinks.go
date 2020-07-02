@@ -64,6 +64,19 @@ func (p *Pipe) SHA256Sum() (string, error) {
 	return encodedCheckSum, nil
 }
 
+// Slice returns the contents of the pipe as a slice of strings, one element per line, or an error.
+// If there is an error reading the pipe, the pipe's error status is also set.
+func (p *Pipe) Slice() ([]string, error) {
+	if p == nil || p.Error() != nil {
+		return nil, p.Error()
+	}
+	result := []string{}
+	p.EachLine(func(line string, out *strings.Builder) {
+		result = append(result, line)
+	})
+	return result, p.Error()
+}
+
 // Stdout writes the contents of the pipe to the program's standard output. It
 // returns the number of bytes successfully written, plus a non-nil error if the
 // write failed or if there was an error reading from the pipe. If the pipe has

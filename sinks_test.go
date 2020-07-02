@@ -2,6 +2,7 @@ package script
 
 import (
 	"bytes"
+	"github.com/google/go-cmp/cmp"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -28,6 +29,11 @@ func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
 	}
 	action = "SHA256Sum()"
 	_, err = p.SHA256Sum()
+	if err != nil {
+		t.Error(err)
+	}
+	action = "Slice()"
+	_, err = p.Slice()
 	if err != nil {
 		t.Error(err)
 	}
@@ -163,6 +169,61 @@ func TestSHA256Sum(t *testing.T) {
 		if got != tc.want {
 			t.Errorf("want %q, got %q", tc.want, got)
 		}
+	}
+}
+
+func TestSliceSink(t *testing.T) {
+	tests := []struct {
+		name    string
+		fields  *Pipe
+		want    []string
+		wantErr bool
+	}{
+		{
+			name: "Multiple lines pipe",
+			fields: Echo("testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip\n"),
+			want: []string{
+				"testdata/multiple_files/1.txt",
+				"testdata/multiple_files/2.txt",
+				"testdata/multiple_files/3.tar.zip",
+			},
+			wantErr: false,
+		},
+		{
+			name: "Empty pipe",
+			fields: Echo(""),
+			want: []string{},
+			wantErr: false,
+		},
+		{
+			name: "Single newline",
+			fields: Echo("\n"),
+			want: []string{""},
+			wantErr: false,
+		},
+		{
+			name: "Empty line between two existing lines",
+			fields: Echo("testdata/multiple_files/1.txt\n\ntestdata/multiple_files/3.tar.zip"),
+			want: []string{
+				"testdata/multiple_files/1.txt",
+				"",
+				"testdata/multiple_files/3.tar.zip",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := tt.fields
+			got, err := p.Slice()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Slice() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !cmp.Equal(tt.want, got) {
+				t.Error(cmp.Diff(tt.want, got))
+			}
+		})
 	}
 }
 

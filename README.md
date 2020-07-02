@@ -121,6 +121,7 @@ John is also a [Kubernetes and cloud infrastructure consultant](https://bitfield
 	- [Read](#read)
 	- [SHA256Sum](#sha256sum)
 		- [Why not MD5?](#why-not-md5)
+	- [Slice](#slice-1)
 	- [Stdout](#stdout)
 	- [String](#string)
 	- [WriteFile](#writefile)
@@ -452,13 +453,13 @@ fmt.Println(files)
 `Slice()` creates a pipe from a slice of strings, one per line.
 
 ```go
-p := Slice([]string{"1", "2", "3"})
+p := script.Slice([]string{"1", "2", "3"})
 output, err := p.String()
 fmt.Println(output)
 // Output:
-1
-2
-3
+// 1
+// 2
+// 3
 ```
 
 ## Stdin
@@ -805,6 +806,17 @@ sha256Sum, err := script.File("test.txt").SHA256Sum()
 
 [MD5 is insecure](https://en.wikipedia.org/wiki/MD5#Security).
 
+## Slice
+
+`Slice()` returns the contents of the pipe as a slice of strings, one element per line, plus an error. An empty pipe will produce an empty slice. A pipe containing a single empty line (that is, a single `\n` character) will produce a slice of one element which is the empty string.
+
+```go
+args, err := script.Args().Slice()
+for _, a := range args {
+	fmt.Println(a)
+}
+```
+
 ## Stdout
 
 `Stdout()` writes the contents of the pipe to the program's standard output. It returns the number of bytes written, or an error:
@@ -871,6 +883,7 @@ Since `script` is designed to help you write system administration programs, a f
 * [least_freq](examples/least_freq/main.go)
 * [ls](examples/ls/main.go)
 * [sha256sum](examples/sha256sum/main.go)
+* [slice](examples/slice/main.go)
 * [tail](examples/tail/main.go)
 * [visitors](examples/visitors/main.go)
 
