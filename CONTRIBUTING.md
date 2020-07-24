@@ -72,7 +72,7 @@ A library is easier to use, and easier for contributors to work on, if it has a 
 
 It goes without saying, but I'll say it anyway, that you must provide comprehensive tests for your feature. Code coverage doesn't need to be 100% (that's a waste of time and effort), but it does need to be very good. The [awesome-go](https://github.com/avelino/awesome-go) collection (which `script` is part of) mandates at least 80% coverage, and I'd rather it were 90% or better.
 
-Test data should go in the `testdata` directory. If you create a file of data for input to your method, name it `method_name.input.txt`. If you create a 'golden' file (of correct output, to compare with the output from your method) name it `method_name.golden.txt`. This will help keep things organised.
+Test data should go in the `testdata` directory. If you create a file of data for input to your method, name it `method_name.input.txt`. If you create a 'golden' file (of correct output, to compare with the output from your method) name it `method_name.golden.txt`. This will help keep things organized.
 
 ### Use the standard library
 
