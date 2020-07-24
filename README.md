@@ -1,5 +1,11 @@
 [![GoDoc](https://godoc.org/github.com/bitfield/script?status.png)](http://godoc.org/github.com/bitfield/script)[![Go Report Card](https://goreportcard.com/badge/github.com/bitfield/script)](https://goreportcard.com/report/github.com/bitfield/script)[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge-flat.svg)](https://github.com/avelino/awesome-go)[![CircleCI](https://circleci.com/gh/bitfield/script.svg?style=svg)](https://circleci.com/gh/bitfield/script)
 
+# How do I import it?
+
+```go
+import github.com/bitfield/script
+```
+
 # What is `script`?
 
 `script` is a Go library for doing the kind of tasks that shell scripts are good at: reading files, executing subprocesses, counting lines, matching strings, and so on.
@@ -8,11 +14,6 @@ Why shouldn't it be as easy to write system administration programs in Go as it 
 
 Shell scripts often compose a sequence of operations on a stream of data (a _pipeline_). This is how `script` works, too.
 
-# How do I import it?
-
-```go
-import github.com/bitfield/script
-```
 
 # What can I do with it?
 
@@ -249,7 +250,7 @@ It's a fair question. Shell scripts and one-liners are perfectly adequate for bu
 
 To be fair to the shell, this kind of thing is not what it was ever intended for. Shell is an interactive job control tool for launching programs, connecting programs together, and to a limited extent, manipulating text. It's not for building portable, scalable, reliable, and elegant programs. That's what Go is for.
 
-Go has a superb testing framework built right into the standard library. It has a superb standard library, and thousands of high-quality third-party packages for just about any functionality you can imagine. It is compiled, so it's fast, and statically typed, so it's reliable. It's efficient and memory-safe. Go programs can be distributed as a single binary. Go scales to enormous projects (Kubernetes, for example).
+Go has a superb testing framework built right into the standard library. It has a superb standard library, and thousands of high-quality third-party packages for just about any functionality you can imagine. It is compiled, so it's fast, and statically typed, so it's reliable. It's efficient and memory-safe. Go programs can be distributed as a single binary. Go scales to enormous projects (Docker and Kubernetes, for example).
 
 The `script` library is implemented entirely in Go, and does not require any userland programs (or any other dependencies) to be present. Thus you can build your `script` program as a container image containing a single (very small) binary, which is quick to build, quick to upload, quick to deploy, quick to run, and economical with resources.
 
