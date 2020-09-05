@@ -116,7 +116,7 @@ func (p *Pipe) writeOrAppendFile(fileName string, mode int) (int64, error) {
 	if p == nil || p.Error() != nil {
 		return 0, p.Error()
 	}
-	out, err := os.OpenFile(fileName, mode, 0644)
+	out, err := os.OpenFile(fileName, mode, 0666)
 	if err != nil {
 		p.SetError(err)
 		return 0, err

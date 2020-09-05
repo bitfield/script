@@ -78,7 +78,7 @@ func (p *Pipe) SetError(err error) {
 // completely read.
 func (p *Pipe) WithReader(r io.Reader) *Pipe {
 	if p == nil {
-		return p
+		return nil
 	}
 	p.Reader = NewReadAutoCloser(r)
 	return p
@@ -90,4 +90,3 @@ func (p *Pipe) WithError(err error) *Pipe {
 	p.SetError(err)
 	return p
 }
-
