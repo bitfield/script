@@ -34,6 +34,7 @@ func Exec(s string) *Pipe {
 // status will be set, and if the file does exist, the pipe will have no error
 // status.
 func IfExists(filename string) *Pipe {
+	filename = strings.TrimRight(filename, "\n")
 	_, err := os.Stat(filename)
 	if err != nil {
 		return NewPipe().WithError(err)
@@ -45,6 +46,7 @@ func IfExists(filename string) *Pipe {
 // starting pipelines. If there is an error opening the file, the pipe's error
 // status will be set.
 func File(name string) *Pipe {
+	name = strings.TrimRight(name, "\n")
 	p := NewPipe()
 	f, err := os.Open(name)
 	if err != nil {
@@ -58,6 +60,7 @@ func File(name string) *Pipe {
 // `find -type f`. If the path doesn't exist or can't be read, the pipe's error
 // status will be set.
 func FindFiles(path string) *Pipe {
+	path = strings.TrimRight(path, "\n")
 	var fileNames []string
 	walkFn := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -78,6 +81,7 @@ func FindFiles(path string) *Pipe {
 // supplied path, one per line. The path may be a glob, conforming to
 // filepath.Match syntax.
 func ListFiles(path string) *Pipe {
+	path = strings.TrimRight(path, "\n")
 	if strings.ContainsAny(path, "[]^*?\\{}!") {
 		fileNames, err := filepath.Glob(path)
 		if err != nil {

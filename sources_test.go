@@ -111,7 +111,7 @@ func TestFile(t *testing.T) {
 	t.Parallel()
 	wantRaw, _ := ioutil.ReadFile("testdata/test.txt") // ignoring error
 	want := string(wantRaw)
-	p := File("testdata/test.txt")
+	p := File("testdata/test.txt\n") // file paths retrieved through Pipe.String() contain a trailing newline
 	gotRaw, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
 		t.Error(err)
@@ -134,7 +134,7 @@ func TestFindFiles(t *testing.T) {
 		Want           string
 	}{
 		{
-			Path:        "testdata/multiple_files",
+			Path:        "testdata/multiple_files\n", // file paths retrieved through Pipe.String() contain a trailing newline
 			ErrExpected: false,
 			Want:        "testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip\n",
 		},
@@ -173,7 +173,7 @@ func TestIfExists(t *testing.T) {
 	if p.Error() == nil {
 		t.Errorf("want error from IfExists on non-existent file, but got nil")
 	}
-	p = IfExists("testdata/empty.txt")
+	p = IfExists("testdata/empty.txt\n") // file paths retrieved through Pipe.String() contain a trailing newline
 	if p.Error() != nil {
 		t.Errorf("want no error from IfExists on existing file, but got %v", p.Error())
 	}
@@ -202,7 +202,7 @@ func TestListFilesNonexistent(t *testing.T) {
 
 func TestListFilesSingle(t *testing.T) {
 	t.Parallel()
-	got, err := ListFiles("testdata/multiple_files/1.txt").String()
+	got, err := ListFiles("testdata/multiple_files/1.txt\n").String() // file paths retrieved through Pipe.String() contain a trailing newline
 	if err != nil {
 		t.Fatal(err)
 	}
