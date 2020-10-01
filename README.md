@@ -2,7 +2,7 @@
 
 # What is `script`?
 
-`script` is a Go library for doing the kind of tasks that shell scripts are good at: reading files, executing subprocesses, counting lines, matching strings, and so on.
+`script` is a Go library for doing the kind of tasks that shell scripts are good at reading files, executing subprocesses, counting lines, matching strings, and so on.
 
 Why shouldn't it be as easy to write system administration programs in Go as it is in a typical shell? `script` aims to make it just that easy.
 
@@ -142,7 +142,7 @@ The output from each stage of the pipeline feeds into the next, and you can thin
 
 By comparison, writing shell-like scripts in raw Go is much less convenient, because everything you do returns a different data type, and you must (or at least should) check errors following every operation.
 
-In scripts for system administration we often want to compose different operations like this in a quick and convenient way. If an error occurs somewhere along the pipeline, we would like to check this just once at the end, rather than after every operation.
+In scripts for system administration, we often want to compose different operations like this in a quick and convenient way. If an error occurs somewhere along the pipeline, we would like to check this just once at the end, rather than after every operation.
 
 # Everything is a pipe
 
@@ -182,7 +182,7 @@ q = script.File("test.txt").Match("Error")
 
 # Handling errors
 
-Woah, woah! Just a minute! What if there was an error opening the file in the first place? Won't `Match` blow up if it tries to read from a non-existent file?
+Woah, Woah! Just a minute! What if there was an error opening the file in the first place? Won't `Match` blow up if it tries to read from a non-existent file?
 
 No, it won't. As soon as an error status is set on a pipe, all operations on the pipe become no-ops. Any operation which would normally return a new pipe just returns the old pipe unchanged. So you can run as long a pipeline as you want to, and if an error occurs at any stage, nothing will crash, and you can check the error status of the pipe at the end.
 
@@ -218,9 +218,9 @@ if err != nil {
 
 # Closing pipes
 
-If you've dealt with files in Go before, you'll know that you need to _close_ the file once you've finished with it. Otherwise, the program will retain what's called a _file handle_ (the kernel data structure which represents an open file). There is a limit to the total number of open file handles for a given program, and for the system as a whole, so a program which leaks file handles will eventually crash, and will waste resources in the meantime.
+If you've dealt with files in Go before, you'll know that you need to _close_ the file once you've finished with it. Otherwise, the program will retain what's called a _file handle_ (the kernel data structure which represents an open file). There is a limit to the total number of open filehandles for a given program, and for the system as a whole, so a program which leaks filehandles will eventually crash and will waste resources in the meantime.
 
-Files aren't the only things which need to be closed after reading: so do network connections, HTTP response bodies, and so on.
+Files aren't the only things that need to be closed after reading: so do network connections, HTTP response bodies, and so on.
 
 How does `script` handle this? Simple. The data source associated with a pipe will be automatically closed once it is read completely. Therefore, calling any sink method which reads the pipe to completion (such as `String()`) will close its data source. The only case in which you need to call `Close()` on a pipe is when you don't read from it, or you don't read it to completion.
 
