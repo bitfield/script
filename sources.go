@@ -59,18 +59,27 @@ func File(name string) *Pipe {
 // status will be set.
 func FindFiles(path string) *Pipe {
 	var fileNames []string
-	walkFn := func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() {
-			fileNames = append(fileNames, path)
-		}
-		return nil
-	}
-	if err := filepath.Walk(path, walkFn); err != nil {
+
+	filePaths, err := filepath.Glob(path)
+	if err != nil {
 		return NewPipe().WithError(err)
 	}
+
+	for _, filePath := range filePaths {
+		walkFn := func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() {
+				fileNames = append(fileNames, path)
+			}
+			return nil
+		}
+		if err := filepath.Walk(filePath, walkFn); err != nil {
+			return NewPipe().WithError(err)
+		}
+	}
+
 	return Slice(fileNames)
 }
 
