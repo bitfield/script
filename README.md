@@ -1,5 +1,9 @@
 [![GoDoc](https://godoc.org/github.com/bitfield/script?status.png)](http://godoc.org/github.com/bitfield/script)[![Go Report Card](https://goreportcard.com/badge/github.com/bitfield/script)](https://goreportcard.com/report/github.com/bitfield/script)[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge-flat.svg)](https://github.com/avelino/awesome-go)[![CircleCI](https://circleci.com/gh/bitfield/script.svg?style=svg)](https://circleci.com/gh/bitfield/script)
 
+```go
+import github.com/bitfield/script
+```
+
 # What is `script`?
 
 `script` is a Go library for doing the kind of tasks that shell scripts are good at: reading files, executing subprocesses, counting lines, matching strings, and so on.
@@ -7,12 +11,6 @@
 Why shouldn't it be as easy to write system administration programs in Go as it is in a typical shell? `script` aims to make it just that easy.
 
 Shell scripts often compose a sequence of operations on a stream of data (a _pipeline_). This is how `script` works, too.
-
-# How do I import it?
-
-```go
-import github.com/bitfield/script
-```
 
 # What can I do with it?
 
@@ -58,20 +56,20 @@ What's that? You want to append that output to a file instead of printing it to 
 script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt")
 ```
 
-# Want some help with Go—or anything else?
+You can find more example programs (mostly replicating traditional Unix utilities) in the [examples/](examples/) directory.
+
+# Who wrote this?
 
 Not content with maintaining this library, John Arundel, of [Bitfield Consulting](https://bitfieldconsulting.com), is a highly experienced Go trainer and mentor who can teach you Go from scratch, take you beyond the basics, or even help you reach complete mastery of the Go programming language. See [Learn Go with Bitfield](https://bitfieldconsulting.com/golang/learn) for details, or email go@bitfieldconsulting.com to find out more.
 
-> John's Golang mentoring has helped me build confidence and fill in gaps in my knowledge. It has provided an immeasurable amount of help and guidance, and as a result I'm applying for my dream job as an SRE!<br />
-—Melina Boutierou
+[![](img/fundamentals.png)](https://bitfieldconsulting.com/books/fundamentals) [![](img/data.png)](https://bitfieldconsulting.com/books/data)
 
-John is also a [Kubernetes and cloud infrastructure consultant](https://bitfieldconsulting.com/kubernetes) and the author of the book [Cloud Native DevOps with Kubernetes](https://amzn.to/2PEPTjc). If John can help you with your infrastructure or DevOps projects, [get in touch](https://bitfieldconsulting.com/contact)! He'd love to hear from you.
+John is also the author of the popular [For the Love of Go](https://bitfieldconsulting.com/books) series of ebooks for Go beginners and improvers. Priced at a cheerful $4.99 each, they'll introduce you to the key concepts of Go in a friendly and patient way, and encourage you to start writing useful Go code right from the first page.
 
 # Table of contents<!-- omit in toc -->
 - [What is `script`?](#what-is-script)
-- [How do I import it?](#how-do-i-import-it)
 - [What can I do with it?](#what-can-i-do-with-it)
-- [Want some help with Go—or anything else?](#want-some-help-with-goor-anything-else)
+- [Who wrote this?](#who-wrote-this)
 - [How does it work?](#how-does-it-work)
 - [Everything is a pipe](#everything-is-a-pipe)
 - [What use is a pipe?](#what-use-is-a-pipe)
@@ -126,6 +124,7 @@ John is also a [Kubernetes and cloud infrastructure consultant](https://bitfield
 	- [String](#string)
 	- [WriteFile](#writefile)
 - [Examples](#examples)
+- [Video tutorial](#video-tutorial)
 - [How can I contribute?](#how-can-i-contribute)
 
 # How does it work?
@@ -890,6 +889,14 @@ Since `script` is designed to help you write system administration programs, a f
 [More examples would be welcome!](https://github.com/bitfield/script/pulls)
 
 If you use `script` for real work (or, for that matter, real play), I'm always very interested to hear about it. Drop me a line to john@bitfieldconsulting.com and tell me how you're using `script` and what you think of it!
+
+# Video tutorial
+
+The `script` library was covered in a recent episode of [Go Code Club](https://www.youtube.com/playlist?list=PLEcwzBXTPUE_YQR7R0BRtHBYJ0LN3Y0i3), where each week John and friends read and discuss a different Go package and explain it to one another.
+
+Watch the episode here:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/6S5EqzVwpEg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 # How can I contribute?
 
