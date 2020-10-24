@@ -894,9 +894,9 @@ If you use `script` for real work (or, for that matter, real play), I'm always v
 
 The `script` library was covered in a recent episode of [Go Code Club](https://www.youtube.com/playlist?list=PLEcwzBXTPUE_YQR7R0BRtHBYJ0LN3Y0i3), where each week John and friends read and discuss a different Go package and explain it to one another.
 
-Watch the episode here:
+Watch the episode here: [Code Club: Script](https://www.youtube.com/watch?v=6S5EqzVwpEg)
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/6S5EqzVwpEg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[![](https://img.youtube.com/vi/6S5EqzVwpEg/hqdefault.jpg)](https://www.youtube.com/watch?v=6S5EqzVwpEg)
 
 # How can I contribute?
 
