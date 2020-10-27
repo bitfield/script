@@ -303,7 +303,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `grep`             | [`Match()`](#match) / [`MatchRegexp()`](#matchregexp)         |
 | `grep -v`          | [`Reject()`](#reject) / [`RejectRegexp()`](#rejectregexp)     |
 | `head`             | [`First()`](#first)                                           |
-| `find`             | [`FindFiles`](#findfiles)                                     |
+| `find -type f`     | [`FindFiles`](#findfiles)                                     |
 | `ls`               | [`ListFiles()`](#listfiles)                                   |
 | `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
 | `sha256sum`        | [`SHA256Sum()`](#sha256Sum) / [`SHA256Sums()`](#sha256sums)   |
