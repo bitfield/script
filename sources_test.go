@@ -167,6 +167,57 @@ func TestFindFiles(t *testing.T) {
 	}
 }
 
+func TestFindFilesGlob(t *testing.T) {
+	tcs := []struct {
+		Path           string
+		ErrExpected    bool
+		wantErrContain string
+		Want           string
+	}{
+		{
+			Path:        "testdata/multiple_files_*",
+			ErrExpected: false,
+			Want:        "testdata/multiple_files_with_subdirectory/1.txt\ntestdata/multiple_files_with_subdirectory/2.txt\ntestdata/multiple_files_with_subdirectory/3.tar.zip\ntestdata/multiple_files_with_subdirectory/dir/.hidden\ntestdata/multiple_files_with_subdirectory/dir/1.txt\ntestdata/multiple_files_with_subdirectory/dir/2.txt\n",
+		},
+		{
+			Path:        "testdata/*",
+			ErrExpected: false,
+			Want:        "testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip\ntestdata/multiple_files_with_subdirectory/1.txt\ntestdata/multiple_files_with_subdirectory/2.txt\ntestdata/multiple_files_with_subdirectory/3.tar.zip\ntestdata/multiple_files_with_subdirectory/dir/.hidden\ntestdata/multiple_files_with_subdirectory/dir/1.txt\ntestdata/multiple_files_with_subdirectory/dir/2.txt\n",
+		},
+		{
+			Path:        "testdata/*/di*",
+			ErrExpected: false,
+			Want:        "testdata/multiple_files_with_subdirectory/dir/.hidden\ntestdata/multiple_files_with_subdirectory/dir/1.txt\ntestdata/multiple_files_with_subdirectory/dir/2.txt\n",
+		},
+		{
+			Path:        "testdata/m*s",
+			ErrExpected: false,
+			Want:        "testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip\n",
+		},
+		{
+			Path:        "testdata/*/di*/.hidden",
+			ErrExpected: false,
+			Want:        "\n",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.Path, func(t *testing.T) {
+			p := FindFiles(tc.Path)
+			if tc.ErrExpected != (p.Error() != nil) {
+				t.Fatalf("unexpected error value: %v", p.Error())
+			}
+			p.SetError(nil) // else p.String() would be a no-op
+			got, err := p.String()
+			if err != nil {
+				t.Fatalf("unexpected error %v", err)
+			}
+			if !cmp.Equal(tc.Want, got) {
+				t.Fatalf("want %q, got %q", tc.Want, got)
+			}
+		})
+	}
+}
+
 func TestIfExists(t *testing.T) {
 	t.Parallel()
 	p := IfExists("testdata/doesntexist")
