@@ -275,7 +275,8 @@ func TestPrompt(t *testing.T) {
 			defer func() { os.Stdin = oldStdin }()
 			os.Stdin = tmp
 
-			got, err := Prompt(fmt.Sprintf("Prompting for %s: ", tc.Description), tc.Default).String()
+			promptMessage := fmt.Sprintf("Prompting for %s: ", tc.Description)
+			got, err := Prompt(promptMessage, tc.Default).String()
 			if tc.ShouldFail != (err != nil) {
 				t.Error(err)
 			}
