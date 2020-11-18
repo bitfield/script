@@ -472,6 +472,17 @@ fmt.Println(output)
 // Output: [contents of standard input]
 ```
 
+## Prompt
+
+`Propmt()` presents a message to the user and returns a pipe containing user input or defaultValue provided.
+
+```go
+p := script.Prompt("This is the prompt message", "This is the default value")
+output, err := p.String()
+fmt.Println(output)
+// Output: [contents of standard input provided by the user]
+```
+
 # Filters
 
 Filters are operations on an existing pipe that also return a pipe, allowing you to chain filters indefinitely.
@@ -881,6 +892,7 @@ Since `script` is designed to help you write system administration programs, a f
 * [head](examples/head/main.go)
 * [least_freq](examples/least_freq/main.go)
 * [ls](examples/ls/main.go)
+* [prompt](examples/prompt/main.go)
 * [sha256sum](examples/sha256sum/main.go)
 * [slice](examples/slice/main.go)
 * [tail](examples/tail/main.go)
