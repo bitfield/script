@@ -311,6 +311,38 @@ func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
 	})
 }
 
+// ReadInput reads displays the pipe content as a message as a prompt
+// and reads the content from standard input and returns the result
+// as a pipe. In case the input was empty it defaults to its `defaultValue`
+func (p *Pipe) ReadInput(defaultValue string) *Pipe {
+	const emptyString = ""
+	const withDefault = "%s [%s]: "
+	const withoutDefault = "%s: "
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	defer p.Close()
+
+	prompt, _ := p.String() // if pipe is empty, prompt message is empty
+
+	if defaultValue == emptyString {
+		Echo(fmt.Sprintf(withoutDefault, prompt)).Stdout()
+	} else {
+		Echo(fmt.Sprintf(withDefault, prompt, defaultValue)).Stdout()
+	}
+
+	scanner := bufio.NewScanner(Stdin().Reader)
+	if ok, err := scanner.Scan(), scanner.Err(); !ok && err != nil {
+		return NewPipe().WithError(err)
+	}
+
+	raw := scanner.Text()
+	if raw == emptyString {
+		return Echo(defaultValue)
+	}
+	return Echo(raw)
+}
+
 // Reject reads from the pipe, and returns a new pipe containing only lines
 // which do not contain the specified string. If there is an error reading the
 // pipe, the pipe's error status is also set.

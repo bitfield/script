@@ -1,8 +1,6 @@
 package script
 
 import (
-	"bufio"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -108,26 +106,7 @@ func ListFiles(path string) *Pipe {
 
 // Prompt prints a prompt with an optional default value and returns a pipe containing the result
 func Prompt(prompt, defaultValue string) *Pipe {
-	const emptyString = ""
-	const withDefault = "%s [%s]: "
-	const withoutDefault = "%s: "
-
-	if defaultValue == emptyString {
-		Echo(fmt.Sprintf(withoutDefault, prompt)).Stdout()
-	} else {
-		Echo(fmt.Sprintf(withDefault, prompt, defaultValue)).Stdout()
-	}
-
-	scanner := bufio.NewScanner(Stdin().Reader)
-	if ok, err := scanner.Scan(), scanner.Err(); !ok && err != nil {
-		return NewPipe().WithError(err)
-	}
-
-	raw := scanner.Text()
-	if raw == emptyString {
-		return Echo(defaultValue)
-	}
-	return Echo(raw)
+	return Echo(prompt).ReadInput(defaultValue)
 }
 
 // Slice returns a pipe containing each element of the supplied slice of strings, one per line.

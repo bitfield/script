@@ -3,7 +3,9 @@ package script
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -343,6 +345,68 @@ func TestMatch(t *testing.T) {
 		if got != tc.want {
 			t.Errorf("%q in %q: want %d, got %d", tc.match, tc.testFileName, tc.want, got)
 		}
+	}
+}
+
+func TestReadInput(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		Description string
+		Input       string
+		Default     string
+		Want        string
+		ShouldFail  bool
+	}{
+		{
+			Description: "User Input OK",
+			Input:       "123",
+			Default:     "Unused",
+			Want:        "123",
+		},
+		{
+			Description: "No User Input",
+			Input:       "",
+			Default:     "default",
+			Want:        "default",
+		},
+		{
+			Description: "Complex Input",
+			Input:       "/user/test @@@ testing one two three",
+			Default:     "default",
+			Want:        "/user/test @@@ testing one two three",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.Description, func(t *testing.T) {
+			// Prepare Stdin before calling prompt.
+			tmp, err := ioutil.TempFile("", tc.Description)
+			if err != nil {
+				t.Error(err)
+			}
+			defer os.Remove(tmp.Name())
+			if _, err := tmp.WriteString(tc.Input); err != nil {
+				t.Error(err)
+			}
+
+			if _, err := tmp.Seek(0, 0); err != nil {
+				t.Error(err)
+			}
+
+			// Restore original Stdin.
+			oldStdin := os.Stdin
+			defer func() { os.Stdin = oldStdin }()
+			os.Stdin = tmp
+
+			promptMessage := fmt.Sprintf("Prompting for %s: ", tc.Description)
+			got, err := Echo(promptMessage).ReadInput(tc.Default).String()
+			if tc.ShouldFail != (err != nil) {
+				t.Error(err)
+			}
+			if got != tc.Want {
+				t.Errorf("got %q, want %q", got, tc.Want)
+			}
+		})
 	}
 }
 
