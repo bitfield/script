@@ -104,11 +104,6 @@ func ListFiles(path string) *Pipe {
 	return Slice(fileNames)
 }
 
-// Prompt prints a prompt with an optional default value and returns a pipe containing the result
-func Prompt(prompt, defaultValue string) *Pipe {
-	return Echo(prompt).ReadInput(defaultValue)
-}
-
 // Slice returns a pipe containing each element of the supplied slice of strings, one per line.
 func Slice(s []string) *Pipe {
 	return Echo(strings.Join(s, "\n") + "\n")

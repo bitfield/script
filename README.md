@@ -472,17 +472,6 @@ fmt.Println(output)
 // Output: [contents of standard input]
 ```
 
-## Prompt
-
-`Propmt()` presents a message to the user and returns a pipe containing user input or defaultValue provided.
-
-```go
-p := script.Prompt("This is the prompt message", "This is the default value")
-output, err := p.String()
-fmt.Println(output)
-// Output: [contents of standard input provided by the user]
-```
-
 # Filters
 
 Filters are operations on an existing pipe that also return a pipe, allowing you to chain filters indefinitely.
