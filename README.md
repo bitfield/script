@@ -107,6 +107,7 @@ John is also the author of the popular [For the Love of Go](https://bitfieldcons
 	- [Last](#last)
 	- [Match](#match)
 	- [MatchRegexp](#matchregexp)
+	- [ReadInput](#readinput)
 	- [Reject](#reject)
 	- [RejectRegexp](#rejectregexp)
 	- [Replace](#replace)
@@ -706,6 +707,14 @@ p := script.File("test.txt").Match("Error")
 ```go
 p := script.File("test.txt").MatchRegexp(regexp.MustCompile(`E.*r`))
 ```
+
+## ReadInput
+`ReadInput(defaultValue)` presents the content of the pipe as a prompt to the user and returns a pipe containing user input or `defaultValue` if no input was provided
+
+``go
+p := script.Echo("This is the prompt message").ReadInput( "This is the default value")
+output, err := p.String()
+fmt.Println(output)
 
 ## Reject
 
