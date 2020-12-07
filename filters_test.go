@@ -351,41 +351,41 @@ func TestMatch(t *testing.T) {
 func TestReadInput(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		Description string
-		Input       string
-		Default     string
-		Want        string
-		ShouldFail  bool
+		description  string
+		input        string
+		defaultValue string
+		want         string
+		wantError    bool
 	}{
 		{
-			Description: "User Input OK",
-			Input:       "123",
-			Default:     "Unused",
-			Want:        "123",
+			description:  "User Input OK",
+			input:        "123",
+			defaultValue: "Unused",
+			want:         "123",
 		},
 		{
-			Description: "No User Input",
-			Input:       "",
-			Default:     "default",
-			Want:        "default",
+			description:  "No User Input",
+			input:        "",
+			defaultValue: "default",
+			want:         "default",
 		},
 		{
-			Description: "Complex Input",
-			Input:       "/user/test @@@ testing one two three",
-			Default:     "default",
-			Want:        "/user/test @@@ testing one two three",
+			description:  "Complex Input",
+			input:        "/user/test @@@ testing one two three",
+			defaultValue: "default",
+			want:         "/user/test @@@ testing one two three",
 		},
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.Description, func(t *testing.T) {
+		t.Run(tc.description, func(t *testing.T) {
 			// Prepare Stdin before calling prompt.
-			tmp, err := ioutil.TempFile("", tc.Description)
+			tmp, err := ioutil.TempFile("", tc.description)
 			if err != nil {
 				t.Error(err)
 			}
 			defer os.Remove(tmp.Name())
-			if _, err := tmp.WriteString(tc.Input); err != nil {
+			if _, err := tmp.WriteString(tc.input); err != nil {
 				t.Error(err)
 			}
 
@@ -398,13 +398,13 @@ func TestReadInput(t *testing.T) {
 			defer func() { os.Stdin = oldStdin }()
 			os.Stdin = tmp
 
-			promptMessage := fmt.Sprintf("Prompting for %s: ", tc.Description)
-			got, err := Echo(promptMessage).ReadInput(tc.Default).String()
-			if tc.ShouldFail != (err != nil) {
+			promptMessage := fmt.Sprintf("Prompting for %s: ", tc.description)
+			got, err := Echo(promptMessage).ReadInput(tc.defaultValue).String()
+			if tc.wantError != (err != nil) {
 				t.Error(err)
 			}
-			if got != tc.Want {
-				t.Errorf("got %q, want %q", got, tc.Want)
+			if got != tc.want {
+				t.Errorf("got %q, want %q", got, tc.want)
 			}
 		})
 	}
