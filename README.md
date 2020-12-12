@@ -306,7 +306,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `head`             | [`First()`](#first)                                           |
 | `find -type f`     | [`FindFiles`](#findfiles)                                     |
 | `ls`               | [`ListFiles()`](#listfiles)                                   |
-| `read`              | [`ReadInput()`](#read)*|
+| `read`             | [`ReadInput()`](#ReadInput)|
 | `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
 | `sha256sum`        | [`SHA256Sum()`](#sha256Sum) / [`SHA256Sums()`](#sha256sums)   |
 | `tail`             | [`Last()`](#last)                                             |
