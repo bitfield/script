@@ -315,9 +315,6 @@ func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
 // and reads the content from standard input and returns the result
 // as a pipe. In case the input was empty it defaults to its `defaultValue`
 func (p *Pipe) ReadInput(defaultValue string) *Pipe {
-	const emptyString = ""
-	const withDefault = "%s [%s]: "
-	const withoutDefault = "%s: "
 	if p == nil || p.Error() != nil {
 		return p
 	}
@@ -325,10 +322,10 @@ func (p *Pipe) ReadInput(defaultValue string) *Pipe {
 
 	prompt, _ := p.String() // if pipe is empty, prompt message is empty
 
-	if defaultValue == emptyString {
-		Echo(fmt.Sprintf(withoutDefault, prompt)).Stdout()
+	if defaultValue == "" {
+		Echo(fmt.Sprintf("%s: ", prompt)).Stdout()
 	} else {
-		Echo(fmt.Sprintf(withDefault, prompt, defaultValue)).Stdout()
+		Echo(fmt.Sprintf("%s [%s]: ", prompt, defaultValue)).Stdout()
 	}
 
 	scanner := bufio.NewScanner(Stdin().Reader)
@@ -337,7 +334,7 @@ func (p *Pipe) ReadInput(defaultValue string) *Pipe {
 	}
 
 	raw := scanner.Text()
-	if raw == emptyString {
+	if raw == "" {
 		return Echo(defaultValue)
 	}
 	return Echo(raw)
