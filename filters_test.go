@@ -30,7 +30,7 @@ func TestBasename(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if got != tc.want {
+		if tc.want != got {
 			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
 		}
 	}
@@ -61,7 +61,7 @@ func TestConcat(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Equal(got, want) {
+	if !bytes.Equal(want, got) {
 		t.Errorf("want %q, got %q", want, got)
 	}
 }
@@ -101,7 +101,7 @@ func TestDirname(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if got != tc.want {
+		if tc.want != got {
 			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
 		}
 	}
@@ -118,7 +118,7 @@ func TestEachLine(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if got != want {
+	if want != got {
 		t.Errorf("want %q, got %q", want, got)
 	}
 }
@@ -132,7 +132,7 @@ func TestExecFilter(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if got != want {
+	if want != got {
 		t.Errorf("want %q, got %q", want, got)
 	}
 	// This should fail because p is now closed.
@@ -211,7 +211,7 @@ func TestFirst(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !bytes.Equal(got, want) {
+	if !bytes.Equal(want, got) {
 		t.Errorf("want %q, got %q", want, got)
 	}
 	_, err = ioutil.ReadAll(input.Reader)
@@ -238,7 +238,7 @@ func TestFirst(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Equal(got, want) {
+	if !bytes.Equal(want, got) {
 		t.Errorf("want %q, got %q", want, got)
 	}
 }
@@ -253,7 +253,7 @@ func TestFreq(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !bytes.Equal(got, want) {
+	if !bytes.Equal(want, got) {
 		t.Errorf("want %q, got %q", want, got)
 	}
 }
@@ -266,7 +266,7 @@ func TestJoin(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if got != want {
+	if want != got {
 		t.Errorf("want %q, got %q", want, got)
 	}
 	input = "hello\nworld"
@@ -275,7 +275,7 @@ func TestJoin(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if got != want {
+	if want != got {
 		t.Errorf("want %q, got %q", want, got)
 	}
 }
@@ -291,7 +291,7 @@ func TestLast(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !bytes.Equal(got, want) {
+	if !bytes.Equal(want, got) {
 		t.Errorf("want %q, got %q", want, got)
 	}
 	_, err = ioutil.ReadAll(input.Reader)
@@ -318,7 +318,7 @@ func TestLast(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Equal(got, want) {
+	if !bytes.Equal(want, got) {
 		t.Errorf("want %q, got %q", want, got)
 	}
 }
@@ -340,7 +340,7 @@ func TestMatch(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if got != tc.want {
+		if tc.want != got {
 			t.Errorf("%q in %q: want %d, got %d", tc.match, tc.testFileName, tc.want, got)
 		}
 	}
@@ -363,7 +363,7 @@ func TestMatchRegexp(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if got != tc.want {
+		if tc.want != got {
 			t.Errorf("%q in %q: want %d, got %d", tc.match, tc.testFileName, tc.want, got)
 		}
 	}
@@ -387,7 +387,7 @@ func TestReplace(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if got != tc.want {
+		if tc.want != got {
 			t.Errorf("%s with %s in %s, want %s, got %s", tc.search, tc.replace, tc.testFileName, tc.want, got)
 		}
 	}
@@ -411,7 +411,7 @@ func TestReplaceRegexp(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if got != tc.want {
+		if tc.want != got {
 			t.Errorf("%s with %s in %s, want %s, got %s", tc.regexp, tc.replace, tc.testFileName, tc.want, got)
 		}
 	}
@@ -434,7 +434,7 @@ func TestReject(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if got != tc.want {
+		if tc.want != got {
 			t.Errorf("%q in %q: want %d, got %d", tc.reject, tc.testFileName, tc.want, got)
 		}
 	}
@@ -457,7 +457,7 @@ func TestRejectRegexp(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if got != tc.want {
+		if tc.want != got {
 			t.Errorf("%q in %q: want %d, got %d", tc.reject, tc.testFileName, tc.want, got)
 		}
 	}
@@ -479,7 +479,7 @@ func TestSHA256Sums(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if got != tc.want {
+		if tc.want != got {
 			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
 		}
 	}
