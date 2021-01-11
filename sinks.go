@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -110,6 +111,14 @@ func (p *Pipe) String() (string, error) {
 // is also set.
 func (p *Pipe) WriteFile(fileName string) (int64, error) {
 	return p.writeOrAppendFile(fileName, os.O_RDWR|os.O_CREATE)
+}
+
+// HTTPRequest creates a new HTTP request with the body set to the content of the pipe.
+func (p *Pipe) HTTPRequest(method string, url string) (*http.Request, error) {
+	if p == nil || p.Error() != nil {
+		return nil, p.Error()
+	}
+	return http.NewRequest(method, url, p.Reader)
 }
 
 func (p *Pipe) writeOrAppendFile(fileName string, mode int) (int64, error) {

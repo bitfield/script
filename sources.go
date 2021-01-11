@@ -1,7 +1,12 @@
 package script
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
+	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -112,4 +117,57 @@ func Slice(s []string) *Pipe {
 // Stdin returns a pipe which reads from the program's standard input.
 func Stdin() *Pipe {
 	return NewPipe().WithReader(os.Stdin)
+}
+
+// HTTP executes the given http request with the default HTTP client from the http package. The response of that request,
+// is processed by `process`. If process is nil, the default process function copies the body from the request to the pipe.
+func HTTP(req *http.Request, process func(*http.Response) (io.Reader, error)) *Pipe {
+	return HTTPWithClient(http.DefaultClient, req, process)
+}
+
+// HTTPClient is an interface to allow the user to plugin alternative HTTP clients into the source.
+// The HTTPClient interface is a subset of the methods provided by the http.Client
+// We use an own interface with a minimal surface to allow make it easy to implement own customized clients.
+type HTTPClient interface {
+	Do(r *http.Request) (*http.Response, error)
+}
+
+// HTTP executes the given http request with the given HTTPClient. The response of that request,
+// is processed by `process`. If process is nil, the default process function copies the body from the request to the pipe.
+func HTTPWithClient(client HTTPClient, req *http.Request, process func(*http.Response) (io.Reader, error)) *Pipe {
+	p := NewPipe()
+	if req == nil {
+		p.SetError(errors.New("no request specified"))
+		return p
+	}
+	if process == nil {
+		process = defaultHTTPProcessor
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		p.SetError(err)
+		return p
+	}
+	reader, err := process(resp)
+	return p.WithReader(reader).WithError(err)
+}
+
+// defaultHTTPProcessor returns the response body as reader if there is a body in the response. Otherwise it will return a
+// reader with the empty string to simulate an empty body.
+func defaultHTTPProcessor(resp *http.Response) (io.Reader, error) {
+	if resp.Body != nil {
+		return resp.Body, nil
+	}
+	return bytes.NewBufferString(""), nil
+}
+
+// AssertingHTTPProcessor is an HTTP processor checking if the HTTP response has the expected code. If the code is not the
+// expected code an error is returned. Otherwise the body of the response is returned as a reader.
+func AssertingHTTPProcessor(code int) func(*http.Response) (io.Reader, error) {
+	return func(resp *http.Response) (io.Reader, error) {
+		if resp.StatusCode != code {
+			return bytes.NewBufferString(""), fmt.Errorf("got HTTP status code %d instead of expected %d", resp.StatusCode, code)
+		}
+		return defaultHTTPProcessor(resp)
+	}
 }
