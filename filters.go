@@ -6,6 +6,7 @@ import (
 	"container/ring"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -18,6 +19,7 @@ import (
 	"text/template"
 
 	"bitbucket.org/creachadair/shell"
+	"github.com/itchyny/gojq"
 )
 
 // Basename reads a list of filepaths from the pipe, one per line, and removes
@@ -384,4 +386,28 @@ func (p *Pipe) SHA256Sums() *Pipe {
 		out.WriteString(hex.EncodeToString(h.Sum(nil)[:]))
 		out.WriteRune('\n')
 	})
+}
+
+func (p *Pipe) JQ(query string) *Pipe {
+	q, err := gojq.Parse(query)
+	if err != nil {
+		p.SetError(err)
+		return p
+	}
+	var input map[string]interface{}
+	json.NewDecoder(p).Decode(&input)
+	output := bytes.NewBuffer(nil)
+	iter := q.Run(input) // or query.RunWithContext
+	for {
+		v, ok := iter.Next()
+		if !ok {
+			return p.WithReader(output)
+		}
+		if err, ok := v.(error); ok {
+			p.SetError(err)
+			return p.WithReader(output)
+		}
+		fmt.Fprintf(output, "%v\n", v)
+	}
+	return p.WithReader(output)
 }
