@@ -385,3 +385,7 @@ func (p *Pipe) SHA256Sums() *Pipe {
 		out.WriteRune('\n')
 	})
 }
+
+func (p *Pipe) ExternalFilter(external func(in *Pipe) *Pipe) *Pipe {
+	return external(p)
+}
