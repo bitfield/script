@@ -101,6 +101,7 @@ John is also the author of the popular [For the Love of Go](https://bitfieldcons
 	- [EachLine](#eachline)
 	- [Exec](#exec-1)
 	- [ExecForEach](#execforeach)
+	- [ExternalFilter](#externalfilter)
 	- [First](#first)
 	- [Freq](#freq)
 	- [Join](#join)
@@ -616,6 +617,30 @@ The first command which results in an error will set the pipe's error status acc
 // Execute all PHP files in current directory and print output
 script.ListFiles("*.php").ExecForEach("php {{.}}").Stdout()
 ```
+
+## ExternalFilter
+
+ExternalFilter runs the given filter functions on the current pipe. This filter can be used to include custom filters in
+a pipe. The external filter function must handle a nil pipe.
+```go
+func secondLine(in *script.Pipe) *script.Pipe {
+	if in == nil {
+		return nil
+    }
+	scanner := bufio.NewScanner(in)
+	var count = 0
+	for scanner.Scan() {
+		count++
+		if count == 2 {
+			return script.Echo(string(scanner.Bytes()))
+		}
+	}
+	return script.NewPipe().WithError(errors.New("no second line"))
+}
+// List all PHP files in current directory and print the second file on stdout output
+script.ListFiles("*.php").ExternalFilter(secondLine).Stdout()
+```
+
 
 ## First
 
