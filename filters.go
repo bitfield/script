@@ -385,3 +385,12 @@ func (p *Pipe) SHA256Sums() *Pipe {
 		out.WriteRune('\n')
 	})
 }
+
+// ExternalFilter calls the given filter function with the current active Pipe. If the filter is nil, the current pipe
+// is returned. Hence it will effectively be a NOOP. The filter function must handle nil Pipes as input.
+func (p *Pipe) ExternalFilter(filter func(in *Pipe) *Pipe) *Pipe {
+	if filter == nil {
+		return p
+	}
+	return filter(p)
+}

@@ -484,3 +484,35 @@ func TestSHA256Sums(t *testing.T) {
 		}
 	}
 }
+
+func TestExternalFilter(t *testing.T) {
+	t.Parallel()
+	p := NewPipe()
+	after := p.ExternalFilter(nil)
+	if p != after {
+		t.Errorf("Nil-Filter: want %v, got %v", p, after)
+	}
+	if err := after.Error(); err != nil {
+		t.Errorf("Nil-Filter: got error: %v, expected nil", err)
+	}
+	expect := "foo"
+	constFilter := func(in *Pipe) *Pipe {
+		return Echo(expect)
+	}
+	data, err := NewPipe().ExternalFilter(constFilter).String()
+	if err != nil {
+		t.Errorf("Const-Filter: got error: %v, expected nil", err)
+	}
+	if data != expect {
+		t.Errorf("Const-Filter: want %v, got %v", expect, data)
+	}
+	expectErr := errors.New("some error")
+	errFilter := func(in *Pipe) *Pipe {
+		return NewPipe().WithError(expectErr)
+	}
+	err = NewPipe().ExternalFilter(errFilter).Error()
+	if err != expectErr {
+		t.Errorf("Error-Filter: want %v, got %v", expectErr, err)
+
+	}
+}
