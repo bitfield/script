@@ -3,9 +3,9 @@ package script
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"testing"
@@ -379,31 +379,19 @@ func TestReadInput(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			// Prepare Stdin before calling prompt.
-			tmp, err := ioutil.TempFile("", tc.description)
-			if err != nil {
-				t.Error(err)
-			}
-			defer os.Remove(tmp.Name())
-			if _, err := tmp.WriteString(tc.input); err != nil {
-				t.Error(err)
-			}
-
-			if _, err := tmp.Seek(0, 0); err != nil {
-				t.Error(err)
-			}
-
-			// Restore original Stdin.
-			oldStdin := os.Stdin
-			defer func() { os.Stdin = oldStdin }()
-			os.Stdin = tmp
-
-			promptMessage := fmt.Sprintf("Prompting for %s: ", tc.description)
-			got, err := Echo(promptMessage).ReadInput(tc.defaultValue).String()
+			t.Parallel()
+			// Prepare Stdin before calling running the test
+			cmd := exec.Command(os.Args[0])
+			cmd.Env = append(os.Environ(), "SCRIPT_TEST=stdin")
+			// Prepare content of Stdin
+			cmd.Stdin = Echo(tc.input).Reader
+			// Run ReadInput filter
+			Echo(tc.description).ReadInput(tc.defaultValue).String()
+			got, err := cmd.Output()
 			if tc.wantError != (err != nil) {
 				t.Error(err)
 			}
-			if got != tc.want {
+			if string(got) != tc.want {
 				t.Errorf("got %q, want %q", got, tc.want)
 			}
 		})
