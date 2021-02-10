@@ -107,6 +107,7 @@ John is also the author of the popular [For the Love of Go](https://bitfieldcons
 	- [Last](#last)
 	- [Match](#match)
 	- [MatchRegexp](#matchregexp)
+	- [ReadInput](#readinput)
 	- [Reject](#reject)
 	- [RejectRegexp](#rejectregexp)
 	- [Replace](#replace)
@@ -305,6 +306,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `head`             | [`First()`](#first)                                           |
 | `find -type f`     | [`FindFiles`](#findfiles)                                     |
 | `ls`               | [`ListFiles()`](#listfiles)                                   |
+| `read`             | [`ReadInput()`](#ReadInput)|
 | `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
 | `sha256sum`        | [`SHA256Sum()`](#sha256Sum) / [`SHA256Sums()`](#sha256sums)   |
 | `tail`             | [`Last()`](#last)                                             |
@@ -707,6 +709,15 @@ p := script.File("test.txt").Match("Error")
 p := script.File("test.txt").MatchRegexp(regexp.MustCompile(`E.*r`))
 ```
 
+## ReadInput
+`ReadInput(defaultValue)` presents the content of the pipe as a prompt to the user and returns a pipe containing user input or `defaultValue` if no input was provided
+
+```go
+p := script.Echo("This is the prompt message").ReadInput( "This is the default value")
+output, err := p.String()
+fmt.Println(output)
+```
+
 ## Reject
 
 `Reject()` is the inverse of `Match()`. Its pipe produces only lines which _don't_ contain the given string:
@@ -881,6 +892,7 @@ Since `script` is designed to help you write system administration programs, a f
 * [head](examples/head/main.go)
 * [least_freq](examples/least_freq/main.go)
 * [ls](examples/ls/main.go)
+* [read](examples/read/main.go)
 * [sha256sum](examples/sha256sum/main.go)
 * [slice](examples/slice/main.go)
 * [tail](examples/tail/main.go)

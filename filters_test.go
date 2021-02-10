@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"io/ioutil"
+	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"testing"
@@ -343,6 +345,56 @@ func TestMatch(t *testing.T) {
 		if got != tc.want {
 			t.Errorf("%q in %q: want %d, got %d", tc.match, tc.testFileName, tc.want, got)
 		}
+	}
+}
+
+func TestReadInput(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		description  string
+		input        string
+		defaultValue string
+		want         string
+		wantError    bool
+	}{
+		{
+			description:  "User Input OK",
+			input:        "123",
+			defaultValue: "Unused",
+			want:         "123",
+		},
+		{
+			description:  "No User Input",
+			input:        "",
+			defaultValue: "default",
+			want:         "default",
+		},
+		{
+			description:  "Complex Input",
+			input:        "/user/test @@@ testing one two three",
+			defaultValue: "default",
+			want:         "/user/test @@@ testing one two three",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.description, func(t *testing.T) {
+			t.Parallel()
+			// Prepare Stdin before calling running the test
+			cmd := exec.Command(os.Args[0])
+			cmd.Env = append(os.Environ(), "SCRIPT_TEST=stdin")
+			// Prepare content of Stdin
+			cmd.Stdin = Echo(tc.input).Reader
+			// Run ReadInput filter
+			Echo(tc.description).ReadInput(tc.defaultValue).String()
+			got, err := cmd.Output()
+			if tc.wantError != (err != nil) {
+				t.Error(err)
+			}
+			if string(got) != tc.want {
+				t.Errorf("got %q, want %q", got, tc.want)
+			}
+		})
 	}
 }
 
