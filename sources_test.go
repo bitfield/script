@@ -107,6 +107,66 @@ func TestExec(t *testing.T) {
 	}
 }
 
+func TestExecArgs(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		Command           []string
+		ErrExpected       bool
+		WantErrContain    string
+		WantOutputContain string
+	}{
+		{
+			Command:           []string{"doesntexist"},
+			ErrExpected:       true,
+			WantErrContain:    "file not found",
+			WantOutputContain: "",
+		},
+		{
+			Command:           []string{"go"},
+			ErrExpected:       true,
+			WantErrContain:    "exit status 2",
+			WantOutputContain: "Usage",
+		},
+		{
+			Command:           []string{"go", "help"},
+			ErrExpected:       false,
+			WantErrContain:    "",
+			WantOutputContain: "Usage",
+		},
+		{
+			Command:           []string{"sh", "-c", "echo hello"},
+			ErrExpected:       false,
+			WantErrContain:    "",
+			WantOutputContain: "hello\n",
+		},
+		{
+			Command:           []string{"sh", "-c", "sh -c 'echo inception'"},
+			ErrExpected:       false,
+			WantErrContain:    "",
+			WantOutputContain: "inception\n",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(strings.Join(tc.Command, " "), func(t *testing.T) {
+			p := ExecArgs(tc.Command[0], tc.Command[1:]...)
+			if tc.ErrExpected != (p.Error() != nil) {
+				t.Fatalf("unexpected error value: %v", p.Error())
+			}
+			if p.Error() != nil && !strings.Contains(p.Error().Error(), tc.WantErrContain) {
+				t.Fatalf("want error string %q to contain %q", p.Error().Error(), tc.WantErrContain)
+			}
+			p.SetError(nil) // else p.String() would be a no-op
+			output, err := p.String()
+			if err != nil {
+				t.Fatalf("unexpected error %v", err)
+			}
+			if !strings.Contains(output, tc.WantOutputContain) {
+				t.Fatalf("want output %q to contain %q", output, tc.WantOutputContain)
+			}
+		})
+	}
+}
+
 func TestFile(t *testing.T) {
 	t.Parallel()
 	wantRaw, _ := ioutil.ReadFile("testdata/test.txt") // ignoring error

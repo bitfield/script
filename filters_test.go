@@ -149,6 +149,32 @@ func TestExecFilter(t *testing.T) {
 	}
 }
 
+func TestExecArgsFilter(t *testing.T) {
+	t.Parallel()
+	want := "a message with spaces"
+	p := File("testdata/hello.txt")
+	q := p.ExecArgs("echo", "-n", "a message with spaces")
+	got, err := q.String()
+	if err != nil {
+		t.Error(err)
+	}
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+	// This should fail because p is now closed.
+	_, err = p.String()
+	if err == nil {
+		t.Error("input not closed after reading")
+	}
+	p = Echo("hello world")
+	p.SetError(errors.New("oh no"))
+	// This should be a no-op because the pipe has error status.
+	out, _ := p.Exec("cat").String()
+	if out != "" {
+		t.Error("want exec on erroneous pipe to be a no-op, but it wasn't")
+	}
+}
+
 func TestExecForEach(t *testing.T) {
 	t.Parallel()
 	tcs := []struct {
