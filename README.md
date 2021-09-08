@@ -62,9 +62,9 @@ You can find more example programs (mostly replicating traditional Unix utilitie
 
 Not content with maintaining this library, John Arundel, of [Bitfield Consulting](https://bitfieldconsulting.com), is a highly experienced Go trainer and mentor who can teach you Go from scratch, take you beyond the basics, or even help you reach complete mastery of the Go programming language. See [Learn Go with Bitfield](https://bitfieldconsulting.com/golang/learn) for details, or email go@bitfieldconsulting.com to find out more.
 
-[![](img/fundamentals.png)](https://bitfieldconsulting.com/books/fundamentals) [![](img/data.png)](https://bitfieldconsulting.com/books/data)
+[!['For the Love of Go' cover image](img/love.png)](https://bitfieldconsulting.com/books/love)
 
-John is also the author of the popular [For the Love of Go](https://bitfieldconsulting.com/books) series of ebooks for Go beginners and improvers. Priced at a cheerful $4.99 each, they'll introduce you to the key concepts of Go in a friendly and patient way, and encourage you to start writing useful Go code right from the first page.
+John is also the author of [For the Love of Go](https://bitfieldconsulting.com/books/love), a book for Go beginners and improvers (along with an accompanying [video course](https://bitfieldconsulting.com/courses/love)).
 
 # Table of contents<!-- omit in toc -->
 - [What is `script`?](#what-is-script)
