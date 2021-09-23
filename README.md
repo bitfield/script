@@ -101,7 +101,7 @@ John is also the author of the popular [For the Love of Go](https://bitfieldcons
 	- [EachLine](#eachline)
 	- [Exec](#exec-1)
 	- [ExecForEach](#execforeach)
-	- [ExternalFilter](#externalfilter)
+	- [FilterFunc](#filterfunc)
 	- [First](#first)
 	- [Freq](#freq)
 	- [Join](#join)
@@ -618,10 +618,10 @@ The first command which results in an error will set the pipe's error status acc
 script.ListFiles("*.php").ExecForEach("php {{.}}").Stdout()
 ```
 
-## ExternalFilter
+## FilterFunc
 
-ExternalFilter runs the given filter functions on the current pipe. This filter can be used to include custom filters in
-a pipe. The external filter function must handle a nil pipe.
+FilterFunc runs the given filter functions on the current pipe. This filter can be used to include custom filters in
+a pipe. The filter function must handle a nil pipe.
 ```go
 func secondLine(in *script.Pipe) *script.Pipe {
 	if in == nil {
@@ -638,7 +638,7 @@ func secondLine(in *script.Pipe) *script.Pipe {
 	return script.NewPipe().WithError(errors.New("no second line"))
 }
 // List all PHP files in current directory and print the second file on stdout output
-script.ListFiles("*.php").ExternalFilter(secondLine).Stdout()
+script.ListFiles("*.php").FilterFunc(secondLine).Stdout()
 ```
 
 

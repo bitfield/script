@@ -485,10 +485,10 @@ func TestSHA256Sums(t *testing.T) {
 	}
 }
 
-func TestExternalFilter(t *testing.T) {
+func TestFilterFunc(t *testing.T) {
 	t.Parallel()
 	p := NewPipe()
-	after := p.ExternalFilter(nil)
+	after := p.FilterFunc(nil)
 	if p != after {
 		t.Errorf("Nil-Filter: want %v, got %v", p, after)
 	}
@@ -499,7 +499,7 @@ func TestExternalFilter(t *testing.T) {
 	constFilter := func(in *Pipe) *Pipe {
 		return Echo(expect)
 	}
-	data, err := NewPipe().ExternalFilter(constFilter).String()
+	data, err := NewPipe().FilterFunc(constFilter).String()
 	if err != nil {
 		t.Errorf("Const-Filter: got error: %v, expected nil", err)
 	}
@@ -510,7 +510,7 @@ func TestExternalFilter(t *testing.T) {
 	errFilter := func(in *Pipe) *Pipe {
 		return NewPipe().WithError(expectErr)
 	}
-	err = NewPipe().ExternalFilter(errFilter).Error()
+	err = NewPipe().FilterFunc(errFilter).Error()
 	if err != expectErr {
 		t.Errorf("Error-Filter: want %v, got %v", expectErr, err)
 

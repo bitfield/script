@@ -27,5 +27,5 @@ func everySecond(in *script.Pipe) *script.Pipe {
 }
 
 func main() {
-	script.ListFiles("*").ExternalFilter(everySecond).Stdout()
+	script.ListFiles("*").FilterFunc(everySecond).Stdout()
 }

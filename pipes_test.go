@@ -156,8 +156,8 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.WithReader(strings.NewReader(""))
 	action = "WriteFile()"
 	p.WriteFile("testdata/bogus.txt")
-	action = "ExternalFilter()"
-	p.ExternalFilter(func(in *Pipe) *Pipe {
+	action = "FilterFunc()"
+	p.FilterFunc(func(in *Pipe) *Pipe {
 		return in
 	})
 }

@@ -7,3 +7,4 @@ examples/visitors/visitors
 examples/*/go.sum
 .vscode/settings.json
 examples/ls/ls
+.idea
