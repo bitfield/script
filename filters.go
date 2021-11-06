@@ -49,7 +49,7 @@ func (p *Pipe) Column(col int) *Pipe {
 }
 
 // Concat reads a list of filenames from the pipe, one per line, and returns a
-// pipe which reads all those files in sequence. If there are any errors (for
+// pipe that reads all those files in sequence. If there are any errors (for
 // example, non-existent files), these will be ignored, execution will continue,
 // and the pipe's error status will not be set.
 func (p *Pipe) Concat() *Pipe {
@@ -73,7 +73,7 @@ func (p *Pipe) Concat() *Pipe {
 }
 
 // Dirname reads a list of pathnames from the pipe, one per line, and returns a
-// pipe which contains only the parent directories of each pathname. If a line
+// pipe that contains only the parent directories of each pathname. If a line
 // is empty, Dirname will produce a '.'. Trailing slashes are removed, unless
 // Dirname returns the root folder.
 func (p *Pipe) Dirname() *Pipe {
@@ -204,7 +204,7 @@ func (p *Pipe) Freq() *Pipe {
 	if p == nil || p.Error() != nil {
 		return p
 	}
-	var freq = map[string]int{}
+	freq := map[string]int{}
 	p.EachLine(func(line string, out *strings.Builder) {
 		freq[line]++
 	})
@@ -212,7 +212,7 @@ func (p *Pipe) Freq() *Pipe {
 		line  string
 		count int
 	}
-	var freqs = make([]frequency, 0, len(freq))
+	freqs := make([]frequency, 0, len(freq))
 	var maxCount int
 	for line, count := range freq {
 		freqs = append(freqs, frequency{line, count})
@@ -287,7 +287,7 @@ func (p *Pipe) Last(lines int) *Pipe {
 	return Echo(output.String())
 }
 
-// Match reads from the pipe, and returns a new pipe containing only lines which
+// Match reads from the pipe, and returns a new pipe containing only lines that
 // contain the specified string. If there is an error reading the pipe, the
 // pipe's error status is also set.
 func (p *Pipe) Match(s string) *Pipe {
@@ -300,7 +300,7 @@ func (p *Pipe) Match(s string) *Pipe {
 }
 
 // MatchRegexp reads from the pipe, and returns a new pipe containing only lines
-// which match the specified compiled regular expression. If there is an error
+// that match the specified compiled regular expression. If there is an error
 // reading the pipe, the pipe's error status is also set.
 func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
@@ -312,7 +312,7 @@ func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
 }
 
 // Reject reads from the pipe, and returns a new pipe containing only lines
-// which do not contain the specified string. If there is an error reading the
+// that do not contain the specified string. If there is an error reading the
 // pipe, the pipe's error status is also set.
 func (p *Pipe) Reject(s string) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
@@ -324,7 +324,7 @@ func (p *Pipe) Reject(s string) *Pipe {
 }
 
 // RejectRegexp reads from the pipe, and returns a new pipe containing only
-// lines which don't match the specified compiled regular expression. If there
+// lines that don't match the specified compiled regular expression. If there
 // is an error reading the pipe, the pipe's error status is also set.
 func (p *Pipe) RejectRegexp(re *regexp.Regexp) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
@@ -357,11 +357,10 @@ func (p *Pipe) ReplaceRegexp(re *regexp.Regexp, replace string) *Pipe {
 	})
 }
 
-// SHA256Sums reads a list of file paths from the pipe, one per line, and returns a
-// pipe which contains the SHA-256 checksum of each pathname.
-// If there are any errors (for
-// example, non-existent files), the pipe's error status will be set to the
-// first error encountered, but execution will continue.``
+// SHA256Sums reads a list of file paths from the pipe, one per line, and
+// returns a pipe that contains the SHA-256 checksum of each pathname. If there
+// are any errors (for example, non-existent files), the pipe's error status
+// will be set to the first error encountered, but execution will continue.
 func (p *Pipe) SHA256Sums() *Pipe {
 	if p == nil || p.Error() != nil {
 		return p

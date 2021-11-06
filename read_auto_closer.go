@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 )
 
-// ReadAutoCloser represents a pipe source which will be automatically closed
+// ReadAutoCloser represents a pipe source that will be automatically closed
 // once it has been fully read.
 type ReadAutoCloser struct {
 	r io.ReadCloser

@@ -1,32 +1,32 @@
 So you'd like to contribute to the `script` library? Excellent! Thank you very much. I can absolutely use your help.
 
-- [Getting started](#Getting-started)
-	- [Look for existing issues](#Look-for-existing-issues)
-	- [Open a new issue before making a PR](#Open-a-new-issue-before-making-a-PR)
-	- [Write a use case](#Write-a-use-case)
-	- [Ideas](#Ideas)
-- [Coding standards](#Coding-standards)
-	- [Tests](#Tests)
-		- [Use the standard library](#Use-the-standard-library)
-		- [Spend time on your test cases](#Spend-time-on-your-test-cases)
-		- [Add your method to `doMethodsOnPipe` for stress testing](#Add-your-method-to-doMethodsOnPipe-for-stress-testing)
-	- [Dealing with errors](#Dealing-with-errors)
-		- [Don't panic](#Dont-panic)
-		- [Set the pipe's error status](#Set-the-pipes-error-status)
-	- [Style and formatting](#Style-and-formatting)
-- [Documentation](#Documentation)
-	- [Write doc comments](#Write-doc-comments)
-	- [Update the README](#Update-the-README)
-- [Writing pipe operations](#Writing-pipe-operations)
-	- [Writing a source](#Writing-a-source)
-	- [Writing a filter](#Writing-a-filter)
-	- [Writing a sink](#Writing-a-sink)
-- [Before submitting your pull request](#Before-submitting-your-pull-request)
-- [After submitting your PR](#After-submitting-your-PR)
-- [The code review process](#The-code-review-process)
-	- [Expect to be taken seriously](#Expect-to-be-taken-seriously)
-	- [Dealing with comments](#Dealing-with-comments)
-	- [This may take a while](#This-may-take-a-while)
+- [Getting started](#getting-started)
+	- [Look for existing issues](#look-for-existing-issues)
+	- [Open a new issue before making a PR](#open-a-new-issue-before-making-a-pr)
+	- [Write a use case](#write-a-use-case)
+	- [Ideas](#ideas)
+- [Coding standards](#coding-standards)
+	- [Tests](#tests)
+		- [Use the standard library](#use-the-standard-library)
+		- [Spend time on your test cases](#spend-time-on-your-test-cases)
+		- [Add your method to `doMethodsOnPipe` for stress testing](#add-your-method-to-domethodsonpipe-for-stress-testing)
+	- [Dealing with errors](#dealing-with-errors)
+		- [Don't panic](#dont-panic)
+		- [Set the pipe's error status](#set-the-pipes-error-status)
+	- [Style and formatting](#style-and-formatting)
+- [Documentation](#documentation)
+	- [Write doc comments](#write-doc-comments)
+	- [Update the README](#update-the-readme)
+- [Writing pipe operations](#writing-pipe-operations)
+	- [Writing a source](#writing-a-source)
+	- [Writing a filter](#writing-a-filter)
+	- [Writing a sink](#writing-a-sink)
+- [Before submitting your pull request](#before-submitting-your-pull-request)
+- [After submitting your PR](#after-submitting-your-pr)
+- [The code review process](#the-code-review-process)
+	- [Expect to be taken seriously](#expect-to-be-taken-seriously)
+	- [Dealing with comments](#dealing-with-comments)
+	- [This may take a while](#this-may-take-a-while)
 
 # Getting started
 
@@ -34,7 +34,7 @@ Here are some hints on a good workflow for contributing to the project.
 
 ## Look for existing issues
 
-First of all, check the [issues](https://github.com/bitfield/script/issues) list. If you see an outstanding issue which you would like to tackle, by all means comment on the issue and let me know.
+First of all, check the [issues](https://github.com/bitfield/script/issues) list. If you see an outstanding issue that you would like to tackle, by all means comment on the issue and let me know.
 
 If you already have an idea for a feature you want to add, check the issues list anyway, just to make sure it hasn't already been discussed.
 
@@ -50,7 +50,7 @@ What do I mean by "use case"? I mean a real problem that you or someone else act
 
 The reason for insisting on this up front is that it's much easier to design a feature the right way if you start with its usage in mind. It's all too easy to design something in the abstract, and then find later that when you try to use it in a program, the API is completely unsuitable.
 
-Another reason for having a use case is that it gives us a useful example program, which can be included with the library to show how the feature is used.
+A concrete use case also provides a helpful example program that can be included with the library to show how the feature is used.
 
 The final reason is that it's tempting to over-elaborate a design and add all sorts of bells and whistles that nobody actually wants. Simple APIs are best. If you think of an enhancement, but it's not needed for your use case, leave it out. Things can always be enhanced later if necessary.
 
@@ -66,7 +66,7 @@ These are some ideas I've been thinking about. Some of them have existing issues
 
 # Coding standards
 
-A library is easier to use, and easier for contributors to work on, if it has a consistent, unified style, approach, and layout. Here are a few hints on how to make a `script` PR which will be accepted right away.
+A library is easier to use, and easier for contributors to work on, if it has a consistent, unified style, approach, and layout. Here are a few hints on how to make a `script` PR that will be accepted right away.
 
 ## Tests
 
@@ -106,7 +106,7 @@ Methods should not, in any situation, panic. In fact, no `script` method panics,
 
 ### Set the pipe's error status
 
-Normally, Go library code which encounters a problem would return an error to the caller, but `script` methods are specifically designed not to do this (see [Handling errors](README.md#Handling-errors)). Instead, set the error status on the pipe and return. Before you do anything at all in your method, you should check whether the pipe is nil, or the error status is set, and if so, return immediately.
+Normally, Go library code that encounters a problem would return an error to the caller, but `script` methods are specifically designed not to do this (see [Handling errors](README.md#Handling-errors)). Instead, set the error status on the pipe and return. Before you do anything at all in your method, you should check whether the pipe is nil, or the error status is set, and if so, return immediately.
 
 Here's an example:
 
@@ -159,7 +159,7 @@ This is the _whole_ user manual for your code. It will be included in the autoge
 
 Any change to the `script` API should also be accompanied by an update to the README. If you add a new method, add it in the appropriate place (sources, filters, or sinks), in its correct order alphabetically, and with a suitable (brief) example of its use.
 
-The README has a table of contents which is automatically generated and updated (when I work on it) by the VS Code [Markdown All In One](github.com/yzhang-gh/vscode-markdown) extension. However, you don't need to use this to update the table of contents yourself. The format should be fairly self-explanatory.
+The README has a table of contents that is automatically generated and updated (when I work on it) by the VS Code [Markdown All In One](github.com/yzhang-gh/vscode-markdown) extension. However, you don't need to use this to update the table of contents yourself. The format should be fairly self-explanatory.
 
 # Writing pipe operations
 
@@ -169,7 +169,7 @@ Here are some tips for writing sources, filters, and sinks for `script` pipes.
 
 All a pipe source has to do is return a pointer to a `script.Pipe`. To be useful, a pipe needs to have a reader (a data source, such as a file) associated with it.
 
-`Echo()` is a simple example, which just creates a pipe containing a string:
+`Echo()` is a simple example that just creates a pipe containing a string:
 
 ```go
 func Echo(s string) *script.Pipe {
@@ -200,7 +200,7 @@ func File(name string) *script.Pipe {
 
 ## Writing a filter
 
-Filters are methods on pipes, that return pipes. For example, here's a simple filter which just reads and rejects all input, returning an empty pipe:
+Filters are methods on pipes, that return pipes. For example, here's a simple filter that just reads and rejects all input, returning an empty pipe:
 
 ```go
 func (p *script.Pipe) RejectEverything() *script.Pipe {
@@ -243,7 +243,7 @@ func (p *Pipe) Match(s string) *Pipe {
 
 ## Writing a sink
 
-Any method on a pipe which returns something other than a pipe is a sink. For example, here's an implementation of `String()`:
+Any method on a pipe that returns something other than a pipe is a sink. For example, here's an implementation of `String()`:
 
 ```go
 func (p *script.Pipe) String() (string, error) {
@@ -279,13 +279,13 @@ Here's a handy checklist for making sure your PR will be accepted as quickly as 
 
 # After submitting your PR
 
-Here's a nice tip for PR-driven development in general. After you've submitted the PR, do a 'pre-code-review'. Go through the diffs, line by line, and be your own code reviewer. Does something look weird? Is something not quite straightforward? It's quite likely that you'll spot errors at this stage which you missed before, simply because you're looking at the code with a reviewer's mindset.
+Here's a nice tip for PR-driven development in general. After you've submitted the PR, do a 'pre-code-review'. Go through the diffs, line by line, and be your own code reviewer. Does something look weird? Is something not quite straightforward? It's quite likely that you'll spot errors at this stage that you missed before, simply because you're looking at the code with a reviewer's mindset.
 
 If so, fix them! But if you can foresee a question from a code reviewer, comment on the code to answer it in advance. (Even better, improve the code so that the question doesn't arise.)
 
 # The code review process
 
-If you've completed all these steps, I _will_ invest significant time and energy in giving your PR a detailed code review. This is a powerful and beneficial process which can not only improve the code, but can also help you learn to be a better engineer and a better Go programmer—and the same goes for me!
+If you've completed all these steps, I _will_ invest significant time and energy in giving your PR a detailed code review. This is a powerful and beneficial process that can not only improve the code, but can also help you learn to be a better engineer and a better Go programmer—and the same goes for me!
 
 ## Expect to be taken seriously
 
@@ -299,7 +299,7 @@ Now comes the tricky bit. You may not agree with some of the code review comment
 
 If you find yourself reacting emotionally, take a break. Go walk in the woods for a while, or play with a laughing child. When you come back to the code, approach it as though it were someone else's, not your own, and ask yourself seriously whether or not the reviewer _has a point_.
 
-If you genuinely think the reviewer has just misunderstood something, or made a mistake, try to clarify the issue. Ask questions, don't make accusations. Remember that every project has a certain way of doing things, which may not be your way. It's polite to go along with these practices and conventions.
+If you genuinely think the reviewer has just misunderstood something, or made a mistake, try to clarify the issue. Ask questions, don't make accusations. Remember that every project has a certain way of doing things that may not be _your_ way. It's polite to go along with these practices and conventions.
 
 You may feel as though you're doing the project maintainer a favour by contributing, as indeed you are, but an open source project is like somebody's home. They're used to living there, they probably like it the way it is, and they don't always respond well to strangers marching in and rearranging the furniture. Be considerate, and be willing to listen and make changes.
 

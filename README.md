@@ -26,7 +26,7 @@ That looks straightforward enough, but suppose you now want to count the lines i
 numLines, err := script.File("test.txt").CountLines()
 ```
 
-For something a bit more challenging, let's try counting the number of lines in the file which match the string "Error":
+For something a bit more challenging, let's try counting the number of lines in the file that match the string "Error":
 
 ```go
 numErrors, err := script.File("test.txt").Match("Error").CountLines()
@@ -137,7 +137,7 @@ One of the neat things about the Unix shell, and its many imitators, is the way 
 cat test.txt | grep Error | wc -l
 ```
 
-The output from each stage of the pipeline feeds into the next, and you can think of each stage as a _filter_ which passes on only certain parts of its input to its output.
+The output from each stage of the pipeline feeds into the next, and you can think of each stage as a _filter_ that passes on only certain parts of its input to its output.
 
 By comparison, writing shell-like scripts in raw Go is much less convenient, because everything you do returns a different data type, and you must (or at least should) check errors following every operation.
 
@@ -183,7 +183,7 @@ q = script.File("test.txt").Match("Error")
 
 Woah, woah! Just a minute! What if there was an error opening the file in the first place? Won't `Match` blow up if it tries to read from a non-existent file?
 
-No, it won't. As soon as an error status is set on a pipe, all operations on the pipe become no-ops. Any operation which would normally return a new pipe just returns the old pipe unchanged. So you can run as long a pipeline as you want to, and if an error occurs at any stage, nothing will crash, and you can check the error status of the pipe at the end.
+No, it won't. As soon as an error status is set on a pipe, all operations on the pipe become no-ops. Any operation that would normally return a new pipe just returns the old pipe unchanged. So you can run as long a pipeline as you want to, and if an error occurs at any stage, nothing will crash, and you can check the error status of the pipe at the end.
 
 (Seasoned Gophers will recognise this as the `errWriter` pattern described by Rob Pike in the blog post [Errors are values](https://blog.golang.org/errors-are-values).)
 
@@ -201,7 +201,7 @@ fmt.Println(result)
 
 # Errors
 
-Note that sinks return an error value in addition to the data. This is the same value you would get by calling `p.Error()`. If the pipe had an error in any operation along the pipeline, the pipe's error status will be set, and a sink operation which gets output will return the zero value, plus the error.
+Note that sinks return an error value in addition to the data. This is the same value you would get by calling `p.Error()`. If the pipe had an error in any operation along the pipeline, the pipe's error status will be set, and a sink operation that gets output will return the zero value, plus the error.
 
 ```go
 numLines, err := script.File("doesnt_exist.txt").CountLines()
@@ -213,19 +213,19 @@ if err != nil {
 // Output: open doesnt_exist.txt: no such file or directory
 ```
 
-`CountLines()` is another useful sink, which simply returns the number of lines read from the pipe.
+`CountLines()` is another useful sink, that simply returns the number of lines read from the pipe.
 
 # Closing pipes
 
-If you've dealt with files in Go before, you'll know that you need to _close_ the file once you've finished with it. Otherwise, the program will retain what's called a _file handle_ (the kernel data structure which represents an open file). There is a limit to the total number of open file handles for a given program, and for the system as a whole, so a program which leaks file handles will eventually crash, and will waste resources in the meantime.
+If you've dealt with files in Go before, you'll know that you need to _close_ the file once you've finished with it. Otherwise, the program will retain what's called a _file handle_ (the kernel data structure that represents an open file). There is a limit to the total number of open file handles for a given program, and for the system as a whole, so a program that leaks file handles will eventually crash, and will waste resources in the meantime.
 
-Files aren't the only things which need to be closed after reading: so do network connections, HTTP response bodies, and so on.
+Files aren't the only things that need to be closed after reading: so do network connections, HTTP response bodies, and so on.
 
-How does `script` handle this? Simple. The data source associated with a pipe will be automatically closed once it is read completely. Therefore, calling any sink method which reads the pipe to completion (such as `String()`) will close its data source. The only case in which you need to call `Close()` on a pipe is when you don't read from it, or you don't read it to completion.
+How does `script` handle this? Simple. The data source associated with a pipe will be automatically closed once it is read completely. Therefore, calling any sink method that reads the pipe to completion (such as `String()`) will close its data source. The only case in which you need to call `Close()` on a pipe is when you don't read from it, or you don't read it to completion.
 
 If the pipe was created from something that doesn't need to be closed, such as a string, then calling `Close()` simply does nothing.
 
-This is implemented using a type called `ReadAutoCloser`, which takes an `io.Reader` and wraps it so that:
+This is implemented using a type called `ReadAutoCloser`, that takes an `io.Reader` and wraps it so that:
 
 1. it is always safe to close (if it's not a closable resource, it will be wrapped in an `ioutil.NopCloser` to make it one), and
 2. it is closed automatically once read to completion (specifically, once the `Read()` call on it returns `io.EOF`).
@@ -250,13 +250,13 @@ To be fair to the shell, this kind of thing is not what it was ever intended for
 
 Go has a superb testing framework built right into the standard library. It has a superb standard library, and thousands of high-quality third-party packages for just about any functionality you can imagine. It is compiled, so it's fast, and statically typed, so it's reliable. It's efficient and memory-safe. Go programs can be distributed as a single binary. Go scales to enormous projects (Kubernetes, for example).
 
-The `script` library is implemented entirely in Go, and does not require any userland programs (or any other dependencies) to be present. Thus you can build your `script` program as a container image containing a single (very small) binary, which is quick to build, quick to upload, quick to deploy, quick to run, and economical with resources.
+The `script` library is implemented entirely in Go, and does not require any userland programs (or any other dependencies) to be present. Thus you can build your `script` program as a container image containing a single (very small) binary that is quick to build, quick to upload, quick to deploy, quick to run, and economical with resources.
 
 If you've ever struggled to get a shell script containing a simple `if` statement to work (and who hasn't?), then the `script` library is dedicated to you.
 
 # A real-world example
 
-Let's use `script` to write a program which system administrators might actually need. One thing I often find myself doing is counting the most frequent visitors to a website over a given period of time. Given an Apache log in the Common Log Format like this:
+Let's use `script` to write a program that system administrators might actually need. One thing I often find myself doing is counting the most frequent visitors to a website over a given period of time. Given an Apache log in the Common Log Format like this:
 
 ```
 212.205.21.11 - - [30/Jun/2019:17:06:15 +0000] "GET / HTTP/1.1" 200 2028 "https://example.com/ "Mozilla/5.0 (Linux; Android 8.0.0; FIG-LX1 Build/HUAWEIFIG-LX1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.156 Mobile Safari/537.36"
@@ -317,14 +317,14 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 `script` provides three types of pipe operations: sources, filters, and sinks.
 
 1. _Sources_ create pipes from input in some way (for example, `File()` opens a file).
-2. _Filters_ read from a pipe and filter the data in some way (for example `Match()` passes on only lines which contain a given string).
+2. _Filters_ read from a pipe and filter the data in some way (for example `Match()` passes on only lines that contain a given string).
 3. _Sinks_ get the output from a pipeline in some useful form (for example `String()` returns the contents of the pipe as a string), along with any error status.
 
 Let's look at the source, filter, and sink options that `script` provides.
 
 # Sources
 
-These are operations which create a pipe.
+These are operations that create a pipe.
 
 ## Args
 
@@ -418,7 +418,7 @@ fmt.Println(err)
 // Output: stat doesntexist.txt: no such file or directory
 ```
 
-This can be used to create pipes which take some action only if a certain file exists:
+This can be used to create pipes that take some action only if a certain file exists:
 
 ```go
 script.IfExists("/foo/bar").Exec("/usr/bin/yada")
@@ -463,7 +463,7 @@ fmt.Println(output)
 
 ## Stdin
 
-`Stdin()` creates a pipe which reads from the program's standard input.
+`Stdin()` creates a pipe that reads from the program's standard input.
 
 ```go
 p := script.Stdin()
@@ -524,7 +524,7 @@ PID
 
 ## Concat
 
-`Concat()` reads a list of filenames from the pipe, one per line, and creates a pipe which concatenates the contents of those files. For example, if you have files `a`, `b`, and `c`:
+`Concat()` reads a list of filenames from the pipe, one per line, and creates a pipe that concatenates the contents of those files. For example, if you have files `a`, `b`, and `c`:
 
 ```go
 output, err := Echo("a\nb\nc\n").Concat().String()
@@ -533,7 +533,7 @@ fmt.Println(output)
 // by contents of c
 ```
 
-This makes it convenient to write programs which take a list of input files on the command line, for example:
+This makes it convenient to write programs that take a list of input files on the command line, for example:
 
 ```go
 func main() {
@@ -559,7 +559,7 @@ Each input file will be closed once it has been fully read. If any of the files 
 
 ## Dirname
 
-`Dirname()` reads a list of pathnames from the pipe, one per line, and returns a pipe which contains only the parent directories of each pathname (so, for example, `/usr/local/bin/foo` would become just `/usr/local/bin`). This is the complement of [Basename](#basename).
+`Dirname()` reads a list of pathnames from the pipe, one per line, and returns a pipe that contains only the parent directories of each pathname (so, for example, `/usr/local/bin/foo` would become just `/usr/local/bin`). This is the complement of [Basename](#basename).
 
 If a line is empty, `Dirname()` will convert it to a single dot: `.` (this is the behaviour of Unix `dirname` and the Go standard library's `filepath.Dir`).
 
@@ -610,7 +610,7 @@ ExecForEach runs the supplied command once for each line of input, and returns a
 
 The command string is interpreted as a Go template, so `{{.}}` will be replaced with the input value, for example.
 
-The first command which results in an error will set the pipe's error status accordingly, and no subsequent commands will be run.
+The first command that results in an error will set the pipe's error status accordingly, and no subsequent commands will be run.
 
 ```go
 // Execute all PHP files in current directory and print output
@@ -693,7 +693,7 @@ script.Stdin().Last(10).Stdout()
 
 ## Match
 
-`Match()` returns a pipe containing only the input lines which match the supplied string:
+`Match()` returns a pipe containing only the input lines that match the supplied string:
 
 ```go
 p := script.File("test.txt").Match("Error")
@@ -709,7 +709,7 @@ p := script.File("test.txt").MatchRegexp(regexp.MustCompile(`E.*r`))
 
 ## Reject
 
-`Reject()` is the inverse of `Match()`. Its pipe produces only lines which _don't_ contain the given string:
+`Reject()` is the inverse of `Match()`. Its pipe produces only lines that _don't_ contain the given string:
 
 ```go
 p := script.File("test.txt").Match("Error").Reject("false alarm")
@@ -725,7 +725,7 @@ p := script.File("test.txt").Match("Error").RejectRegexp(regexp.MustCompile(`fal
 
 ## Replace
 
-`Replace()` returns a pipe which filters its input by replacing all occurrences of one string with another, like Unix `sed`:
+`Replace()` returns a pipe that filters its input by replacing all occurrences of one string with another, like Unix `sed`:
 
 ```go
 p := script.File("test.txt").Replace("old", "new")
@@ -733,14 +733,14 @@ p := script.File("test.txt").Replace("old", "new")
 
 ## ReplaceRegexp
 
-`ReplaceRegexp()` returns a pipe which filters its input by replacing all matches of a compiled regular expression with a supplied replacement string, like Unix `sed`:
+`ReplaceRegexp()` returns a pipe that filters its input by replacing all matches of a compiled regular expression with a supplied replacement string, like Unix `sed`:
 
 ```go
 p := script.File("test.txt").ReplaceRegexp(regexp.MustCompile("Gol[a-z]{1}ng"), "Go")
 ```
 
 ## SHA256Sums
-`SHA256Sums()` reads a list of file paths from the pipe, one per line, and returns a pipe which contains the SHA-256 checksum of each file.
+`SHA256Sums()` reads a list of file paths from the pipe, one per line, and returns a pipe that contains the SHA-256 checksum of each file.
 If there are any errors (for example, non-existent files), the pipe's error status will be set to the first error encountered, but execution will continue.
 
 Examples:
@@ -752,7 +752,7 @@ Examples:
 
 # Sinks
 
-Sinks are operations which return some data from a pipe, ending the pipeline.
+Sinks are operations that return some data from a pipe, ending the pipeline.
 
 ## AppendFile
 
@@ -790,7 +790,7 @@ buf := make([]byte, 256)
 n, err := r.Read(buf)
 ```
 
-Because a Pipe is an `io.Reader`, you can use it anywhere you would use a file, network connection, and so on. You can pass it to `ioutil.ReadAll`, `io.Copy`, `json.NewDecoder`, and anything else which takes an `io.Reader`.
+Because a Pipe is an `io.Reader`, you can use it anywhere you would use a file, network connection, and so on. You can pass it to `ioutil.ReadAll`, `io.Copy`, `json.NewDecoder`, and anything else that takes an `io.Reader`.
 
 Unlike most sinks, `Read()` does not read the whole contents of the pipe (unless the supplied buffer is big enough to hold them).
 
@@ -807,7 +807,7 @@ sha256Sum, err := script.File("test.txt").SHA256Sum()
 
 ## Slice
 
-`Slice()` returns the contents of the pipe as a slice of strings, one element per line, plus an error. An empty pipe will produce an empty slice. A pipe containing a single empty line (that is, a single `\n` character) will produce a slice of one element which is the empty string.
+`Slice()` returns the contents of the pipe as a slice of strings, one element per line, plus an error. An empty pipe will produce an empty slice. A pipe containing a single empty line (that is, a single `\n` character) will produce a slice of one element that is the empty string.
 
 ```go
 args, err := script.Args().Slice()
@@ -825,7 +825,7 @@ p := Echo("hello world")
 wrote, err := p.Stdout()
 ```
 
-In conjunction with `Stdin()`, `Stdout()` is useful for writing programs which filter input. For example, here is a program which simply copies its input to its output, like `cat`:
+In conjunction with `Stdin()`, `Stdout()` is useful for writing programs that filter input. For example, here is a program that simply copies its input to its output, like `cat`:
 
 ```go
 func main() {

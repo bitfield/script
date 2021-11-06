@@ -109,7 +109,7 @@ func Slice(s []string) *Pipe {
 	return Echo(strings.Join(s, "\n") + "\n")
 }
 
-// Stdin returns a pipe which reads from the program's standard input.
+// Stdin returns a pipe that reads from the program's standard input.
 func Stdin() *Pipe {
 	return NewPipe().WithReader(os.Stdin)
 }
