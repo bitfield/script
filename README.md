@@ -62,9 +62,9 @@ You can find more example programs (mostly replicating traditional Unix utilitie
 
 Not content with maintaining this library, John Arundel, of [Bitfield Consulting](https://bitfieldconsulting.com), is a highly experienced Go trainer and mentor who can teach you Go from scratch, take you beyond the basics, or even help you reach complete mastery of the Go programming language. See [Learn Go with Bitfield](https://bitfieldconsulting.com/golang/learn) for details, or email go@bitfieldconsulting.com to find out more.
 
-[!['For the Love of Go' cover image](img/love.png)](https://bitfieldconsulting.com/books/love)
+[!['The Power of Go: Tools' cover image](img/tools.png)](https://bitfieldconsulting.com/books/tools)
 
-John is also the author of [For the Love of Go](https://bitfieldconsulting.com/books/love), a book for Go beginners and improvers (along with an accompanying [video course](https://bitfieldconsulting.com/courses/love)).
+John's book [The Power of Go: Tools](https://bitfieldconsulting.com/books/tools) is an opinionated guide to writing powerful, modern, elegant command-line tools in Go, and includes a chapter on the design and implementation of the `script` library. You may like to check it out.
 
 # Table of contents<!-- omit in toc -->
 - [What is `script`?](#what-is-script)
