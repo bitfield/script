@@ -577,9 +577,9 @@ Examples:
 | `./src/filters`    | `./src`          |
 | `C:/Program Files` | `C:`             |
 
-## EachLine
+## EachLine and EachLineConc
 
-`EachLine()` lets you create custom filters. You provide a function, and it will be called once for each line of input. If you want to produce output, your function can write to a supplied `strings.Builder`. The return value from EachLine is a pipe containing your output.
+`EachLine()` and `EachLineConc()` let you create custom filters. You provide a function, and it will be called once for each line of input. If you want to produce output, your function can write to a supplied `strings.Builder`. The return value is a pipe containing your output. `EachLine()` runs the function line by line, whereas `EachLineConc()` runs on the lines concurrently. Both methods output in the order corresponding to their input.
 
 ```go
 p := script.File("test.txt")
@@ -604,13 +604,17 @@ fmt.Println(output)
 // Output: hello world
 ```
 
-## ExecForEach
+## ExecForEach and ExecForEachConc
 
-ExecForEach runs the supplied command once for each line of input, and returns a pipe containing the output, like Unix `xargs`.
+ExecForEach and ExecForEachConc run the supplied command once for each line of input, and returns a pipe containing the output, like Unix `xargs`.
 
 The command string is interpreted as a Go template, so `{{.}}` will be replaced with the input value, for example.
 
-The first command that results in an error will set the pipe's error status accordingly, and no subsequent commands will be run.
+ExecForEach runs commands line by line. The first command that results in an error will set the pipe's error status accordingly, and no subsequent commands will be run.
+
+By contrast, ExecForEachConc runs commands concurrently, like Unix '&', which improves efficiency when the command is time-consuming. 
+
+Both methods output in the order corresponding to their input.
 
 ```go
 // Execute all PHP files in current directory and print output

@@ -15,6 +15,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"text/template"
 
 	"bitbucket.org/creachadair/shell"
@@ -117,6 +118,43 @@ func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 	return Echo(output.String())
 }
 
+// EachLineConc calls the specified function for all input lines concurrently,
+// passing it the line as a string, and a *strings.Builder to write its output
+// to. The return value from EachLine is a pipe containing the contents of the
+// strings.Builder.
+func (p *Pipe) EachLineConc(process func(string, *strings.Builder)) *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	scanner := bufio.NewScanner(p.Reader)
+	inputs := []string{}
+	for scanner.Scan() {
+		inputs = append(inputs, scanner.Text())
+	}
+	err := scanner.Err()
+	if err != nil {
+		p.SetError(err)
+		return p
+	}
+	lineNum := len(inputs)
+	outputs := make([]string, lineNum)
+	latch := sync.WaitGroup{}
+	latch.Add(lineNum)
+	for index, input := range inputs {
+		go func(index int, input string) {
+			output := strings.Builder{}
+			process(input, &output)
+			outputs[index] = output.String()
+			latch.Done()
+		}(index, input)
+	}
+	latch.Wait()
+	if p.Error() != nil {
+		return p
+	}
+	return Echo(strings.Join(outputs, ""))
+}
+
 // Exec runs an external command and returns a pipe containing the output. If
 // the command had a non-zero exit status, the pipe's error status will also be
 // set to the string "exit status X", where X is the integer exit status.
@@ -153,6 +191,36 @@ func (p *Pipe) ExecForEach(cmdTpl string) *Pipe {
 		return p.WithError(err)
 	}
 	return p.EachLine(func(line string, out *strings.Builder) {
+		cmdLine := strings.Builder{}
+		err := tpl.Execute(&cmdLine, line)
+		if err != nil {
+			p.SetError(err)
+			return
+		}
+		cmdOutput, err := Exec(cmdLine.String()).String()
+		if err != nil {
+			p.SetError(err)
+			return
+		}
+		out.WriteString(cmdOutput)
+	})
+}
+
+// ExecForEachConc runs the supplied command for all input lines concurrently, and
+// returns a pipe containing the output. The command string is interpreted as a
+// Go template, so `{{.}}` will be replaced with the input value, for example.
+// If any command resulted in a non-zero exit status, the pipe's error status
+// will also be set to the string "exit status X", where X is the integer exit
+// status.
+func (p *Pipe) ExecForEachConc(cmdTpl string) *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	tpl, err := template.New("").Parse(cmdTpl)
+	if err != nil {
+		return p.WithError(err)
+	}
+	return p.EachLineConc(func(line string, out *strings.Builder) {
 		cmdLine := strings.Builder{}
 		err := tpl.Execute(&cmdLine, line)
 		if err != nil {

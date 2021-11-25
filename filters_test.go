@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -123,6 +124,31 @@ func TestEachLine(t *testing.T) {
 	}
 }
 
+func TestEachLineConc(t *testing.T) {
+	t.Parallel()
+	Num := 10000
+	numbers := make([]string, Num)
+	for i := 0; i < Num; i++ {
+		numbers[i] = strconv.Itoa(i)
+	}
+	s1, err1 := Slice(numbers).EachLineConc(func(s string, b *strings.Builder) {
+		b.WriteString(s)
+	}).String()
+	s2, err2 := Slice(numbers).EachLine(func(s string, b *strings.Builder) {
+		b.WriteString(s)
+	}).String()
+	if err1 != nil {
+		if err2 == nil {
+			t.Error(err1)
+		} else {
+			t.Logf("test size = %q may be too large for this machine", Num)
+		}
+	}
+	if s1 != s2 {
+		t.Error("method EachLineConc has different output with method EachLine")
+	}
+}
+
 func TestExecFilter(t *testing.T) {
 	t.Parallel()
 	want := "hello world"
@@ -185,6 +211,57 @@ func TestExecForEach(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.Command, func(t *testing.T) {
 			p := Slice(tc.Input).ExecForEach(tc.Command)
+			if tc.ErrExpected != (p.Error() != nil) {
+				t.Fatalf("unexpected error value: %v", p.Error())
+			}
+			p.SetError(nil) // else p.String() would be a no-op
+			output, err := p.String()
+			if err != nil {
+				t.Fatalf("unexpected error %v", err)
+			}
+			if !strings.Contains(output, tc.WantOutput) {
+				t.Fatalf("want output %q to contain %q", output, tc.WantOutput)
+			}
+		})
+	}
+}
+
+func TestExecForEachConc(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		Input       []string
+		Command     string
+		ErrExpected bool
+		WantOutput  string
+	}{
+		{
+			Command:     "bash -c 'echo {{.}}'",
+			Input:       []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"},
+			ErrExpected: false,
+			WantOutput:  "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\n",
+		},
+		{
+			Command:     "bash -c 'echo {{if not .}}DEFAULT{{else}}{{.}}{{end}}'",
+			Input:       []string{"a", "", "c"},
+			ErrExpected: false,
+			WantOutput:  "a\nDEFAULT\nc\n",
+		},
+		{
+			Command:     "bash -c 'echo {{bogus template syntax}}'",
+			Input:       []string{"a", "", "c"},
+			ErrExpected: true,
+			WantOutput:  "",
+		},
+		{
+			Command:     "bogus {{.}}",
+			Input:       []string{"a", "b", "c"},
+			ErrExpected: true,
+			WantOutput:  "",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.Command, func(t *testing.T) {
+			p := Slice(tc.Input).ExecForEachConc(tc.Command)
 			if tc.ErrExpected != (p.Error() != nil) {
 				t.Fatalf("unexpected error value: %v", p.Error())
 			}

@@ -111,10 +111,16 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.Dirname()
 	action = "EachLine()"
 	p.EachLine(func(string, *strings.Builder) {})
+	action = "EachLineConc()"
+	p.EachLineConc(func(string, *strings.Builder) {})
 	action = "Error()"
 	p.Error()
 	action = "Exec()"
 	p.Exec("bogus")
+	action = "ExecForEach()"
+	p.ExecForEach("bogus")
+	action = "ExecForEachConc()"
+	p.ExecForEachConc("bogus")
 	action = "ExitStatus()"
 	p.ExitStatus()
 	action = "First()"
