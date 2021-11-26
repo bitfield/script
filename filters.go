@@ -180,27 +180,14 @@ func (p *Pipe) ExecForEach(cmdTpl string) *Pipe {
 // lines. If there is an error reading the pipe, the pipe's error status is also
 // set.
 func (p *Pipe) First(lines int) *Pipe {
-	if p == nil || p.Error() != nil {
-		return p
-	}
-	defer p.Close()
-	if lines == 0 {
-		return NewPipe()
-	}
-	scanner := bufio.NewScanner(p.Reader)
-	output := strings.Builder{}
-	for i := 0; i < lines; i++ {
-		if !scanner.Scan() {
-			break
+	count := 0
+	return p.EachLine(func(s string, b *strings.Builder) {
+		if count < lines {
+			b.WriteString(s)
+			b.WriteRune('\n')
 		}
-		output.WriteString(scanner.Text())
-		output.WriteRune('\n')
-	}
-	err := scanner.Err()
-	if err != nil {
-		p.SetError(err)
-	}
-	return Echo(output.String())
+		count++
+	})
 }
 
 // Freq reads from the pipe, and returns a new pipe containing only unique lines
