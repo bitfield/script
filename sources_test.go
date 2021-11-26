@@ -89,18 +89,14 @@ func TestExec(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.Command, func(t *testing.T) {
 			p := Exec(tc.Command)
-			if tc.ErrExpected != (p.Error() != nil) {
-				t.Fatalf("unexpected error value: %v", p.Error())
-			}
-			if p.Error() != nil && !strings.Contains(p.Error().Error(), tc.WantErrContain) {
-				t.Fatalf("want error string %q to contain %q", p.Error().Error(), tc.WantErrContain)
-			}
-			p.SetError(nil) // else p.String() would be a no-op
 			output, err := p.String()
-			if err != nil {
-				t.Fatalf("unexpected error %v", err)
+			if tc.ErrExpected != (err != nil) {
+				t.Fatalf("unexpected error value: %v", err)
 			}
-			if !strings.Contains(output, tc.WantOutputContain) {
+			if err != nil && !strings.Contains(err.Error(), tc.WantErrContain) {
+				t.Fatalf("want error string %q to contain %q", err.Error(), tc.WantErrContain)
+			}
+			if err == nil && !strings.Contains(output, tc.WantOutputContain) {
 				t.Fatalf("want output %q to contain %q", output, tc.WantOutputContain)
 			}
 		})

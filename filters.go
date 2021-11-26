@@ -2,7 +2,6 @@ package script
 
 import (
 	"bufio"
-	"bytes"
 	"container/ring"
 	"crypto/sha256"
 	"encoding/hex"
@@ -139,11 +138,39 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 	}
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdin = p.Reader
-	output, err := cmd.CombinedOutput()
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		q.SetError(err)
+		return p.WithError(err)
 	}
-	return q.WithReader(bytes.NewReader(output))
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return p.WithError(err)
+	}
+	if err := cmd.Start(); err != nil {
+		return p.WithError(err)
+	}
+	// open another go routine and push data into io.Pipe() to call
+	// cmd.Wait() and set the error before the next pipe stops reading
+	r, w := io.Pipe()
+	go func() {
+		combinedReader := bufio.NewReader(io.MultiReader(stdout, stderr))
+		for {
+			// use ReadBytes so that the delimiter can be included
+			bytes, err := combinedReader.ReadBytes('\n')
+			w.Write(bytes)
+			if err != nil {
+				if err != io.EOF {
+					p.SetError(err)
+					q.SetError(err)
+				}
+				break
+			}
+		}
+		q.SetError(cmd.Wait())
+		w.Close()
+	}()
+
+	return q.WithReader(r)
 }
 
 // ExecForEach runs the supplied command once for each line of input, and
