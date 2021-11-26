@@ -3,7 +3,6 @@ package script
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -27,9 +26,9 @@ func (p *Pipe) Bytes() ([]byte, error) {
 	res, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
 		p.SetError(err)
-		return []byte{}, err
+		return []byte{}, p.Error()
 	}
-	return res, nil
+	return res, p.Error()
 }
 
 // CountLines counts lines from the pipe's reader, and returns the integer
@@ -42,7 +41,7 @@ func (p *Pipe) CountLines() (int, error) {
 	var lines int
 	p.EachLine(func(line string, out *strings.Builder) {
 		lines++
-	})
+	}).Wait()
 	return lines, p.Error()
 }
 
@@ -73,7 +72,7 @@ func (p *Pipe) Slice() ([]string, error) {
 	result := []string{}
 	p.EachLine(func(line string, out *strings.Builder) {
 		result = append(result, line)
-	})
+	}).Wait()
 	return result, p.Error()
 }
 
@@ -85,11 +84,11 @@ func (p *Pipe) Stdout() (int, error) {
 	if p == nil || p.Error() != nil {
 		return 0, p.Error()
 	}
-	output, err := p.String()
+	written, err := io.Copy(os.Stdout, p.Reader)
 	if err != nil {
-		return 0, err
+		p.SetError(err)
 	}
-	return fmt.Print(output)
+	return int(written), p.Error()
 }
 
 // String returns the contents of the Pipe as a string, or an error, and closes
@@ -102,6 +101,19 @@ func (p *Pipe) String() (string, error) {
 		return "", err
 	}
 	return string(data), nil
+}
+
+// Wait blocks until the previous Pipe finishes
+func (p *Pipe) Wait() error {
+	if p == nil || p.Error() != nil {
+		return p.Error()
+	}
+	_, err := ioutil.ReadAll(p.Reader)
+	if err != nil {
+		p.SetError(err)
+		return p.Error()
+	}
+	return p.Error()
 }
 
 // WriteFile writes the contents of the Pipe to the specified file, and closes

@@ -103,18 +103,26 @@ func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 		return p
 	}
 	scanner := bufio.NewScanner(p.Reader)
-	output := strings.Builder{}
-	for scanner.Scan() {
-		process(scanner.Text(), &output)
-		if p.Error() != nil {
-			return p
+	r, w := io.Pipe()
+	q := NewPipe().WithReader(r)
+	go func() {
+		for scanner.Scan() {
+			output := strings.Builder{}
+			process(scanner.Text(), &output)
+			if p.Error() != nil {
+				q.SetError(p.Error())
+				break
+			}
+			w.Write([]byte(output.String()))
 		}
-	}
-	err := scanner.Err()
-	if err != nil {
-		p.SetError(err)
-	}
-	return Echo(output.String())
+		err := scanner.Err()
+		if err != nil {
+			p.SetError(err)
+			q.SetError(err)
+		}
+		w.Close()
+	}()
+	return q
 }
 
 // Exec runs an external command and returns a pipe containing the output. If
@@ -207,7 +215,7 @@ func (p *Pipe) Freq() *Pipe {
 	freq := map[string]int{}
 	p.EachLine(func(line string, out *strings.Builder) {
 		freq[line]++
-	})
+	}).Wait()
 	type frequency struct {
 		line  string
 		count int

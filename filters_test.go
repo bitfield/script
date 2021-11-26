@@ -184,14 +184,9 @@ func TestExecForEach(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.Command, func(t *testing.T) {
-			p := Slice(tc.Input).ExecForEach(tc.Command)
-			if tc.ErrExpected != (p.Error() != nil) {
-				t.Fatalf("unexpected error value: %v", p.Error())
-			}
-			p.SetError(nil) // else p.String() would be a no-op
-			output, err := p.String()
-			if err != nil {
-				t.Fatalf("unexpected error %v", err)
+			output, err := Slice(tc.Input).ExecForEach(tc.Command).String()
+			if tc.ErrExpected != (err != nil) {
+				t.Fatalf("unexpected error value: %v", err)
 			}
 			if !strings.Contains(output, tc.WantOutput) {
 				t.Fatalf("want output %q to contain %q", output, tc.WantOutput)

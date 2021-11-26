@@ -859,6 +859,15 @@ fmt.Println(err)
 // Output: read test.txt: file already closed
 ```
 
+## Wait
+
+`Wait()` waits until the pipe finishes, consumes it, and returns the error:
+
+```go
+err := script.Slice(make([]string, 5)).ExecForEach("sleep 1").Wait()
+// should sleep for 5 seconds
+```
+
 ## WriteFile
 
 `WriteFile()` writes the contents of the pipe to a named file. It returns the number of bytes written, or an error:

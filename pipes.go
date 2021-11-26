@@ -41,10 +41,11 @@ var exitStatusPattern = regexp.MustCompile(`exit status (\d+)$`)
 // pipe's error status is set, and if the error matches the pattern "exit status
 // %d". Otherwise, it returns zero.
 func (p *Pipe) ExitStatus() int {
-	if p.Error() == nil {
+	perr := p.Error()
+	if perr == nil {
 		return 0
 	}
-	match := exitStatusPattern.FindStringSubmatch(p.Error().Error())
+	match := exitStatusPattern.FindStringSubmatch(perr.Error())
 	if len(match) < 2 {
 		return 0
 	}
