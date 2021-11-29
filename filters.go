@@ -2,6 +2,7 @@ package script
 
 import (
 	"bufio"
+	"bytes"
 	"container/ring"
 	"crypto/sha256"
 	"encoding/hex"
@@ -102,31 +103,46 @@ func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 		return p
 	}
 	scanner := bufio.NewScanner(p.Reader)
-	r, w := io.Pipe()
-	q := NewPipe().WithReader(r)
-	go func() {
-		for scanner.Scan() {
-			if p.Error() != nil {
-				break
+	if p.async {
+		r, w := io.Pipe()
+		q := NewPipe().WithReader(r).withAsync(p.async)
+		go func() {
+			for scanner.Scan() {
+				if p.Error() != nil {
+					break
+				}
+				output := strings.Builder{}
+				process(scanner.Text(), &output)
+				w.Write([]byte(output.String()))
 			}
-			output := strings.Builder{}
-			process(scanner.Text(), &output)
-			w.Write([]byte(output.String()))
-		}
-		// by this time, the previous pipe stage must have finished
-		err := p.Error()
-		if err != nil {
-			q.SetError(err)
-		} else {
-			err := scanner.Err()
+			// by this time, the previous pipe stage must have finished
+			err := p.Error()
 			if err != nil {
-				p.SetError(err)
 				q.SetError(err)
+			} else {
+				err := scanner.Err()
+				if err != nil {
+					p.SetError(err)
+					q.SetError(err)
+				}
+			}
+			w.Close()
+		}()
+		return q
+	} else {
+		output := strings.Builder{}
+		for scanner.Scan() {
+			process(scanner.Text(), &output)
+			if p.Error() != nil {
+				return p
 			}
 		}
-		w.Close()
-	}()
-	return q
+		err := scanner.Err()
+		if err != nil {
+			p.SetError(err)
+		}
+		return Echo(output.String()).withAsync(p.async)
+	}
 }
 
 // Exec runs an external command and returns a pipe containing the output. If
@@ -136,55 +152,63 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 	if p == nil || p.Error() != nil {
 		return p
 	}
-	q := NewPipe()
+	q := NewPipe().withAsync(p.async)
 	args, ok := shell.Split(cmdLine) // strings.Fields doesn't handle quotes
 	if !ok {
 		return p.WithError(fmt.Errorf("unbalanced quotes or backslashes in [%s]", cmdLine))
 	}
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdin = p.Reader
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return p.WithError(err)
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return p.WithError(err)
-	}
-	if err := cmd.Start(); err != nil {
-		return p.WithError(err)
-	}
-	// open another go routine and push data into io.Pipe(), call
-	// cmd.Wait() and set the error before the next pipe stops reading
-	r, w := io.Pipe()
-	go func() {
-		combinedReader := bufio.NewReader(io.MultiReader(stdout, stderr))
-		for {
-			if p.Error() != nil {
-				break
-			}
-			// use ReadBytes so that the delimiter can be included
-			bytes, err := combinedReader.ReadBytes('\n')
-			w.Write(bytes)
-			if err != nil {
-				if err != io.EOF {
-					q.SetError(err)
-				}
-				break
-			}
+	if q.async {
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			return p.WithError(err)
 		}
-		err := p.Error()
+		stderr, err := cmd.StderrPipe()
+		if err != nil {
+			return p.WithError(err)
+		}
+		if err := cmd.Start(); err != nil {
+			return p.WithError(err)
+		}
+		// open another go routine and push data into io.Pipe(), call
+		// cmd.Wait() and set the error before the next pipe stops reading
+		r, w := io.Pipe()
+		go func() {
+			combinedReader := bufio.NewReader(io.MultiReader(stdout, stderr))
+			for {
+				if p.Error() != nil {
+					break
+				}
+				// use ReadBytes so that the delimiter can be included
+				bytes, err := combinedReader.ReadBytes('\n')
+				w.Write(bytes)
+				if err != nil {
+					if err != io.EOF {
+						q.SetError(err)
+					}
+					break
+				}
+			}
+			err := p.Error()
+			if err != nil {
+				q.SetError(err)
+			}
+			if q.Error() == nil {
+				q.SetError(cmd.Wait())
+			}
+
+			w.Close()
+		}()
+		return q.WithReader(r)
+	} else {
+		output, err := cmd.CombinedOutput()
 		if err != nil {
 			q.SetError(err)
 		}
-		if q.Error() == nil {
-			q.SetError(cmd.Wait())
-		}
+		return q.WithReader(bytes.NewReader(output))
+	}
 
-		w.Close()
-	}()
-
-	return q.WithReader(r)
 }
 
 // ExecForEach runs the supplied command once for each line of input, and
@@ -268,7 +292,7 @@ func (p *Pipe) Freq() *Pipe {
 		output.WriteString(fmt.Sprintf("%*d %s", fieldWidth, item.count, item.line))
 		output.WriteRune('\n')
 	}
-	return Echo(output.String())
+	return Echo(output.String()).withAsync(p.async)
 }
 
 // Join reads the contents of the pipe, line by line, and joins them into a
@@ -288,7 +312,7 @@ func (p *Pipe) Join() *Pipe {
 		result = result[:len(result)-1]
 	}
 	output := strings.ReplaceAll(result, "\n", " ")
-	return Echo(output + terminator)
+	return Echo(output + terminator).withAsync(p.async)
 }
 
 // Last reads from the pipe, and returns a new pipe containing only the last N
@@ -320,7 +344,7 @@ func (p *Pipe) Last(lines int) *Pipe {
 	if err != nil {
 		p.SetError(err)
 	}
-	return Echo(output.String())
+	return Echo(output.String()).withAsync(p.async)
 }
 
 // Match reads from the pipe, and returns a new pipe containing only lines that

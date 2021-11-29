@@ -10,11 +10,12 @@ import (
 type Pipe struct {
 	Reader ReadAutoCloser
 	err    error
+	async  bool
 }
 
-// NewPipe returns a pointer to a new empty pipe.
+// NewPipe returns a pointer to a new empty pipe, with streaming turned off.
 func NewPipe() *Pipe {
-	return &Pipe{ReadAutoCloser{}, nil}
+	return &Pipe{ReadAutoCloser{}, nil, false}
 }
 
 // Close closes the pipe's associated reader. This is always safe to do, because
@@ -89,5 +90,12 @@ func (p *Pipe) WithReader(r io.Reader) *Pipe {
 // modified pipe.
 func (p *Pipe) WithError(err error) *Pipe {
 	p.SetError(err)
+	return p
+}
+
+// WithError sets the pipe's error status to the specified error and returns the
+// modified pipe.
+func (p *Pipe) withAsync(async bool) *Pipe {
+	p.async = async
 	return p
 }
