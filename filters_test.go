@@ -121,6 +121,51 @@ func TestEachLine(t *testing.T) {
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
 	}
+
+	appendFunc := func(line string, out *strings.Builder) {
+		out.WriteString(line + "1\n")
+	}
+	deleteFunc := func(line string, out *strings.Builder) {
+		out.WriteString(line[:len(line)-1])
+		out.WriteRune('\n')
+	}
+
+	// append a character to the string for N times,
+	// then remove every one of them, as well as \n
+	roundTest := func(p *Pipe, N int) *Pipe {
+		for n := 0; n < N; n++ {
+			p = p.EachLine(appendFunc)
+		}
+		for n := 0; n < N; n++ {
+			p = p.EachLine(deleteFunc)
+		}
+		p = p.EachLine(func(line string, out *strings.Builder) {
+			out.WriteString(line) // remove \n
+		})
+		return p
+	}
+
+	// 5 appends, 5 deletes
+	N := 5
+	p = Slice(make([]string, 30))
+	p = roundTest(p, N)
+	got, err = p.String()
+	if err != nil {
+		t.Error("unexpected error", err)
+	}
+	if got != "" {
+		t.Errorf("expected empty string, got %q", got)
+	}
+
+	// test that EachLine propagates error properly
+	payload := make([]string, 30)
+	payload[20] = "bogus"
+	p = Slice(payload).ExecForEach("echo{{.}}")
+	p = roundTest(p, N)
+	_, err = p.String()
+	if !strings.Contains(err.Error(), "echobogus") {
+		t.Errorf("error %q does not contain 'echobogus'", err)
+	}
 }
 
 func TestExecFilter(t *testing.T) {

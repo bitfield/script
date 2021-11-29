@@ -109,15 +109,20 @@ func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 			output := strings.Builder{}
 			process(scanner.Text(), &output)
 			if p.Error() != nil {
-				q.SetError(p.Error())
 				break
 			}
 			w.Write([]byte(output.String()))
 		}
-		err := scanner.Err()
+		// by this time, the previous pipe stage must have finished
+		err := p.Error()
 		if err != nil {
-			p.SetError(err)
 			q.SetError(err)
+		} else {
+			err := scanner.Err()
+			if err != nil {
+				p.SetError(err)
+				q.SetError(err)
+			}
 		}
 		w.Close()
 	}()
