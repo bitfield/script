@@ -106,11 +106,11 @@ func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 	q := NewPipe().WithReader(r)
 	go func() {
 		for scanner.Scan() {
-			output := strings.Builder{}
-			process(scanner.Text(), &output)
 			if p.Error() != nil {
 				break
 			}
+			output := strings.Builder{}
+			process(scanner.Text(), &output)
 			w.Write([]byte(output.String()))
 		}
 		// by this time, the previous pipe stage must have finished
@@ -154,24 +154,33 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 	if err := cmd.Start(); err != nil {
 		return p.WithError(err)
 	}
-	// open another go routine and push data into io.Pipe() to call
+	// open another go routine and push data into io.Pipe(), call
 	// cmd.Wait() and set the error before the next pipe stops reading
 	r, w := io.Pipe()
 	go func() {
 		combinedReader := bufio.NewReader(io.MultiReader(stdout, stderr))
 		for {
+			if p.Error() != nil {
+				break
+			}
 			// use ReadBytes so that the delimiter can be included
 			bytes, err := combinedReader.ReadBytes('\n')
 			w.Write(bytes)
 			if err != nil {
 				if err != io.EOF {
-					p.SetError(err)
 					q.SetError(err)
 				}
 				break
 			}
 		}
-		q.SetError(cmd.Wait())
+		err := p.Error()
+		if err != nil {
+			q.SetError(err)
+		}
+		if q.Error() == nil {
+			q.SetError(cmd.Wait())
+		}
+
 		w.Close()
 	}()
 

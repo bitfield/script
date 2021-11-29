@@ -192,6 +192,18 @@ func TestExecFilter(t *testing.T) {
 	if out != "" {
 		t.Error("want exec on erroneous pipe to be a no-op, but it wasn't")
 	}
+
+	payload := make([]string, 30)
+	payload[0] = " do_not_print_this"
+	payload[20] = "bogus"
+	p = Slice(payload).ExecForEach("echo{{.}}")
+	out, err = p.Exec("cat").String()
+	if out != "" {
+		t.Error("want exec on erroneous pipe to be a no-op, but it wasn't")
+	}
+	if !strings.Contains(err.Error(), "echobogus") {
+		t.Errorf("error %q does not contain 'echobogus'", err)
+	}
 }
 
 func TestExecForEach(t *testing.T) {
