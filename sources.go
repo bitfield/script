@@ -113,3 +113,12 @@ func Slice(s []string) *Pipe {
 func Stdin() *Pipe {
 	return NewPipe().WithReader(os.Stdin)
 }
+
+// Stream lets the pipeline after it be executed in the streaming mode.
+// Like a Unix pipe, functions start simultaneously, each consuming the
+// output of its predecessor instantly. Function will stop when it detects
+// an error either in itself or from its predecessor. One can call
+// Synchronize() or any sink function to disable the streaming.
+func Stream() *Pipe {
+	return NewPipe().withAsync(true)
+}

@@ -148,8 +148,12 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	stdoutM.Lock()
 	defer stdoutM.Unlock()
 	p.Stdout()
+	action = "Stream()"
+	p.Stream()
 	action = "String()"
 	p.String()
+	action = "Synchronize()"
+	p.Synchronize()
 	action = "WithError()"
 	p.WithError(nil)
 	action = "WithReader()"

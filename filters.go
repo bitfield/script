@@ -444,3 +444,25 @@ func (p *Pipe) SHA256Sums() *Pipe {
 		out.WriteRune('\n')
 	})
 }
+
+// Stream lets the pipeline after it be executed in the streaming mode.
+// Like a Unix pipe, functions start simultaneously, each consuming the
+// output of its predecessor instantly. Function will stop when it detects
+// an error either in itself or from its predecessor. One can call
+// Synchronize() or any sink function to disable the streaming.
+func (p *Pipe) Stream() *Pipe {
+	if p == nil {
+		return p
+	}
+	return p.withAsync(true)
+}
+
+// Synchronize turns off streaming mode
+func (p *Pipe) Synchronize() *Pipe {
+	if p == nil || p.Error() != nil || !p.async {
+		return p
+	}
+	w := bytes.Buffer{}
+	io.Copy(&w, p.Reader)
+	return NewPipe().WithReader(bytes.NewReader(w.Bytes())).withAsync(false)
+}

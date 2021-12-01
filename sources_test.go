@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -248,5 +249,33 @@ func TestStdin(t *testing.T) {
 	}
 	if string(got) != want {
 		t.Errorf("want %q, got %q", want, string(got))
+	}
+}
+
+func TestStream(t *testing.T) {
+	t.Parallel()
+	n := 0
+	round := 5
+	plusOneAndDoubleLine := func(s string, b *strings.Builder) {
+		time.Sleep(10 * time.Millisecond)
+		n++
+		b.WriteRune('\n')
+		b.WriteRune('\n')
+	}
+	timesTwo := func(s string, b *strings.Builder) {
+		n *= 2
+		b.WriteRune('\n')
+	}
+	err := Stream().Exec("bash -c 'yes 1 | head -n 5; wait'").EachLine(plusOneAndDoubleLine).EachLine(timesTwo).Wait()
+	if err != nil {
+		t.Errorf("Got unexpected error %q", err)
+	}
+	want := 0
+	for i := 0; i < round; i++ {
+		want++
+		want *= 4
+	}
+	if n != want {
+		t.Errorf("want n = %d, got %d", want, n)
 	}
 }
