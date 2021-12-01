@@ -103,7 +103,7 @@ func (p *Pipe) String() (string, error) {
 	return string(data), nil
 }
 
-// Wait blocks until the previous Pipe finishes
+// Wait blocks until the previous Pipe finishes, and returns the error
 func (p *Pipe) Wait() error {
 	if p == nil || p.Error() != nil || !p.async {
 		return p.Error()
