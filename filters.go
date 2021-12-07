@@ -220,15 +220,20 @@ func (p *Pipe) ExecForEachConc(cmdTpl string) *Pipe {
 	if err != nil {
 		return p.WithError(err)
 	}
+	mu := sync.Mutex{}
 	return p.EachLineConc(func(line string, out *strings.Builder) {
 		cmdLine := strings.Builder{}
 		err := tpl.Execute(&cmdLine, line)
 		if err != nil {
+			mu.Lock()
+			defer mu.Unlock()
 			p.SetError(err)
 			return
 		}
 		cmdOutput, err := Exec(cmdLine.String()).String()
 		if err != nil {
+			mu.Lock()
+			defer mu.Unlock()
 			p.SetError(err)
 			return
 		}

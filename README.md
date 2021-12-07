@@ -99,8 +99,10 @@ John is also the author of [For the Love of Go](https://bitfieldconsulting.com/b
 	- [Concat](#concat)
 	- [Dirname](#dirname)
 	- [EachLine](#eachline)
+	- [EachLineConc](#eachlineconc)
 	- [Exec](#exec-1)
 	- [ExecForEach](#execforeach)
+	- [ExecForEachConc](#execforeachconc)
 	- [First](#first)
 	- [Freq](#freq)
 	- [Join](#join)
@@ -311,6 +313,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `uniq -c`          | [`Freq()`](#freq)                                             |
 | `wc -l`            | [`CountLines()`](#countlines)                                 |
 | `xargs`            | [`ExecForEach()`](#execforeach)                               |
+| `xargs -P`         | [`ExecForEachConc()`](#execforeachconc)                       |
 
 # Sources, filters, and sinks
 
