@@ -134,7 +134,7 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 	cmd.Stdin = p.Reader
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		q.SetError(errors.New(err.Error() + ":" + string(output)))
+		q.SetError(errors.New(err.Error() + ": " + string(output)))
 	}
 	return q.WithReader(bytes.NewReader(output))
 }
