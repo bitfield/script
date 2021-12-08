@@ -6,6 +6,7 @@ import (
 	"container/ring"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -133,7 +134,7 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 	cmd.Stdin = p.Reader
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		q.SetError(err)
+		q.SetError(errors.New(err.Error() + ":" + string(output)))
 	}
 	return q.WithReader(bytes.NewReader(output))
 }
