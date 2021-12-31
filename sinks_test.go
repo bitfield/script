@@ -2,10 +2,11 @@ package script
 
 import (
 	"bytes"
-	"github.com/google/go-cmp/cmp"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 // doSinksOnPipe calls every kind of sink method on the supplied pipe and
@@ -61,12 +62,11 @@ func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
 func TestAppendFile(t *testing.T) {
 	t.Parallel()
 	orig := "Hello, world"
-	testFile := "testdata/appendfile.txt"
-	defer os.Remove(testFile)
+	path := t.TempDir() + t.Name()
 	// ignore results; we're testing AppendFile, not WriteFile
-	_, _ = Echo(orig).WriteFile(testFile)
+	_, _ = Echo(orig).WriteFile(path)
 	extra := " and goodbye"
-	wrote, err := Echo(extra).AppendFile(testFile)
+	wrote, err := Echo(extra).AppendFile(path)
 	if err != nil {
 		t.Error(err)
 	}
@@ -74,7 +74,7 @@ func TestAppendFile(t *testing.T) {
 		t.Errorf("want %d bytes written, got %d", len(extra), int(wrote))
 	}
 	// check file contains both contents
-	got, err := File(testFile).String()
+	got, err := File(path).String()
 	if err != nil {
 		t.Error(err)
 	}
@@ -180,7 +180,7 @@ func TestSliceSink(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Multiple lines pipe",
+			name:   "Multiple lines pipe",
 			fields: Echo("testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip\n"),
 			want: []string{
 				"testdata/multiple_files/1.txt",
@@ -190,19 +190,19 @@ func TestSliceSink(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Empty pipe",
-			fields: Echo(""),
-			want: []string{},
+			name:    "Empty pipe",
+			fields:  Echo(""),
+			want:    []string{},
 			wantErr: false,
 		},
 		{
-			name: "Single newline",
-			fields: Echo("\n"),
-			want: []string{""},
+			name:    "Single newline",
+			fields:  Echo("\n"),
+			want:    []string{""},
 			wantErr: false,
 		},
 		{
-			name: "Empty line between two existing lines",
+			name:   "Empty line between two existing lines",
 			fields: Echo("testdata/multiple_files/1.txt\n\ntestdata/multiple_files/3.tar.zip"),
 			want: []string{
 				"testdata/multiple_files/1.txt",
@@ -297,21 +297,49 @@ func TestString(t *testing.T) {
 	}
 }
 
-func TestWriteFile(t *testing.T) {
+func TestWriteFileNew(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world"
-	testFile := "testdata/writefile.txt"
-	defer os.Remove(testFile)
-	wrote, err := Echo(want).WriteFile(testFile)
+	path := t.TempDir() + t.Name()
+	wrote, err := Echo(want).WriteFile(path)
 	if err != nil {
 		t.Error(err)
 	}
 	if int(wrote) != len(want) {
 		t.Errorf("want %d bytes written, got %d", len(want), int(wrote))
 	}
-	got, err := File(testFile).String()
+	got, err := File(path).String()
 	if err != nil {
 		t.Error(err)
+	}
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestWriteFileTruncatesExisting(t *testing.T) {
+	t.Parallel()
+	want := "Hello, world"
+	path := t.TempDir() + t.Name()
+	// write some data first so we can check for truncation
+	data := make([]byte, 15)
+	err := os.WriteFile(path, data, 0600)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wrote, err := Echo(want).WriteFile(path)
+	if err != nil {
+		t.Error(err)
+	}
+	if int(wrote) != len(want) {
+		t.Errorf("want %d bytes written, got %d", len(want), int(wrote))
+	}
+	got, err := File(path).String()
+	if err != nil {
+		t.Error(err)
+	}
+	if got == want+"\x00\x00\x00" {
+		t.Fatalf("file not truncated on write")
 	}
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)

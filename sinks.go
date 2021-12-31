@@ -105,11 +105,12 @@ func (p *Pipe) String() (string, error) {
 }
 
 // WriteFile writes the contents of the Pipe to the specified file, and closes
-// the pipe after reading. It returns the number of bytes successfully written,
-// or an error. If there is an error reading or writing, the pipe's error status
-// is also set.
+// the pipe after reading. If the file already exists, it is truncated and the
+// new data will replace the old. It returns the number of bytes successfully
+// written, or an error. If there is an error reading or writing, the pipe's
+// error status is also set.
 func (p *Pipe) WriteFile(fileName string) (int64, error) {
-	return p.writeOrAppendFile(fileName, os.O_RDWR|os.O_CREATE)
+	return p.writeOrAppendFile(fileName, os.O_RDWR|os.O_CREATE|os.O_TRUNC)
 }
 
 func (p *Pipe) writeOrAppendFile(fileName string, mode int) (int64, error) {

@@ -861,7 +861,7 @@ fmt.Println(err)
 
 ## WriteFile
 
-`WriteFile()` writes the contents of the pipe to a named file. It returns the number of bytes written, or an error:
+`WriteFile()` writes the contents of the pipe to a named file, truncating it if it exists. It returns the number of bytes written, or an error:
 
 ```go
 var wrote int
