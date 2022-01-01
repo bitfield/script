@@ -51,6 +51,27 @@ func TestColumn(t *testing.T) {
 	if !bytes.Equal(got, want) {
 		t.Errorf("want %q, got %q", want, got)
 	}
+	got, err = script.File("testdata/column.input.txt").Column(0).Bytes()
+	if err != nil {
+		t.Error()
+	}
+	if !bytes.Equal(got, []byte{}) {
+		t.Errorf("want %q, got %q", want, got)
+	}
+	got, err = script.File("testdata/column.input.txt").Column(-1).Bytes()
+	if err != nil {
+		t.Error()
+	}
+	if !bytes.Equal(got, []byte{}) {
+		t.Errorf("want %q, got %q", want, got)
+	}
+	got, err = script.File("testdata/column.input.txt").Column(10).Bytes()
+	if err != nil {
+		t.Error()
+	}
+	if !bytes.Equal(got, []byte{}) {
+		t.Errorf("want %q, got %q", want, got)
+	}
 }
 
 func TestConcat(t *testing.T) {
@@ -232,6 +253,18 @@ func TestFirst(t *testing.T) {
 	if err == nil {
 		t.Error("input not closed after reading")
 	}
+	input = script.File("testdata/first.input.txt")
+	gotZero, err = input.First(-1).CountLines()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotZero != 0 {
+		t.Errorf("want 0 lines, got %d lines", gotZero)
+	}
+	_, err = ioutil.ReadAll(input.Reader)
+	if err == nil {
+		t.Error("input not closed after reading")
+	}
 	want, err = script.File("testdata/first.input.txt").Bytes()
 	if err != nil {
 		t.Fatal(err)
@@ -312,6 +345,18 @@ func TestLast(t *testing.T) {
 	if err == nil {
 		t.Error("input not closed after reading")
 	}
+	input = script.File("testdata/first.input.txt")
+	gotZero, err = input.Last(-1).CountLines()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotZero != 0 {
+		t.Errorf("want 0 lines, got %d lines", gotZero)
+	}
+	_, err = ioutil.ReadAll(input.Reader)
+	if err == nil {
+		t.Error("input not closed after reading")
+	}
 	want, err = script.File("testdata/first.input.txt").Bytes()
 	if err != nil {
 		t.Fatal(err)
@@ -350,6 +395,16 @@ func TestMatch(t *testing.T) {
 
 func TestMatchRegexp(t *testing.T) {
 	t.Parallel()
+	p := script.File("testdata/hello.txt")
+	_, err := p.MatchRegexp(nil).String()
+	if err == nil {
+		t.Error("nil regex should cause an error")
+	}
+	_, err = ioutil.ReadAll(p.Reader)
+	if err == nil {
+		t.Error("input not closed after reading")
+	}
+
 	testCases := []struct {
 		testFileName string
 		match        string
@@ -397,6 +452,16 @@ func TestReplace(t *testing.T) {
 
 func TestReplaceRegexp(t *testing.T) {
 	t.Parallel()
+	p := script.File("testdata/hello.txt")
+	_, err := p.ReplaceRegexp(nil, "").String()
+	if err == nil {
+		t.Error("nil regex should cause an error")
+	}
+	_, err = ioutil.ReadAll(p.Reader)
+	if err == nil {
+		t.Error("input not closed after reading")
+	}
+
 	testCases := []struct {
 		testFileName string
 		regexp       string
@@ -444,6 +509,16 @@ func TestReject(t *testing.T) {
 
 func TestRejectRegexp(t *testing.T) {
 	t.Parallel()
+	p := script.File("testdata/hello.txt")
+	_, err := p.RejectRegexp(nil).String()
+	if err == nil {
+		t.Error("nil regex should cause an error")
+	}
+	_, err = ioutil.ReadAll(p.Reader)
+	if err == nil {
+		t.Error("input not closed after reading")
+	}
+
 	testCases := []struct {
 		testFileName string
 		reject       string

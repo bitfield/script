@@ -75,6 +75,9 @@ func (p *Pipe) Read(b []byte) (int, error) {
 // SetError sets the pipe's error status to the specified error.
 func (p *Pipe) SetError(err error) {
 	if p != nil {
+		if err != nil {
+			p.Close()
+		}
 		p.err = err
 	}
 }

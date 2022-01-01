@@ -6,6 +6,7 @@ import (
 	"container/ring"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -41,7 +42,7 @@ func (p *Pipe) Basename() *Pipe {
 func (p *Pipe) Column(col int) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		columns := strings.Fields(line)
-		if col <= len(columns) {
+		if col > 0 && col <= len(columns) {
 			out.WriteString(columns[col-1])
 			out.WriteRune('\n')
 		}
@@ -176,7 +177,7 @@ func (p *Pipe) First(lines int) *Pipe {
 		return p
 	}
 	defer p.Close()
-	if lines == 0 {
+	if lines <= 0 {
 		return NewPipe()
 	}
 	scanner := bufio.NewScanner(p.Reader)
@@ -263,7 +264,7 @@ func (p *Pipe) Last(lines int) *Pipe {
 		return p
 	}
 	defer p.Close()
-	if lines == 0 {
+	if lines <= 0 {
 		return NewPipe()
 	}
 	scanner := bufio.NewScanner(p.Reader)
@@ -303,6 +304,9 @@ func (p *Pipe) Match(s string) *Pipe {
 // that match the specified compiled regular expression. If there is an error
 // reading the pipe, the pipe's error status is also set.
 func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
+	if re == nil { // to prevent SIGSEGV
+		return p.WithError(errors.New("nil regular expression"))
+	}
 	return p.EachLine(func(line string, out *strings.Builder) {
 		if re.MatchString(line) {
 			out.WriteString(line)
@@ -327,6 +331,9 @@ func (p *Pipe) Reject(s string) *Pipe {
 // lines that don't match the specified compiled regular expression. If there
 // is an error reading the pipe, the pipe's error status is also set.
 func (p *Pipe) RejectRegexp(re *regexp.Regexp) *Pipe {
+	if re == nil { // to prevent SIGSEGV
+		return p.WithError(errors.New("nil regular expression"))
+	}
 	return p.EachLine(func(line string, out *strings.Builder) {
 		if !re.MatchString(line) {
 			out.WriteString(line)
@@ -351,6 +358,9 @@ func (p *Pipe) Replace(search, replace string) *Pipe {
 // represents the text of the first submatch. If there is an error reading the
 // pipe, the pipe's error status is also set.
 func (p *Pipe) ReplaceRegexp(re *regexp.Regexp, replace string) *Pipe {
+	if re == nil { // to prevent SIGSEGV
+		return p.WithError(errors.New("nil regular expression"))
+	}
 	return p.EachLine(func(line string, out *strings.Builder) {
 		out.WriteString(re.ReplaceAllString(line, replace))
 		out.WriteRune('\n')

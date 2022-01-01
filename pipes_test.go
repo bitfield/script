@@ -26,6 +26,25 @@ func TestWithReader(t *testing.T) {
 	}
 }
 
+func TestWithError(t *testing.T) {
+	t.Parallel()
+	p := script.File("testdata/empty.txt")
+	want := "fake error"
+	_, gotErr := p.WithError(errors.New(want)).String()
+	if gotErr.Error() != "fake error" {
+		t.Errorf("want %q, got %q", want, gotErr.Error())
+	}
+	_, err := ioutil.ReadAll(p.Reader)
+	if err == nil {
+		t.Error("input not closed after reading")
+	}
+	p = script.File("testdata/empty.txt")
+	_, gotErr = p.WithError(nil).String()
+	if gotErr != nil {
+		t.Errorf("got unexpected error: %q", gotErr.Error())
+	}
+}
+
 func TestWithStdout(t *testing.T) {
 	t.Parallel()
 	buf := &bytes.Buffer{}
@@ -126,6 +145,8 @@ func doMethodsOnPipe(t *testing.T, p *script.Pipe, kind string) {
 	p.Error()
 	action = "Exec()"
 	p.Exec("bogus")
+	action = "ExecForEach()"
+	p.ExecForEach("bogus")
 	action = "ExitStatus()"
 	p.ExitStatus()
 	action = "First()"
@@ -142,6 +163,10 @@ func doMethodsOnPipe(t *testing.T, p *script.Pipe, kind string) {
 	p.MatchRegexp(regexp.MustCompile(".*"))
 	action = "Read()"
 	p.Read([]byte{})
+	action = "Reject()"
+	p.Reject("")
+	action = "RejectRegexp"
+	p.RejectRegexp(regexp.MustCompile(".*"))
 	action = "Replace()"
 	p.Replace("old", "new")
 	action = "ReplaceRegexp()"
