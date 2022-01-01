@@ -25,8 +25,10 @@ func TestWithReader(t *testing.T) {
 		t.Errorf("want %q, got %q", want, got)
 	}
 }
+
 func TestWithError(t *testing.T) {
-	p := File("testdata/empty.txt")
+	t.Parallel()
+	p := script.File("testdata/empty.txt")
 	want := "fake error"
 	_, gotErr := p.WithError(errors.New(want)).String()
 	if gotErr.Error() != "fake error" {
@@ -36,7 +38,7 @@ func TestWithError(t *testing.T) {
 	if err == nil {
 		t.Error("input not closed after reading")
 	}
-	p = File("testdata/empty.txt")
+	p = script.File("testdata/empty.txt")
 	_, gotErr = p.WithError(nil).String()
 	if gotErr != nil {
 		t.Errorf("got unexpected error: %q", gotErr.Error())
