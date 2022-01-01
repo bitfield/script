@@ -179,6 +179,8 @@ func doMethodsOnPipe(t *testing.T, p *script.Pipe, kind string) {
 	p.Slice()
 	action = "Stdout()"
 	p.Stdout()
+	q := &Pipe{}
+	q.Stdout()
 	action = "String()"
 	p.String()
 	action = "WithError()"
