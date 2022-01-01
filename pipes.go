@@ -2,6 +2,7 @@ package script
 
 import (
 	"io"
+	"os"
 	"regexp"
 	"strconv"
 )
@@ -10,11 +11,16 @@ import (
 type Pipe struct {
 	Reader ReadAutoCloser
 	err    error
+	stdout io.Writer
 }
 
 // NewPipe returns a pointer to a new empty pipe.
 func NewPipe() *Pipe {
-	return &Pipe{ReadAutoCloser{}, nil}
+	return &Pipe{
+		Reader: ReadAutoCloser{},
+		err:    nil,
+		stdout: os.Stdout,
+	}
 }
 
 // Close closes the pipe's associated reader. This is always safe to do, because
@@ -81,6 +87,17 @@ func (p *Pipe) WithReader(r io.Reader) *Pipe {
 		return nil
 	}
 	p.Reader = NewReadAutoCloser(r)
+	return p
+}
+
+// WithStdout takes an io.Writer, and associates the pipe's standard output with
+// that reader, instead of the default os.Stdout. This is primarily useful for
+// testing.
+func (p *Pipe) WithStdout(w io.Writer) *Pipe {
+	if p == nil {
+		return nil
+	}
+	p.stdout = w
 	return p
 }
 

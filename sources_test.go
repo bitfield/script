@@ -127,6 +127,7 @@ func TestFile(t *testing.T) {
 }
 
 func TestFindFiles(t *testing.T) {
+	t.Parallel()
 	tcs := []struct {
 		Path           string
 		ErrExpected    bool

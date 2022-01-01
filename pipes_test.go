@@ -1,19 +1,15 @@
 package script
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"regexp"
 	"strings"
-	"sync"
 	"testing"
 )
-
-// Some tests require monkeying with stdout. Make this concurrency-safe.
-var stdoutM sync.Mutex
 
 func TestWithReader(t *testing.T) {
 	t.Parallel()
@@ -23,6 +19,20 @@ func TestWithReader(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestWithStdout(t *testing.T) {
+	t.Parallel()
+	buf := &bytes.Buffer{}
+	want := "Hello, world."
+	_, err := Echo(want).WithStdout(buf).Stdout()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := buf.String()
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
 	}
@@ -92,9 +102,8 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 			t.Errorf("panic: %s on %s pipe", action, kind)
 		}
 	}()
-	defer os.Remove("testdata/bogus.txt")
 	action = "AppendFile()"
-	p.AppendFile("testdata/bogus.txt")
+	p.AppendFile(t.TempDir() + "/AppendFile")
 	action = "Basename()"
 	p.Basename()
 	action = "Bytes()"
@@ -144,10 +153,9 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	action = "Slice()"
 	p.Slice()
 	action = "Stdout()"
-	// Ensure we don't clash with TestStdout
-	stdoutM.Lock()
-	defer stdoutM.Unlock()
 	p.Stdout()
+	q := &Pipe{}
+	q.Stdout()
 	action = "String()"
 	p.String()
 	action = "WithError()"
@@ -155,7 +163,7 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	action = "WithReader()"
 	p.WithReader(strings.NewReader(""))
 	action = "WriteFile()"
-	p.WriteFile("testdata/bogus.txt")
+	p.WriteFile(t.TempDir() + "bogus.txt")
 }
 
 func TestNilPipes(t *testing.T) {

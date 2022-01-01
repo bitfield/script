@@ -4,10 +4,21 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
+
+func TestSinksOnNilPipes(t *testing.T) {
+	t.Parallel()
+	doSinksOnPipe(t, nil, "nil")
+}
+
+func TestSinksOnZeroPipes(t *testing.T) {
+	t.Parallel()
+	doSinksOnPipe(t, &Pipe{}, "zero")
+}
 
 // doSinksOnPipe calls every kind of sink method on the supplied pipe and
 // tries to trigger a panic.
@@ -39,21 +50,12 @@ func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
 		t.Error(err)
 	}
 	action = "WriteFile()"
-	_, err = p.WriteFile("testdata/tmp" + kind)
-	defer os.Remove("testdata/tmp" + kind)
+	_, err = p.WriteFile(t.TempDir() + "/" + kind)
 	if err != nil {
 		t.Error(err)
 	}
 	action = "AppendFile()"
-	_, err = p.AppendFile("testdata/tmp" + kind)
-	if err != nil {
-		t.Error(err)
-	}
-	action = "Stdout()"
-	// Ensure we don't clash with TestStdout
-	stdoutM.Lock()
-	defer stdoutM.Unlock()
-	_, err = p.Stdout()
+	_, err = p.AppendFile(t.TempDir() + "/" + kind)
 	if err != nil {
 		t.Error(err)
 	}
@@ -62,7 +64,7 @@ func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
 func TestAppendFile(t *testing.T) {
 	t.Parallel()
 	orig := "Hello, world"
-	path := t.TempDir() + t.Name()
+	path := t.TempDir() + "/" + t.Name()
 	// ignore results; we're testing AppendFile, not WriteFile
 	_, _ = Echo(orig).WriteFile(path)
 	extra := " and goodbye"
@@ -139,16 +141,6 @@ func TestCountLines(t *testing.T) {
 	}
 }
 
-func TestSinksOnNilPipes(t *testing.T) {
-	t.Parallel()
-	doSinksOnPipe(t, nil, "nil")
-}
-
-func TestSinksOnZeroPipes(t *testing.T) {
-	t.Parallel()
-	doSinksOnPipe(t, &Pipe{}, "zero")
-}
-
 func TestSHA256Sum(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
@@ -173,6 +165,7 @@ func TestSHA256Sum(t *testing.T) {
 }
 
 func TestSliceSink(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		fields  *Pipe
@@ -229,26 +222,9 @@ func TestSliceSink(t *testing.T) {
 
 func TestStdout(t *testing.T) {
 	t.Parallel()
-	// Temporarily point os.Stdout to a file so that we can capture it for
-	// testing purposes.
-	stdoutM.Lock()
-	realStdout := os.Stdout
-	stdoutM.Unlock()
-	fake, err := ioutil.TempFile("testdata", "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(fake.Name())
-	defer fake.Close()
-	// Make sure no other goroutine writes to our fake stdout.
-	stdoutM.Lock()
-	os.Stdout = fake
-	defer func() {
-		os.Stdout = realStdout
-		stdoutM.Unlock()
-	}()
+	buf := &bytes.Buffer{}
 	want := "hello world"
-	p := File("testdata/hello.txt")
+	p := File("testdata/hello.txt").WithStdout(buf)
 	wrote, err := p.Stdout()
 	if err != nil {
 		t.Error(err)
@@ -256,17 +232,32 @@ func TestStdout(t *testing.T) {
 	if wrote != len(want) {
 		t.Errorf("want %d bytes written, got %d", len(want), wrote)
 	}
-	got, err := ioutil.ReadFile(fake.Name())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(got) != want {
+	got := buf.String()
+	if want != got {
 		t.Errorf("want %q, got %q", want, string(got))
 	}
 	_, err = p.String()
 	if err == nil {
 		t.Error("input not closed after reading")
 	}
+}
+
+func TestStdoutNoPanicOnNilOrZero(t *testing.T) {
+	t.Parallel()
+	kind := "nil pipe"
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("panic: Stdout on %s", kind)
+		}
+	}()
+	var p *Pipe
+	_, _ = p.Stdout()
+	kind = "zero pipe"
+	p = &Pipe{}
+	_, _ = p.Stdout()
+	kind = "zero pipe with non-empty reader"
+	p.Reader = NewReadAutoCloser(strings.NewReader("bogus"))
+	_, _ = p.Stdout()
 }
 
 func TestString(t *testing.T) {
@@ -300,7 +291,7 @@ func TestString(t *testing.T) {
 func TestWriteFileNew(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world"
-	path := t.TempDir() + t.Name()
+	path := t.TempDir() + "/" + t.Name()
 	wrote, err := Echo(want).WriteFile(path)
 	if err != nil {
 		t.Error(err)
@@ -320,7 +311,7 @@ func TestWriteFileNew(t *testing.T) {
 func TestWriteFileTruncatesExisting(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world"
-	path := t.TempDir() + t.Name()
+	path := t.TempDir() + "/" + t.Name()
 	// write some data first so we can check for truncation
 	data := make([]byte, 15)
 	err := os.WriteFile(path, data, 0600)

@@ -77,19 +77,23 @@ func (p *Pipe) Slice() ([]string, error) {
 	return result, p.Error()
 }
 
-// Stdout writes the contents of the pipe to the program's standard output. It
+// Stdout writes the contents of the pipe to its configured standard output. It
 // returns the number of bytes successfully written, plus a non-nil error if the
 // write failed or if there was an error reading from the pipe. If the pipe has
 // error status, Stdout returns zero plus the existing error.
 func (p *Pipe) Stdout() (int, error) {
-	if p == nil || p.Error() != nil {
+	if p == nil || p.Error() != nil || p.stdout == nil {
 		return 0, p.Error()
 	}
-	output, err := p.String()
+	n64, err := io.Copy(p.stdout, p.Reader)
 	if err != nil {
 		return 0, err
 	}
-	return fmt.Print(output)
+	n := int(n64)
+	if int64(n) != n64 {
+		return 0, fmt.Errorf("length %d overflows int", n64)
+	}
+	return n, nil
 }
 
 // String returns the contents of the Pipe as a string, or an error, and closes
