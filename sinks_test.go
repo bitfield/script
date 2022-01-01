@@ -1,4 +1,4 @@
-package script
+package script_test
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/bitfield/script"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -17,12 +18,12 @@ func TestSinksOnNilPipes(t *testing.T) {
 
 func TestSinksOnZeroPipes(t *testing.T) {
 	t.Parallel()
-	doSinksOnPipe(t, &Pipe{}, "zero")
+	doSinksOnPipe(t, &script.Pipe{}, "zero")
 }
 
 // doSinksOnPipe calls every kind of sink method on the supplied pipe and
 // tries to trigger a panic.
-func doSinksOnPipe(t *testing.T, p *Pipe, kind string) {
+func doSinksOnPipe(t *testing.T, p *script.Pipe, kind string) {
 	var action string
 	defer func() {
 		if r := recover(); r != nil {
@@ -66,9 +67,9 @@ func TestAppendFile(t *testing.T) {
 	orig := "Hello, world"
 	path := t.TempDir() + "/" + t.Name()
 	// ignore results; we're testing AppendFile, not WriteFile
-	_, _ = Echo(orig).WriteFile(path)
+	_, _ = script.Echo(orig).WriteFile(path)
 	extra := " and goodbye"
-	wrote, err := Echo(extra).AppendFile(path)
+	wrote, err := script.Echo(extra).AppendFile(path)
 	if err != nil {
 		t.Error(err)
 	}
@@ -76,7 +77,7 @@ func TestAppendFile(t *testing.T) {
 		t.Errorf("want %d bytes written, got %d", len(extra), int(wrote))
 	}
 	// check file contains both contents
-	got, err := File(path).String()
+	got, err := script.File(path).String()
 	if err != nil {
 		t.Error(err)
 	}
@@ -88,7 +89,7 @@ func TestAppendFile(t *testing.T) {
 func TestBytes(t *testing.T) {
 	t.Parallel()
 	inFile := "testdata/bytes.bin"
-	got, err := File(inFile).Bytes()
+	got, err := script.File(inFile).Bytes()
 	if err != nil {
 		t.Error(err)
 	}
@@ -104,7 +105,7 @@ func TestBytes(t *testing.T) {
 func TestCountLines(t *testing.T) {
 	t.Parallel()
 	want := 3
-	got, err := File("testdata/test.txt").CountLines()
+	got, err := script.File("testdata/test.txt").CountLines()
 	if err != nil {
 		t.Error(err)
 	}
@@ -112,7 +113,7 @@ func TestCountLines(t *testing.T) {
 		t.Errorf("counting non-empty file: want %d, got %d", want, got)
 	}
 	want = 0
-	got, err = File("testdata/empty.txt").CountLines()
+	got, err = script.File("testdata/empty.txt").CountLines()
 	if err != nil {
 		t.Error(err)
 	}
@@ -120,7 +121,7 @@ func TestCountLines(t *testing.T) {
 		t.Errorf("counting empty file: want %d, got %d", want, got)
 	}
 	want = 3
-	p := File("testdata/test.txt")
+	p := script.File("testdata/test.txt")
 	got, err = p.CountLines()
 	if err != nil {
 		t.Error(err)
@@ -153,7 +154,7 @@ func TestSHA256Sum(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		p := File(tc.testFileName)
+		p := script.File(tc.testFileName)
 		got, err := p.SHA256Sum()
 		if err != nil {
 			t.Error(err)
@@ -168,13 +169,13 @@ func TestSliceSink(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name    string
-		fields  *Pipe
+		fields  *script.Pipe
 		want    []string
 		wantErr bool
 	}{
 		{
 			name:   "Multiple lines pipe",
-			fields: Echo("testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip\n"),
+			fields: script.Echo("testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip\n"),
 			want: []string{
 				"testdata/multiple_files/1.txt",
 				"testdata/multiple_files/2.txt",
@@ -184,19 +185,19 @@ func TestSliceSink(t *testing.T) {
 		},
 		{
 			name:    "Empty pipe",
-			fields:  Echo(""),
+			fields:  script.Echo(""),
 			want:    []string{},
 			wantErr: false,
 		},
 		{
 			name:    "Single newline",
-			fields:  Echo("\n"),
+			fields:  script.Echo("\n"),
 			want:    []string{""},
 			wantErr: false,
 		},
 		{
 			name:   "Empty line between two existing lines",
-			fields: Echo("testdata/multiple_files/1.txt\n\ntestdata/multiple_files/3.tar.zip"),
+			fields: script.Echo("testdata/multiple_files/1.txt\n\ntestdata/multiple_files/3.tar.zip"),
 			want: []string{
 				"testdata/multiple_files/1.txt",
 				"",
@@ -224,7 +225,7 @@ func TestStdout(t *testing.T) {
 	t.Parallel()
 	buf := &bytes.Buffer{}
 	want := "hello world"
-	p := File("testdata/hello.txt").WithStdout(buf)
+	p := script.File("testdata/hello.txt").WithStdout(buf)
 	wrote, err := p.Stdout()
 	if err != nil {
 		t.Error(err)
@@ -250,13 +251,13 @@ func TestStdoutNoPanicOnNilOrZero(t *testing.T) {
 			t.Fatalf("panic: Stdout on %s", kind)
 		}
 	}()
-	var p *Pipe
+	var p *script.Pipe
 	_, _ = p.Stdout()
 	kind = "zero pipe"
-	p = &Pipe{}
+	p = &script.Pipe{}
 	_, _ = p.Stdout()
 	kind = "zero pipe with non-empty reader"
-	p.Reader = NewReadAutoCloser(strings.NewReader("bogus"))
+	p.Reader = script.NewReadAutoCloser(strings.NewReader("bogus"))
 	_, _ = p.Stdout()
 }
 
@@ -267,7 +268,7 @@ func TestString(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := string(wantRaw)
-	p := File("testdata/test.txt")
+	p := script.File("testdata/test.txt")
 	got, err := p.String()
 	if err != nil {
 		t.Error(err)
@@ -292,14 +293,14 @@ func TestWriteFileNew(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world"
 	path := t.TempDir() + "/" + t.Name()
-	wrote, err := Echo(want).WriteFile(path)
+	wrote, err := script.Echo(want).WriteFile(path)
 	if err != nil {
 		t.Error(err)
 	}
 	if int(wrote) != len(want) {
 		t.Errorf("want %d bytes written, got %d", len(want), int(wrote))
 	}
-	got, err := File(path).String()
+	got, err := script.File(path).String()
 	if err != nil {
 		t.Error(err)
 	}
@@ -318,14 +319,14 @@ func TestWriteFileTruncatesExisting(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wrote, err := Echo(want).WriteFile(path)
+	wrote, err := script.Echo(want).WriteFile(path)
 	if err != nil {
 		t.Error(err)
 	}
 	if int(wrote) != len(want) {
 		t.Errorf("want %d bytes written, got %d", len(want), int(wrote))
 	}
-	got, err := File(path).String()
+	got, err := script.File(path).String()
 	if err != nil {
 		t.Error(err)
 	}

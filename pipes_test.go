@@ -1,4 +1,4 @@
-package script
+package script_test
 
 import (
 	"bytes"
@@ -9,12 +9,14 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/bitfield/script"
 )
 
 func TestWithReader(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world."
-	p := NewPipe().WithReader(strings.NewReader(want))
+	p := script.NewPipe().WithReader(strings.NewReader(want))
 	got, err := p.String()
 	if err != nil {
 		t.Error(err)
@@ -28,7 +30,7 @@ func TestWithStdout(t *testing.T) {
 	t.Parallel()
 	buf := &bytes.Buffer{}
 	want := "Hello, world."
-	_, err := Echo(want).WithStdout(buf).Stdout()
+	_, err := script.Echo(want).WithStdout(buf).Stdout()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +42,7 @@ func TestWithStdout(t *testing.T) {
 
 func TestError(t *testing.T) {
 	t.Parallel()
-	p := File("testdata/nonexistent.txt")
+	p := script.File("testdata/nonexistent.txt")
 	if p.Error() == nil {
 		t.Error("want error status reading nonexistent file, but got nil")
 	}
@@ -80,14 +82,14 @@ func TestExitStatus(t *testing.T) {
 		{"exit status 1 followed by junk", 0},
 	}
 	for _, tc := range tcs {
-		p := NewPipe()
+		p := script.NewPipe()
 		p.SetError(fmt.Errorf(tc.input))
 		got := p.ExitStatus()
 		if got != tc.want {
 			t.Errorf("input %q: want %d, got %d", tc.input, tc.want, got)
 		}
 	}
-	got := NewPipe().ExitStatus()
+	got := script.NewPipe().ExitStatus()
 	if got != 0 {
 		t.Errorf("want 0, got %d", got)
 	}
@@ -95,7 +97,7 @@ func TestExitStatus(t *testing.T) {
 
 // doMethodsOnPipe calls every kind of method on the supplied pipe and
 // tries to trigger a panic.
-func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
+func doMethodsOnPipe(t *testing.T, p *script.Pipe, kind string) {
 	var action string
 	defer func() {
 		if r := recover(); r != nil {
@@ -154,8 +156,6 @@ func doMethodsOnPipe(t *testing.T, p *Pipe, kind string) {
 	p.Slice()
 	action = "Stdout()"
 	p.Stdout()
-	q := &Pipe{}
-	q.Stdout()
 	action = "String()"
 	p.String()
 	action = "WithError()"
@@ -173,17 +173,17 @@ func TestNilPipes(t *testing.T) {
 
 func TestZeroPipes(t *testing.T) {
 	t.Parallel()
-	doMethodsOnPipe(t, &Pipe{}, "zero")
+	doMethodsOnPipe(t, &script.Pipe{}, "zero")
 }
 
 func TestNewPipes(t *testing.T) {
 	t.Parallel()
-	doMethodsOnPipe(t, NewPipe(), "new")
+	doMethodsOnPipe(t, script.NewPipe(), "new")
 }
 
 func TestPipeIsReader(t *testing.T) {
 	t.Parallel()
-	var p io.Reader = NewPipe()
+	var p io.Reader = script.NewPipe()
 	_, err := ioutil.ReadAll(p)
 	if err != nil {
 		t.Error(err)

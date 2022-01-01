@@ -1,10 +1,12 @@
-package script
+package script_test
 
 import (
 	"bytes"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/bitfield/script"
 )
 
 func TestReadAutoCloser(t *testing.T) {
@@ -22,7 +24,7 @@ func TestReadAutoCloser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	acr := NewReadAutoCloser(input)
+	acr := script.NewReadAutoCloser(input)
 	got, err := ioutil.ReadAll(acr)
 	if err != nil {
 		t.Error(err)

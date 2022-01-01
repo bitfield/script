@@ -1,4 +1,4 @@
-package script
+package script_test
 
 import (
 	"fmt"
@@ -8,13 +8,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/bitfield/script"
 	"github.com/google/go-cmp/cmp"
 )
 
 func TestArgs(t *testing.T) {
 	t.Parallel()
 	// dummy test to prove coverage
-	Args()
+	script.Args()
 	// now the real test
 	cmd := exec.Command(os.Args[0], "hello", "world")
 	cmd.Env = append(os.Environ(), "SCRIPT_TEST=args")
@@ -31,7 +32,7 @@ func TestArgs(t *testing.T) {
 func TestEcho(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world."
-	p := Echo(want)
+	p := script.Echo(want)
 	got, err := p.String()
 	if err != nil {
 		t.Error(err)
@@ -88,7 +89,7 @@ func TestExec(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.Command, func(t *testing.T) {
-			p := Exec(tc.Command)
+			p := script.Exec(tc.Command)
 			if tc.ErrExpected != (p.Error() != nil) {
 				t.Fatalf("unexpected error value: %v", p.Error())
 			}
@@ -111,7 +112,7 @@ func TestFile(t *testing.T) {
 	t.Parallel()
 	wantRaw, _ := ioutil.ReadFile("testdata/test.txt") // ignoring error
 	want := string(wantRaw)
-	p := File("testdata/test.txt")
+	p := script.File("testdata/test.txt")
 	gotRaw, err := ioutil.ReadAll(p.Reader)
 	if err != nil {
 		t.Error(err)
@@ -120,7 +121,7 @@ func TestFile(t *testing.T) {
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
 	}
-	q := File("doesntexist")
+	q := script.File("doesntexist")
 	if q.Error() == nil {
 		t.Error("want error status on opening non-existent file, but got nil")
 	}
@@ -152,7 +153,7 @@ func TestFindFiles(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.Path, func(t *testing.T) {
-			p := FindFiles(tc.Path)
+			p := script.FindFiles(tc.Path)
 			if tc.ErrExpected != (p.Error() != nil) {
 				t.Fatalf("unexpected error value: %v", p.Error())
 			}
@@ -170,11 +171,11 @@ func TestFindFiles(t *testing.T) {
 
 func TestIfExists(t *testing.T) {
 	t.Parallel()
-	p := IfExists("testdata/doesntexist")
+	p := script.IfExists("testdata/doesntexist")
 	if p.Error() == nil {
 		t.Errorf("want error from IfExists on non-existent file, but got nil")
 	}
-	p = IfExists("testdata/empty.txt")
+	p = script.IfExists("testdata/empty.txt")
 	if p.Error() != nil {
 		t.Errorf("want no error from IfExists on existing file, but got %v", p.Error())
 	}
@@ -184,7 +185,7 @@ func TestListFilesMultipleFiles(t *testing.T) {
 	t.Parallel()
 	dir := "testdata/multiple_files"
 	want := fmt.Sprintf("%s/1.txt\n%s/2.txt\n%s/3.tar.zip\n", dir, dir, dir)
-	got, err := ListFiles(dir).String()
+	got, err := script.ListFiles(dir).String()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,7 +196,7 @@ func TestListFilesMultipleFiles(t *testing.T) {
 
 func TestListFilesNonexistent(t *testing.T) {
 	t.Parallel()
-	p := ListFiles("nonexistentpath")
+	p := script.ListFiles("nonexistentpath")
 	if p.Error() == nil {
 		t.Error("want error status on listing non-existent path, but got nil")
 	}
@@ -203,7 +204,7 @@ func TestListFilesNonexistent(t *testing.T) {
 
 func TestListFilesSingle(t *testing.T) {
 	t.Parallel()
-	got, err := ListFiles("testdata/multiple_files/1.txt").String()
+	got, err := script.ListFiles("testdata/multiple_files/1.txt").String()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -217,7 +218,7 @@ func TestListFilesGlob(t *testing.T) {
 	t.Parallel()
 	dir := "testdata/multiple_files"
 	want := fmt.Sprintf("%s/1.txt\n%s/2.txt\n", dir, dir)
-	got, err := ListFiles("testdata/multi?le_files/*.txt").String()
+	got, err := script.ListFiles("testdata/multi?le_files/*.txt").String()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -229,7 +230,7 @@ func TestListFilesGlob(t *testing.T) {
 func TestSlice(t *testing.T) {
 	t.Parallel()
 	want := "1\n2\n3\n"
-	got, err := Slice([]string{"1", "2", "3"}).String()
+	got, err := script.Slice([]string{"1", "2", "3"}).String()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -241,12 +242,12 @@ func TestSlice(t *testing.T) {
 func TestStdin(t *testing.T) {
 	t.Parallel()
 	// dummy test to prove coverage
-	Stdin()
+	script.Stdin()
 	// now the real test
 	want := "hello world"
 	cmd := exec.Command(os.Args[0])
 	cmd.Env = append(os.Environ(), "SCRIPT_TEST=stdin")
-	cmd.Stdin = Echo(want).Reader
+	cmd.Stdin = script.Echo(want).Reader
 	got, err := cmd.Output()
 	if err != nil {
 		t.Error(err)

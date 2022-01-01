@@ -1,4 +1,4 @@
-package script
+package script_test
 
 import (
 	"bytes"
@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/bitfield/script"
 )
 
 func TestBasename(t *testing.T) {
@@ -26,7 +28,7 @@ func TestBasename(t *testing.T) {
 		{"C:/Program Files/", "Program Files\n"},
 	}
 	for _, tc := range testCases {
-		got, err := Echo(tc.testFileName).Basename().String()
+		got, err := script.Echo(tc.testFileName).Basename().String()
 		if err != nil {
 			t.Error(err)
 		}
@@ -42,7 +44,7 @@ func TestColumn(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := File("testdata/column.input.txt").Column(3).Bytes()
+	got, err := script.File("testdata/column.input.txt").Column(3).Bytes()
 	if err != nil {
 		t.Error(err)
 	}
@@ -57,7 +59,7 @@ func TestConcat(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := Echo("testdata/test.txt\ntestdata/doesntexist.txt\ntestdata/hello.txt").Concat().Bytes()
+	got, err := script.Echo("testdata/test.txt\ntestdata/doesntexist.txt\ntestdata/hello.txt").Concat().Bytes()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,7 +99,7 @@ func TestDirname(t *testing.T) {
 		// {"C:\\Program Files\\PHP\\", "C:\\Program Files\n"},
 	}
 	for _, tc := range testCases {
-		got, err := Echo(tc.testFileName).Dirname().String()
+		got, err := script.Echo(tc.testFileName).Dirname().String()
 		if err != nil {
 			t.Error(err)
 		}
@@ -109,7 +111,7 @@ func TestDirname(t *testing.T) {
 
 func TestEachLine(t *testing.T) {
 	t.Parallel()
-	p := Echo("Hello\nGoodbye")
+	p := script.Echo("Hello\nGoodbye")
 	q := p.EachLine(func(line string, out *strings.Builder) {
 		out.WriteString(line + " world\n")
 	})
@@ -126,7 +128,7 @@ func TestEachLine(t *testing.T) {
 func TestExecFilter(t *testing.T) {
 	t.Parallel()
 	want := "hello world"
-	p := File("testdata/hello.txt")
+	p := script.File("testdata/hello.txt")
 	q := p.Exec("cat")
 	got, err := q.String()
 	if err != nil {
@@ -140,7 +142,7 @@ func TestExecFilter(t *testing.T) {
 	if err == nil {
 		t.Error("input not closed after reading")
 	}
-	p = Echo("hello world")
+	p = script.Echo("hello world")
 	p.SetError(errors.New("oh no"))
 	// This should be a no-op because the pipe has error status.
 	out, _ := p.Exec("cat").String()
@@ -184,7 +186,7 @@ func TestExecForEach(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.Command, func(t *testing.T) {
-			p := Slice(tc.Input).ExecForEach(tc.Command)
+			p := script.Slice(tc.Input).ExecForEach(tc.Command)
 			if tc.ErrExpected != (p.Error() != nil) {
 				t.Fatalf("unexpected error value: %v", p.Error())
 			}
@@ -206,7 +208,7 @@ func TestFirst(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	input := File("testdata/first.input.txt")
+	input := script.File("testdata/first.input.txt")
 	got, err := input.First(10).Bytes()
 	if err != nil {
 		t.Error(err)
@@ -218,7 +220,7 @@ func TestFirst(t *testing.T) {
 	if err == nil {
 		t.Error("input not closed after reading")
 	}
-	input = File("testdata/first.input.txt")
+	input = script.File("testdata/first.input.txt")
 	gotZero, err := input.First(0).CountLines()
 	if err != nil {
 		t.Fatal(err)
@@ -230,11 +232,11 @@ func TestFirst(t *testing.T) {
 	if err == nil {
 		t.Error("input not closed after reading")
 	}
-	want, err = File("testdata/first.input.txt").Bytes()
+	want, err = script.File("testdata/first.input.txt").Bytes()
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err = File("testdata/first.input.txt").First(100).Bytes()
+	got, err = script.File("testdata/first.input.txt").First(100).Bytes()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -249,7 +251,7 @@ func TestFreq(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := File("testdata/freq.input.txt").Freq().Bytes()
+	got, err := script.File("testdata/freq.input.txt").Freq().Bytes()
 	if err != nil {
 		t.Error(err)
 	}
@@ -262,7 +264,7 @@ func TestJoin(t *testing.T) {
 	t.Parallel()
 	input := "hello\nfrom\nthe\njoin\ntest\n"
 	want := "hello from the join test\n"
-	got, err := Echo(input).Join().String()
+	got, err := script.Echo(input).Join().String()
 	if err != nil {
 		t.Error(err)
 	}
@@ -271,7 +273,7 @@ func TestJoin(t *testing.T) {
 	}
 	input = "hello\nworld"
 	want = "hello world"
-	got, err = Echo(input).Join().String()
+	got, err = script.Echo(input).Join().String()
 	if err != nil {
 		t.Error(err)
 	}
@@ -286,7 +288,7 @@ func TestLast(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	input := File("testdata/first.input.txt")
+	input := script.File("testdata/first.input.txt")
 	got, err := input.Last(10).Bytes()
 	if err != nil {
 		t.Error(err)
@@ -298,7 +300,7 @@ func TestLast(t *testing.T) {
 	if err == nil {
 		t.Error("input not closed after reading")
 	}
-	input = File("testdata/first.input.txt")
+	input = script.File("testdata/first.input.txt")
 	gotZero, err := input.Last(0).CountLines()
 	if err != nil {
 		t.Fatal(err)
@@ -310,11 +312,11 @@ func TestLast(t *testing.T) {
 	if err == nil {
 		t.Error("input not closed after reading")
 	}
-	want, err = File("testdata/first.input.txt").Bytes()
+	want, err = script.File("testdata/first.input.txt").Bytes()
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err = File("testdata/first.input.txt").Last(100).Bytes()
+	got, err = script.File("testdata/first.input.txt").Last(100).Bytes()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -336,7 +338,7 @@ func TestMatch(t *testing.T) {
 		{"testdata/empty.txt", "line", 0},
 	}
 	for _, tc := range testCases {
-		got, err := File(tc.testFileName).Match(tc.match).CountLines()
+		got, err := script.File(tc.testFileName).Match(tc.match).CountLines()
 		if err != nil {
 			t.Error(err)
 		}
@@ -359,7 +361,7 @@ func TestMatchRegexp(t *testing.T) {
 		{"testdata/empty.txt", `bogus$`, 0},
 	}
 	for _, tc := range testCases {
-		got, err := File(tc.testFileName).MatchRegexp(regexp.MustCompile(tc.match)).CountLines()
+		got, err := script.File(tc.testFileName).MatchRegexp(regexp.MustCompile(tc.match)).CountLines()
 		if err != nil {
 			t.Error(err)
 		}
@@ -383,7 +385,7 @@ func TestReplace(t *testing.T) {
 		{"testdata/hello.txt", "hello", "Ж9", "Ж9 world\n"},
 	}
 	for _, tc := range testCases {
-		got, err := File(tc.testFileName).Replace(tc.search, tc.replace).String()
+		got, err := script.File(tc.testFileName).Replace(tc.search, tc.replace).String()
 		if err != nil {
 			t.Error(err)
 		}
@@ -407,7 +409,7 @@ func TestReplaceRegexp(t *testing.T) {
 		{"testdata/hello.txt", "hello{1}", "Ж9", "Ж9 world\n"},
 	}
 	for _, tc := range testCases {
-		got, err := File(tc.testFileName).ReplaceRegexp(regexp.MustCompile(tc.regexp), tc.replace).String()
+		got, err := script.File(tc.testFileName).ReplaceRegexp(regexp.MustCompile(tc.regexp), tc.replace).String()
 		if err != nil {
 			t.Error(err)
 		}
@@ -430,7 +432,7 @@ func TestReject(t *testing.T) {
 		{"testdata/empty.txt", "line", 0},
 	}
 	for _, tc := range testCases {
-		got, err := File(tc.testFileName).Reject(tc.reject).CountLines()
+		got, err := script.File(tc.testFileName).Reject(tc.reject).CountLines()
 		if err != nil {
 			t.Error(err)
 		}
@@ -453,7 +455,7 @@ func TestRejectRegexp(t *testing.T) {
 		{"testdata/empty.txt", "wontmatch", 0},
 	}
 	for _, tc := range testCases {
-		got, err := File(tc.testFileName).RejectRegexp(regexp.MustCompile(tc.reject)).CountLines()
+		got, err := script.File(tc.testFileName).RejectRegexp(regexp.MustCompile(tc.reject)).CountLines()
 		if err != nil {
 			t.Error(err)
 		}
@@ -475,7 +477,7 @@ func TestSHA256Sums(t *testing.T) {
 		{"testdata/multiple_files", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"},
 	}
 	for _, tc := range testCases {
-		got, err := ListFiles(tc.testFileName).SHA256Sums().String()
+		got, err := script.ListFiles(tc.testFileName).SHA256Sums().String()
 		if err != nil {
 			t.Error(err)
 		}
