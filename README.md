@@ -24,25 +24,25 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | ------------------ | ------------------- |
 | (any program name) | [`Exec()`](https://pkg.go.dev/github.com/bitfield/script#Exec) |
 | `[ -f FILE ]`      | [`IfExists()`](https://pkg.go.dev/github.com/bitfield/script#IfExists) |
-| `>`                | [`WriteFile()`](https://pkg.go.dev/github.com/bitfield/script#Writefile) |
-| `>>`               | [`AppendFile()`](https://pkg.go.dev/github.com/bitfield/script#AppendFile) |
+| `>`                | [`WriteFile()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) |
+| `>>`               | [`AppendFile()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) |
 | `$*`               | [`Args()`](https://pkg.go.dev/github.com/bitfield/script#Args) |
-| `basename`         | [`Basename()`](https://pkg.go.dev/github.com/bitfield/script#Basename) |
-| `cat`              | [`File()`](https://pkg.go.dev/github.com/bitfield/script#File) / [`Concat()`](https://pkg.go.dev/github.com/bitfield/script#Concat) |
-| `cut`              | [`Column()`](https://pkg.go.dev/github.com/bitfield/script#Column) |
-| `dirname`          | [`Dirname()`](https://pkg.go.dev/github.com/bitfield/script#Dirname) |
+| `basename`         | [`Basename()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Basename) |
+| `cat`              | [`File()`](https://pkg.go.dev/github.com/bitfield/script#File) / [`Concat()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) |
+| `cut`              | [`Column()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) |
+| `dirname`          | [`Dirname()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) |
 | `echo`             | [`Echo()`](https://pkg.go.dev/github.com/bitfield/script#Echo) |
-| `grep`             | [`Match()`](https://pkg.go.dev/github.com/bitfield/script#Match) / [`MatchRegexp()`](https://pkg.go.dev/github.com/bitfield/script#MatchRegexp) |
-| `grep -v`          | [`Reject()`](https://pkg.go.dev/github.com/bitfield/script#Reject) / [`RejectRegexp()`](https://pkg.go.dev/github.com/bitfield/script#RejectRegexp) |
-| `head`             | [`First()`](https://pkg.go.dev/github.com/bitfield/script#First) |
+| `grep`             | [`Match()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) / [`MatchRegexp()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) |
+| `grep -v`          | [`Reject()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) / [`RejectRegexp()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) |
+| `head`             | [`First()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) |
 | `find -type f`     | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) |
 | `ls`               | [`ListFiles()`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) |
-| `sed`              | [`Replace()`](https://pkg.go.dev/github.com/bitfield/script#Replace) / [`ReplaceRegexp()`](https://pkg.go.dev/github.com/bitfield/script#ReplaceRegexp) |
-| `sha256sum`        | [`SHA256Sum()`](https://pkg.go.dev/github.com/bitfield/script#SHA256Sum) / [`SHA256Sums()`](https://pkg.go.dev/github.com/bitfield/script#SHA256sums) |
-| `tail`             | [`Last()`](https://pkg.go.dev/github.com/bitfield/script#Last) |
-| `uniq -c`          | [`Freq()`](https://pkg.go.dev/github.com/bitfield/script#Freq) |
-| `wc -l`            | [`CountLines()`](https://pkg.go.dev/github.com/bitfield/script#Countlines) |
-| `xargs`            | [`ExecForEach()`](https://pkg.go.dev/github.com/bitfield/script#ExecForEach) |
+| `sed`              | [`Replace()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) / [`ReplaceRegexp()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) |
+| `sha256sum`        | [`SHA256Sum()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sum) / [`SHA256Sums()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sums) |
+| `tail`             | [`Last()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) |
+| `uniq -c`          | [`Freq()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) |
+| `wc -l`            | [`CountLines()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.CountLines) |
+| `xargs`            | [`ExecForEach()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) |
 
 # Some examples
 
@@ -154,25 +154,25 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 
 | Filter | Results |
 | -------- | ------------- |
-| [`Basename`](https://pkg.go.dev/github.com/bitfield/script#Basename) | removes leading path components from each line, leaving only the filename |
-| [`Column`](https://pkg.go.dev/github.com/bitfield/script#Column) | Nth column of input |
-| [`Concat`](https://pkg.go.dev/github.com/bitfield/script#Concat) | contents of multiple files |
-| [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Dirname) | removes filename from each line, leaving only leading path components |
-| [`EachLine`](https://pkg.go.dev/github.com/bitfield/script#EachLine) | user-supplied function |
-| [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) | all input replaced by given string |
-| [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) | filtered through external command |
-| [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#ExecForEach) | execute given command template for each line of input |
-| [`First`](https://pkg.go.dev/github.com/bitfield/script#First) | first N lines |
-| [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Freq) | frequency count of unique input lines, most frequent first |
-| [`Join`](https://pkg.go.dev/github.com/bitfield/script#Join) | replace all newlines with spaces |
-| [`Last`](https://pkg.go.dev/github.com/bitfield/script#Last) | last N lines |
-| [`Match`](https://pkg.go.dev/github.com/bitfield/script#Match) | matching lines |
-| [`MatchRegexp`](https://pkg.go.dev/github.com/bitfield/script#MatchRegexp) | matching lines |
-| [`Reject`](https://pkg.go.dev/github.com/bitfield/script#Reject) | non-matching lines |
-| [`RejectRegexp`](https://pkg.go.dev/github.com/bitfield/script#RejectRegexp) | non-matching lines |
-| [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Replace) | matching lines replaced with string |
-| [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#ReplaceRegexp) | matching lines replaced with string |
-| [`SHA256Sums`](https://pkg.go.dev/github.com/bitfield/script#SHA256Sums) | SHA-256 hashes of each listed file |
+| [`Basename`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Basename) | removes leading path components from each line, leaving only the filename |
+| [`Column`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) | Nth column of input |
+| [`Concat`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) | contents of multiple files |
+| [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) | removes filename from each line, leaving only leading path components |
+| [`EachLine`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EachLine) | user-supplied function |
+| [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Echo) | all input replaced by given string |
+| [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Exec) | filtered through external command |
+| [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) | execute given command template for each line of input |
+| [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) | first N lines |
+| [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) | frequency count of unique input lines, most frequent first |
+| [`Join`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Join) | replace all newlines with spaces |
+| [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) | last N lines |
+| [`Match`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) | matching lines |
+| [`MatchRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) | matching lines |
+| [`Reject`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) | non-matching lines |
+| [`RejectRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) | non-matching lines |
+| [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) | matching lines replaced with string |
+| [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) | matching lines replaced with string |
+| [`SHA256Sums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sums) | SHA-256 hashes of each listed file |
 
 ## Sinks
 
@@ -180,15 +180,15 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 
 | Sink | Destination | Results |
 | ---- | ----------- | ------- |
-| [`AppendFile`](https://pkg.go.dev/github.com/bitfield/script#AppendFile) | appended to file, creating if it exists | bytes written, error |
-| [`Bytes`](https://pkg.go.dev/github.com/bitfield/script#Bytes) | | data as `[]byte`, error
-| [`CountLines`](https://pkg.go.dev/github.com/bitfield/script#CountLines) | |number of lines, error  |
-| [`Read`](https://pkg.go.dev/github.com/bitfield/script#Read) | given `[]byte` | bytes read, error  |
-| [`SHA256Sum`](https://pkg.go.dev/github.com/bitfield/script#SHA256Sum) | | SHA-256 hash, error  |
-| [`Slice`](https://pkg.go.dev/github.com/bitfield/script#Slice) | | data as `[]string`, error  |
-| [`Stdout`](https://pkg.go.dev/github.com/bitfield/script#Stdout) | standard output | bytes written, error  |
-| [`String`](https://pkg.go.dev/github.com/bitfield/script#String) | | data as `string`, error  |
-| [`WriteFile`](https://pkg.go.dev/github.com/bitfield/script#WriteFile) | specified file, truncating if it exists | bytes written, error  |
+| [`AppendFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) | appended to file, creating if it exists | bytes written, error |
+| [`Bytes`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Bytes) | | data as `[]byte`, error
+| [`CountLines`](https://pkg.go.dev/github.com/bitfield/script#Pipe.CountLines) | |number of lines, error  |
+| [`Read`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Read) | given `[]byte` | bytes read, error  |
+| [`SHA256Sum`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sum) | | SHA-256 hash, error  |
+| [`Slice`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Slice) | | data as `[]string`, error  |
+| [`Stdout`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Stdout) | standard output | bytes written, error  |
+| [`String`](https://pkg.go.dev/github.com/bitfield/script#Pipe.String) | | data as `string`, error  |
+| [`WriteFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) | specified file, truncating if it exists | bytes written, error  |
 
 ## Examples
 
