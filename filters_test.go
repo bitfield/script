@@ -146,6 +146,19 @@ func TestEachLine(t *testing.T) {
 	}
 }
 
+func TestEchoFilter(t *testing.T) {
+	t.Parallel()
+	want := "Hello, world."
+	p := script.NewPipe().Echo(want)
+	got, err := p.String()
+	if err != nil {
+		t.Error(err)
+	}
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
 func TestExecFilter(t *testing.T) {
 	t.Parallel()
 	want := "hello world"

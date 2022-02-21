@@ -4,7 +4,6 @@ So you'd like to contribute to the `script` library? Excellent! Thank you very m
 	- [Look for existing issues](#look-for-existing-issues)
 	- [Open a new issue before making a PR](#open-a-new-issue-before-making-a-pr)
 	- [Write a use case](#write-a-use-case)
-	- [Ideas](#ideas)
 - [Coding standards](#coding-standards)
 	- [Tests](#tests)
 		- [Use the standard library](#use-the-standard-library)
@@ -53,16 +52,6 @@ The reason for insisting on this up front is that it's much easier to design a f
 A concrete use case also provides a helpful example program that can be included with the library to show how the feature is used.
 
 The final reason is that it's tempting to over-elaborate a design and add all sorts of bells and whistles that nobody actually wants. Simple APIs are best. If you think of an enhancement, but it's not needed for your use case, leave it out. Things can always be enhanced later if necessary.
-
-## Ideas
-
-These are some ideas I've been thinking about. Some of them have existing issues and PRs with active discussion, so check those first.
-
-* `Get()` makes a web request, like `curl`, and pipes the result
-* `Net()` makes a network connection to a specified address and port, and reads the connection until it's closed
-* `ListFiles()` takes a filesystem path or glob, and pipes the list of matching files
-* `Find()` pipes a list of files matching various criteria (name, modified time, and so on)
-* `Processes()` pipes the list of running processes, like `ps`.
 
 # Coding standards
 
@@ -157,9 +146,7 @@ This is the _whole_ user manual for your code. It will be included in the autoge
 
 ## Update the README
 
-Any change to the `script` API should also be accompanied by an update to the README. If you add a new method, add it in the appropriate place (sources, filters, or sinks), in its correct order alphabetically, and with a suitable (brief) example of its use.
-
-The README has a table of contents that is automatically generated and updated (when I work on it) by the VS Code [Markdown All In One](github.com/yzhang-gh/vscode-markdown) extension. However, you don't need to use this to update the table of contents yourself. The format should be fairly self-explanatory.
+Any change to the `script` API should also be accompanied by an update to the README. If you add a new method, add it in the appropriate place (sources, filters, or sinks), in its correct order alphabetically, and with a suitable (brief) description.
 
 # Writing pipe operations
 

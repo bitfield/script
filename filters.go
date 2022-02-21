@@ -22,8 +22,12 @@ import (
 )
 
 // Basename reads a list of filepaths from the pipe, one per line, and removes
-// any leading directory components from each line. If a line is empty, Basename
-// will produce '.'. Trailing slashes are removed.
+// any leading directory components from each line. So, for example,
+// `/usr/local/bin/foo` would become just `foo`. This is the complementary
+// operation to Dirname.
+//
+// If a line is empty, Basename will produce '.'. Trailing slashes are removed.
+// The behaviour of Basename is the same as filepath.Base (not by coincidence).
 func (p *Pipe) Basename() *Pipe {
 	if p == nil || p.Error() != nil {
 		return p
@@ -39,6 +43,8 @@ func (p *Pipe) Basename() *Pipe {
 // columns are delimited by whitespace. Specifically, whatever Unicode defines
 // as whitespace ('WSpace=yes'). If there is an error reading the pipe, the
 // pipe's error status is also set.
+//
+// Lines containing less than N columns will be ignored.
 func (p *Pipe) Column(col int) *Pipe {
 	return p.EachLine(func(line string, out *strings.Builder) {
 		columns := strings.Fields(line)
@@ -53,6 +59,24 @@ func (p *Pipe) Column(col int) *Pipe {
 // pipe that reads all those files in sequence. If there are any errors (for
 // example, non-existent files), these will be ignored, execution will continue,
 // and the pipe's error status will not be set.
+//
+// This makes it convenient to write programs that take a list of input files on
+// the command line. For example:
+//
+// script.Args().Concat().Stdout()
+//
+// The list of files could also come from a file:
+//
+// script.File("filelist.txt").Concat()
+//
+// ...or from the output of a command:
+//
+// script.Exec("ls /var/app/config/").Concat().Stdout()
+//
+// Each input file will be closed once it has been fully read. If any of the
+// files can't be opened or read, `Concat` will simply skip these and carry on,
+// without setting the pipe's error status. This mimics the behaviour of Unix
+// `cat`.
 func (p *Pipe) Concat() *Pipe {
 	if p == nil || p.Error() != nil {
 		return p
@@ -62,7 +86,7 @@ func (p *Pipe) Concat() *Pipe {
 	for scanner.Scan() {
 		input, err := os.Open(scanner.Text())
 		if err != nil {
-			continue // Concat() ignores errors
+			continue // skip errors
 		}
 		readers = append(readers, NewReadAutoCloser(input))
 	}
@@ -74,9 +98,13 @@ func (p *Pipe) Concat() *Pipe {
 }
 
 // Dirname reads a list of pathnames from the pipe, one per line, and returns a
-// pipe that contains only the parent directories of each pathname. If a line
-// is empty, Dirname will produce a '.'. Trailing slashes are removed, unless
-// Dirname returns the root folder.
+// pipe that contains only the parent directories of each pathname. For example,
+// `/usr/local/bin/foo` would become just `/usr/local/bin`. This is the
+// complementary operation to Basename.
+//
+// If a line is empty, Dirname will produce a '.'. Trailing slashes are removed,
+// unless Dirname returns the root folder. The behaviour of Dirname is the same
+// as filepath.Dir (not by coincidence).
 func (p *Pipe) Dirname() *Pipe {
 	if p == nil || p.Error() != nil {
 		return p
@@ -118,9 +146,21 @@ func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 	return Echo(output.String())
 }
 
-// Exec runs an external command and returns a pipe containing the output. If
-// the command had a non-zero exit status, the pipe's error status will also be
-// set to the string "exit status X", where X is the integer exit status.
+// Echo returns a pipe containing the supplied string.
+func (p *Pipe) Echo(s string) *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	return p.WithReader(strings.NewReader(s))
+}
+
+// Exec runs an external command, sending it the contents of the pipe as input,
+// and returns a pipe containing the command's combined output (`stdout` and
+// `stderr`). The effect of this is to use the external command as a filter on
+// the pipe.
+//
+// If the command had a non-zero exit status, the pipe's error status will also
+// be set to the string "exit status X", where X is the integer exit status.
 func (p *Pipe) Exec(cmdLine string) *Pipe {
 	if p == nil || p.Error() != nil {
 		return p
@@ -201,6 +241,25 @@ func (p *Pipe) First(lines int) *Pipe {
 // order (most frequent lines first). Lines with equal frequency will be sorted
 // alphabetically. If there is an error reading the pipe, the pipe's error
 // status is also set.
+//
+// This is a common pattern in shell scripts to find the most
+// frequently-occurring lines in a file:
+//
+// sort testdata/freq.input.txt |uniq -c |sort -rn
+//
+// Freq's behaviour is like the combination of Unix `sort`, `uniq -c`, and `sort
+// -rn` used here. You can use Freq in combination with First to get, for
+// example, the ten most common lines in a file:
+//
+// script.Stdin().Freq().First(10).Stdout()
+//
+// Like `uniq -c`, Freq left-pads its count values if necessary to make them
+// easier to read:
+//
+// 10 apple
+//  4 banana
+//  2 orange
+//  1 kumquat
 func (p *Pipe) Freq() *Pipe {
 	if p == nil || p.Error() != nil {
 		return p
@@ -368,9 +427,10 @@ func (p *Pipe) ReplaceRegexp(re *regexp.Regexp, replace string) *Pipe {
 }
 
 // SHA256Sums reads a list of file paths from the pipe, one per line, and
-// returns a pipe that contains the SHA-256 checksum of each pathname. If there
-// are any errors (for example, non-existent files), the pipe's error status
-// will be set to the first error encountered, but execution will continue.
+// returns a pipe that contains the SHA-256 checksum of each pathname, in hex.
+// If there are any errors (for example, non-existent files), the pipe's error
+// status will be set to the first error encountered, but execution will
+// continue.
 func (p *Pipe) SHA256Sums() *Pipe {
 	if p == nil || p.Error() != nil {
 		return p

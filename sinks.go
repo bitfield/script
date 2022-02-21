@@ -11,9 +11,10 @@ import (
 )
 
 // AppendFile appends the contents of the Pipe to the specified file, and closes
-// the pipe after reading. It returns the number of bytes successfully written,
-// or an error. If there is an error reading or writing, the pipe's error status
-// is also set.
+// the pipe after reading. If the file does not exist, it is created.
+//
+// AppendFile returns the number of bytes successfully written, or an error. If
+// there is an error reading or writing, the pipe's error status is also set.
 func (p *Pipe) AppendFile(fileName string) (int64, error) {
 	return p.writeOrAppendFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY)
 }
@@ -46,9 +47,9 @@ func (p *Pipe) CountLines() (int, error) {
 	return lines, p.Error()
 }
 
-// SHA256Sum calculates the SHA-256 of the file from the pipe's reader, and returns the
-// string result, or an error. If there is an error reading the pipe, the pipe's
-// error status is also set.
+// SHA256Sum calculates the SHA-256 of the file from the pipe's reader, and
+// returns the hex-encoded string result, or an error. If there is an error
+// reading the pipe, the pipe's error status is also set.
 func (p *Pipe) SHA256Sum() (string, error) {
 	if p == nil || p.Error() != nil {
 		return "", p.Error()
@@ -64,8 +65,13 @@ func (p *Pipe) SHA256Sum() (string, error) {
 	return encodedCheckSum, nil
 }
 
-// Slice returns the contents of the pipe as a slice of strings, one element per line, or an error.
-// If there is an error reading the pipe, the pipe's error status is also set.
+// Slice returns the contents of the pipe as a slice of strings, one element per
+// line, or an error. If there is an error reading the pipe, the pipe's error
+// status is also set.
+//
+// An empty pipe will produce an empty slice. A pipe containing a single empty
+// line (that is, a single `\n` character) will produce a slice of one element
+// that is the empty string.
 func (p *Pipe) Slice() ([]string, error) {
 	if p == nil || p.Error() != nil {
 		return nil, p.Error()
@@ -99,6 +105,10 @@ func (p *Pipe) Stdout() (int, error) {
 // String returns the contents of the Pipe as a string, or an error, and closes
 // the pipe after reading. If there is an error reading, the pipe's error status
 // is also set.
+//
+// Note that String consumes the complete output of the pipe, which closes the
+// input reader automatically. Therefore, calling String (or any other sink
+// method) again on the same pipe will return an error.
 func (p *Pipe) String() (string, error) {
 	data, err := p.Bytes()
 	if err != nil {
