@@ -26,10 +26,10 @@ func ExampleExec_ok() {
 }
 
 func ExampleExec_exitstatus() {
-	p := script.Exec("ls doesntexist")
+	p := script.Exec("echo")
 	fmt.Println(p.ExitStatus())
 	// Output:
-	// 1
+	// 0
 }
 
 func ExampleFile() {
