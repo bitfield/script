@@ -22,27 +22,27 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 
 | Unix / shell       | `script` equivalent |
 | ------------------ | ------------------- |
-| (any program name) | [`Exec()`](#exec) |
-| `[ -f FILE ]`      | [`IfExists()`](#ifexists) |
-| `>`                | [`WriteFile()`](#writefile) |
-| `>>`               | [`AppendFile()`](#appendfile) |
-| `$*`               | [`Args()`](#args) |
-| `basename`         | [`Basename()`](#basename) |
-| `cat`              | [`File()`](#file) / [`Concat()`](#concat) |
-| `cut`              | [`Column()`](#column) |
-| `dirname`          | [`Dirname()`](#dirname) |
-| `echo`             | [`Echo()`](#echo) |
-| `grep`             | [`Match()`](#match) / [`MatchRegexp()`](#matchregexp) |
-| `grep -v`          | [`Reject()`](#reject) / [`RejectRegexp()`](#rejectregexp) |
-| `head`             | [`First()`](#first) |
-| `find -type f`     | [`FindFiles`](#findfiles) |
-| `ls`               | [`ListFiles()`](#listfiles) |
-| `sed`              | [`Replace()`](#replace) / [`ReplaceRegexp()`](#replaceregexp) |
-| `sha256sum`        | [`SHA256Sum()`](#sha256Sum) / [`SHA256Sums()`](#sha256sums) |
-| `tail`             | [`Last()`](#last) |
-| `uniq -c`          | [`Freq()`](#freq) |
-| `wc -l`            | [`CountLines()`](#countlines) |
-| `xargs`            | [`ExecForEach()`](#execforeach) |
+| (any program name) | [`Exec()`](https://pkg.go.dev/github.com/bitfield/script#Exec) |
+| `[ -f FILE ]`      | [`IfExists()`](https://pkg.go.dev/github.com/bitfield/script#IfExists) |
+| `>`                | [`WriteFile()`](https://pkg.go.dev/github.com/bitfield/script#Writefile) |
+| `>>`               | [`AppendFile()`](https://pkg.go.dev/github.com/bitfield/script#AppendFile) |
+| `$*`               | [`Args()`](https://pkg.go.dev/github.com/bitfield/script#Args) |
+| `basename`         | [`Basename()`](https://pkg.go.dev/github.com/bitfield/script#Basename) |
+| `cat`              | [`File()`](https://pkg.go.dev/github.com/bitfield/script#File) / [`Concat()`](https://pkg.go.dev/github.com/bitfield/script#Concat) |
+| `cut`              | [`Column()`](https://pkg.go.dev/github.com/bitfield/script#Column) |
+| `dirname`          | [`Dirname()`](https://pkg.go.dev/github.com/bitfield/script#Dirname) |
+| `echo`             | [`Echo()`](https://pkg.go.dev/github.com/bitfield/script#Echo) |
+| `grep`             | [`Match()`](https://pkg.go.dev/github.com/bitfield/script#Match) / [`MatchRegexp()`](https://pkg.go.dev/github.com/bitfield/script#MatchRegexp) |
+| `grep -v`          | [`Reject()`](https://pkg.go.dev/github.com/bitfield/script#Reject) / [`RejectRegexp()`](https://pkg.go.dev/github.com/bitfield/script#RejectRegexp) |
+| `head`             | [`First()`](https://pkg.go.dev/github.com/bitfield/script#First) |
+| `find -type f`     | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) |
+| `ls`               | [`ListFiles()`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) |
+| `sed`              | [`Replace()`](https://pkg.go.dev/github.com/bitfield/script#Replace) / [`ReplaceRegexp()`](https://pkg.go.dev/github.com/bitfield/script#ReplaceRegexp) |
+| `sha256sum`        | [`SHA256Sum()`](https://pkg.go.dev/github.com/bitfield/script#SHA256Sum) / [`SHA256Sums()`](https://pkg.go.dev/github.com/bitfield/script#SHA256sums) |
+| `tail`             | [`Last()`](https://pkg.go.dev/github.com/bitfield/script#Last) |
+| `uniq -c`          | [`Freq()`](https://pkg.go.dev/github.com/bitfield/script#Freq) |
+| `wc -l`            | [`CountLines()`](https://pkg.go.dev/github.com/bitfield/script#Countlines) |
+| `xargs`            | [`ExecForEach()`](https://pkg.go.dev/github.com/bitfield/script#ExecForEach) |
 
 # Some examples
 
