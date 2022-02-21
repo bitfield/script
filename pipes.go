@@ -65,6 +65,9 @@ func (p *Pipe) ExitStatus() int {
 // Read reads up to len(b) bytes from the data source into b. It returns the
 // number of bytes read and any error encountered. At end of file, or on a nil
 // pipe, Read returns 0, io.EOF.
+//
+// Unlike most sinks, Read does not necessarily read the whole contents of the
+// pipe. It will read as many bytes as it takes to fill the slice.
 func (p *Pipe) Read(b []byte) (int, error) {
 	if p == nil {
 		return 0, io.EOF

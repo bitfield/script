@@ -141,6 +141,8 @@ func doMethodsOnPipe(t *testing.T, p *script.Pipe, kind string) {
 	p.Dirname()
 	action = "EachLine()"
 	p.EachLine(func(string, *strings.Builder) {})
+	action = "Echo()"
+	p.Echo("bogus")
 	action = "Error()"
 	p.Error()
 	action = "Exec()"
