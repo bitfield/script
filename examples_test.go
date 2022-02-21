@@ -32,14 +32,6 @@ func ExampleExec_exitstatus() {
 	// 1
 }
 
-func ExampleExec_errorOutput() {
-	p := script.Exec("man bogus")
-	p.SetError(nil)
-	p.Stdout()
-	// Output:
-	// No manual entry for bogus
-}
-
 func ExampleFile() {
 	script.File("testdata/hello.txt").Stdout()
 	// Output:
@@ -200,10 +192,10 @@ func ExamplePipe_ExecForEach() {
 }
 
 func ExamplePipe_ExitStatus() {
-	p := script.Exec("ls doesntexist")
+	p := script.Exec("echo")
 	fmt.Println(p.ExitStatus())
 	// Output:
-	// 1
+	// 0
 }
 
 func ExamplePipe_First() {
