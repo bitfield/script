@@ -149,7 +149,7 @@ func TestSHA256Sum(t *testing.T) {
 		want         string
 	}{
 		{"testdata/empty.txt", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
-		{"testdata/test.txt", "a562c9c95e2ff3403e7ffcd8508c6b54d47d5f251387758d3e63dbaaa8296341"},
+		{"testdata/test.txt", "4aea3d470d3f667fdd2dcdb9dbbc77db43872cfbfac1ce15682c4928eae9a146"},
 		{"testdata/bytes.bin", "b267dc7e66ee428bc8b51b1114bd0e05bde5c8c5d20ce828fbc95b83060c2f17"},
 	}
 
