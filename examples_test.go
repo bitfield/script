@@ -294,7 +294,7 @@ func ExamplePipe_SHA256Sum() {
 func ExamplePipe_SHA256Sums() {
 	script.Echo("testdata/test.txt").SHA256Sums().Stdout()
 	// Output:
-	// a562c9c95e2ff3403e7ffcd8508c6b54d47d5f251387758d3e63dbaaa8296341
+	// 4aea3d470d3f667fdd2dcdb9dbbc77db43872cfbfac1ce15682c4928eae9a146
 }
 
 func ExamplePipe_Slice() {
