@@ -1,4 +1,0 @@
-10 apple
- 4 banana
- 4 orange
- 1 kumquat

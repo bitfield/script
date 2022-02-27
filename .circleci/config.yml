@@ -1,4 +1,7 @@
-version: 2
+version: 2.1
+orbs:
+  windows: circleci/windows@2.4.1
+
 jobs:
   test:
     docker:
@@ -6,8 +9,18 @@ jobs:
     steps:
       - checkout
       - run: go test ./...
+  test-windows:
+    executor:
+      name: windows/default
+    steps:
+      - checkout
+      - attach_workspace:
+          at: script
+      - run: go test
+
 workflows:
   version: 2
   test:
     jobs:
       - test
+      - test-windows
