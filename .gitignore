@@ -1,3 +1,4 @@
+.DS_Store
 examples/cat/cat
 examples/grep/grep
 examples/cat2/cat2

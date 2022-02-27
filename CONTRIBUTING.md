@@ -122,8 +122,6 @@ This is easy in Go. Just use `gofmt`. End of.
 
 Your code should also pass `golint` and `go vet` without errors (and if you want to run other linters too, that would be excellent). Very, very occasionally there are situations where `golint` incorrectly detects a problem, and the workaround is awkward or annoying. In that situation, comment on the PR and we'll work out how best to handle it.
 
-For ease of finding things, and to satisfy the tidy-minded, functions and methods are in alphabetical order within each file. Source functions are in `sources.go`, filter methods in `filters.go`, and sink methods in `sinks.go`. The `Pipe` type itself and its 'internal' methods (such as `SetError()`) are in `pipes.go`.
-
 # Documentation
 
 It doesn't matter if you write the greatest piece of code in the history of the world, if no one knows it exists, or how to use it.
@@ -146,7 +144,7 @@ This is the _whole_ user manual for your code. It will be included in the autoge
 
 ## Update the README
 
-Any change to the `script` API should also be accompanied by an update to the README. If you add a new method, add it in the appropriate place (sources, filters, or sinks), in its correct order alphabetically, and with a suitable (brief) description.
+Any change to the `script` API should also be accompanied by an update to the README. If you add a new method, add it to the appropriate table (sources, filters, or sinks), and if it's the equivalent of a command Unix command, add it to the table of Unix equivalents too.
 
 # Writing pipe operations
 

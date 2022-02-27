@@ -4,7 +4,7 @@
 import "github.com/bitfield/script"
 ```
 
-[!['Excited gopher](img/magic.png)](https://bitfieldconsulting.com/golang/scripting)
+[![Magical gopher logo](img/magic.png)](https://bitfieldconsulting.com/golang/scripting)
 
 # What is `script`?
 
