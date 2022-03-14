@@ -14,6 +14,9 @@ Why shouldn't it be as easy to write system administration programs in Go as it 
 
 Shell scripts often compose a sequence of operations on a stream of data (a _pipeline_). This is how `script` works, too.
 
+> *This is one absolutely superb API design. Taking inspiration from shell pipes and turning it into a Go library with syntax this clean is really impressive.*\
+> —[Simon Willison](https://news.ycombinator.com/item?id=30649524)
+
 Read more: [Scripting with Go](https://bitfieldconsulting.com/golang/scripting)
 
 # Quick start: Unix equivalents
