@@ -17,6 +17,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"text/template"
 
 	"bitbucket.org/creachadair/shell"
@@ -69,6 +70,7 @@ func NewReadAutoCloser(r io.Reader) ReadAutoCloser {
 // Pipe represents a pipe object with an associated ReadAutoCloser.
 type Pipe struct {
 	Reader ReadAutoCloser
+	mu     *sync.Mutex
 	err    error
 	stdout io.Writer
 }
@@ -77,6 +79,7 @@ type Pipe struct {
 func NewPipe() *Pipe {
 	return &Pipe{
 		Reader: ReadAutoCloser{},
+		mu:     &sync.Mutex{},
 		err:    nil,
 		stdout: os.Stdout,
 	}
@@ -136,12 +139,18 @@ func (p *Pipe) Read(b []byte) (int, error) {
 
 // SetError sets the pipe's error status to the specified error.
 func (p *Pipe) SetError(err error) {
-	if p != nil {
-		if err != nil {
-			p.Close()
-		}
-		p.err = err
+	if p == nil {
+		return
 	}
+	if p.mu == nil { // uninitialised pipe
+		return
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if err != nil {
+		p.Close()
+	}
+	p.err = err
 }
 
 // WithReader takes an io.Reader, and associates the pipe with that reader. If
@@ -493,6 +502,19 @@ func (p *Pipe) ExecForEach(cmdTpl string) *Pipe {
 		}
 		out.WriteString(cmdOutput)
 	})
+}
+
+type FilterFunc func(io.Reader, io.Writer) error
+
+func (p *Pipe) Filter(filter FilterFunc) *Pipe {
+	pr, pw := io.Pipe()
+	q := NewPipe().WithReader(pr)
+	go func() {
+		err := filter(p.Reader, pw)
+		q.SetError(err)
+		pw.Close()
+	}()
+	return q
 }
 
 // First reads from the pipe, and returns a new pipe containing only the first N

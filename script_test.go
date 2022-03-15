@@ -1,6 +1,7 @@
 package script_test
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -291,6 +292,69 @@ func TestExecForEach_ErrorsOnInvalidTemplateSyntax(t *testing.T) {
 	p.ExecForEach("{{invalid template syntax}}")
 	if p.Error() == nil {
 		t.Error("want error with invalid template syntax")
+	}
+}
+
+func TestFilterByCopyPassesInputThroughUnchanged(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("hello").Filter(func(r io.Reader, w io.Writer) error {
+		_, err := io.Copy(w, r)
+		return err
+	})
+	want := "hello"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestFilterByCopyToDiscardGivesNoOutput(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("hello").Filter(func(r io.Reader, w io.Writer) error {
+		_, err := io.Copy(io.Discard, r)
+		return err
+	})
+	want := ""
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestFilterByFirstLineOnlyGivesFirstLineOfInput(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("hello\nworld").Filter(func(r io.Reader, w io.Writer) error {
+		scanner := bufio.NewScanner(r)
+		for scanner.Scan() {
+			fmt.Fprintln(w, scanner.Text())
+			break
+		}
+		return scanner.Err()
+	})
+	want := "hello\n"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestFilterSetsErrorOnPipeIfFilterReturnsError(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("hello").Filter(func(io.Reader, io.Writer) error {
+		return errors.New("oh no")
+	})
+	io.ReadAll(p)
+	if p.Error() == nil {
+		t.Error("no error")
 	}
 }
 
@@ -1342,7 +1406,7 @@ func doMethodsOnPipe(t *testing.T, p *script.Pipe, kind string) {
 	var action string
 	defer func() {
 		if r := recover(); r != nil {
-			t.Errorf("panic: %s on %s pipe", action, kind)
+			t.Errorf("panic: %s on %s pipe: %v", action, kind, r)
 		}
 	}()
 	action = "AppendFile()"
