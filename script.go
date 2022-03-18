@@ -70,9 +70,11 @@ func NewReadAutoCloser(r io.Reader) ReadAutoCloser {
 // Pipe represents a pipe object with an associated ReadAutoCloser.
 type Pipe struct {
 	Reader ReadAutoCloser
-	mu     *sync.Mutex
-	err    error
 	stdout io.Writer
+
+	// because pipe stages are concurrent, protect 'err'
+	mu  *sync.Mutex
+	err error
 }
 
 // NewPipe returns a pointer to a new empty pipe.
@@ -100,6 +102,11 @@ func (p *Pipe) Error() error {
 	if p == nil {
 		return nil
 	}
+	if p.mu == nil { // uninitialised pipe
+		return nil
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	return p.err
 }
 
@@ -504,15 +511,13 @@ func (p *Pipe) ExecForEach(cmdTpl string) *Pipe {
 	})
 }
 
-type FilterFunc func(io.Reader, io.Writer) error
-
-func (p *Pipe) Filter(filter FilterFunc) *Pipe {
+func (p *Pipe) Filter(filter func(io.Reader, io.Writer) error) *Pipe {
 	pr, pw := io.Pipe()
 	q := NewPipe().WithReader(pr)
 	go func() {
+		defer pw.Close()
 		err := filter(p.Reader, pw)
 		q.SetError(err)
-		pw.Close()
 	}()
 	return q
 }

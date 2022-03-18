@@ -327,6 +327,37 @@ func TestFilterByCopyToDiscardGivesNoOutput(t *testing.T) {
 	}
 }
 
+func TestFilterDoesNotReadMoreThanNecessary(t *testing.T) {
+	t.Parallel()
+	input := "firstline\nsecondline"
+	source := bytes.NewBufferString(input)
+	p := script.NewPipe().WithReader(source).Filter(func(r io.Reader, w io.Writer) error {
+		// read just the first line of input
+		var text string
+		_, err := fmt.Fscanln(r, &text)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(w, text)
+		return nil
+	})
+	if source.Len() < len(input) {
+		t.Error("premature read")
+	}
+	want := "firstline\n"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+	wantRemaining := "secondline"
+	if wantRemaining != source.String() {
+		t.Errorf("want %q remaining, got %q", wantRemaining, source.String())
+	}
+}
+
 func TestFilterByFirstLineOnlyGivesFirstLineOfInput(t *testing.T) {
 	t.Parallel()
 	p := script.Echo("hello\nworld").Filter(func(r io.Reader, w io.Writer) error {
@@ -347,7 +378,7 @@ func TestFilterByFirstLineOnlyGivesFirstLineOfInput(t *testing.T) {
 	}
 }
 
-func TestFilterSetsErrorOnPipeIfFilterReturnsError(t *testing.T) {
+func TestFilterSetsErrorOnPipeIfFilterFuncReturnsError(t *testing.T) {
 	t.Parallel()
 	p := script.Echo("hello").Filter(func(io.Reader, io.Writer) error {
 		return errors.New("oh no")
