@@ -522,6 +522,16 @@ func (p *Pipe) Filter(filter func(io.Reader, io.Writer) error) *Pipe {
 	return q
 }
 
+func (p *Pipe) FilterLine(filter func(string) string) *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		scanner := bufio.NewScanner(r)
+		for scanner.Scan() {
+			fmt.Fprintln(w, filter(scanner.Text()))
+		}
+		return scanner.Err()
+	})
+}
+
 // First reads from the pipe, and returns a new pipe containing only the first N
 // lines. If there is an error reading the pipe, the pipe's error status is also
 // set.
