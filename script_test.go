@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -401,6 +400,23 @@ func TestFilterLine_FiltersEachLineThroughSuppliedFunction(t *testing.T) {
 	}
 }
 
+func TestFilterScan_FiltersInputLineByLine(t *testing.T) {
+	t.Parallel()
+	input := "hello\nworld\ngoodbye"
+	want := "world\n"
+	got, err := script.Echo(input).FilterScan(func(line string, w io.Writer) {
+		if strings.HasPrefix(line, "w") {
+			fmt.Fprintln(w, line)
+		}
+	}).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestFirstDropsAllButFirstNLinesOfInput(t *testing.T) {
 	t.Parallel()
 	input := "a\nb\nc\n"
@@ -488,18 +504,9 @@ func TestFreqProducesCorrectFrequencyTableForInput(t *testing.T) {
 
 func TestJoin(t *testing.T) {
 	t.Parallel()
-	input := "hello\nfrom\nthe\njoin\ntest\n"
+	input := "hello\nfrom\nthe\njoin\ntest"
 	want := "hello from the join test\n"
 	got, err := script.Echo(input).Join().String()
-	if err != nil {
-		t.Error(err)
-	}
-	if got != want {
-		t.Errorf("want %q, got %q", want, got)
-	}
-	input = "hello\nworld"
-	want = "hello world"
-	got, err = script.Echo(input).Join().String()
 	if err != nil {
 		t.Error(err)
 	}
@@ -598,14 +605,6 @@ func TestMatchOutputsNothingGivenEmptyInput(t *testing.T) {
 	}
 	if got != "" {
 		t.Error("want no output given empty input")
-	}
-}
-
-func TestMatchRegexp_ErrorsGivenANilRegexp(t *testing.T) {
-	t.Parallel()
-	p := script.NewPipe().MatchRegexp(nil)
-	if p.Error() == nil {
-		t.Error("want error on nil regexp")
 	}
 }
 
@@ -812,6 +811,7 @@ func TestSHA256Sums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
 func TestExecErrorsWhenTheSpecifiedCommandDoesNotExist(t *testing.T) {
 	t.Parallel()
 	p := script.Exec("doesntexist")
+	p.Wait()
 	if p.Error() == nil {
 		t.Error("want error running non-existent command")
 	}
@@ -822,17 +822,12 @@ func TestExecRunsGoWithNoArgsAndGetsUsageMessagePlusErrorExitStatus2(t *testing.
 	// We can't make many cross-platform assumptions about what external
 	// commands will be available, but it seems logical that 'go' would be
 	// (though it may not be in the user's path)
-	p := script.Exec("go")
-	if p.Error() == nil {
-		t.Error("want error running 'go' with no arguments (because this command returns a non-zero exit status")
+	got, err := script.Exec("go").String()
+	if err == nil {
+		t.Error("want error when command returns a non-zero exit status")
 	}
-	p.SetError(nil) // else p.String() would be a no-op
-	output, err := p.String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(output, "Usage") {
-		t.Fatalf("want output containing the word 'usage', got %q", output)
+	if !strings.Contains(got, "Usage") {
+		t.Fatalf("want output containing the word 'usage', got %q", got)
 	}
 }
 
@@ -992,19 +987,6 @@ func TestReadAutoCloser_ReadsAllDataFromSourceAndClosesItAutomatically(t *testin
 	}
 }
 
-func TestReadReturnsEOFOnNilPipe(t *testing.T) {
-	t.Parallel()
-	var p *script.Pipe
-	buf := []byte{0} // try to read at least 1 byte
-	n, err := p.Read(buf)
-	if !errors.Is(err, io.EOF) {
-		t.Errorf("want EOF, got %v", err)
-	}
-	if n > 0 {
-		t.Errorf("unexpectedly read %d bytes", n)
-	}
-}
-
 func TestReadReturnsEOFOnUninitialisedPipe(t *testing.T) {
 	t.Parallel()
 	p := &script.Pipe{}
@@ -1112,14 +1094,11 @@ func TestCountLines(t *testing.T) {
 	if got != want {
 		t.Errorf("want %d lines, got %d", want, got)
 	}
-	_, err = ioutil.ReadAll(p.Reader)
+	_, err = io.ReadAll(p.Reader)
 	if err == nil {
 		t.Error("input not closed after reading")
 	}
 	_, err = p.CountLines() // result should be zero
-	if p.Error() == nil {
-		t.Error("want error reading closed pipe, got nil")
-	}
 	if err != p.Error() {
 		t.Errorf("got error %v but pipe error status was %v", err, p.Error())
 	}
@@ -1238,24 +1217,6 @@ func TestStdout(t *testing.T) {
 	}
 }
 
-func TestStdoutNoPanicOnNilOrZero(t *testing.T) {
-	t.Parallel()
-	kind := "nil pipe"
-	defer func() {
-		if r := recover(); r != nil {
-			t.Fatalf("panic: Stdout on %s", kind)
-		}
-	}()
-	var p *script.Pipe
-	_, _ = p.Stdout()
-	kind = "zero pipe"
-	p = &script.Pipe{}
-	_, _ = p.Stdout()
-	kind = "zero pipe with non-empty reader"
-	p.Reader = script.NewReadAutoCloser(strings.NewReader("bogus"))
-	_, _ = p.Stdout()
-}
-
 func TestStringOutputsInputStringUnchanged(t *testing.T) {
 	t.Parallel()
 	want := "hello, world"
@@ -1265,6 +1226,15 @@ func TestStringOutputsInputStringUnchanged(t *testing.T) {
 	}
 	if want != got {
 		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestWaitReadsPipeSourceToCompletion(t *testing.T) {
+	t.Parallel()
+	source := bytes.NewBufferString("hello")
+	script.NewPipe().WithReader(source).FilterLine(strings.ToUpper).Wait()
+	if source.Len() > 0 {
+		t.Errorf("incomplete read: %d bytes of input remaining: %q", source.Len(), source.String())
 	}
 }
 
@@ -1330,22 +1300,12 @@ func TestWithReader(t *testing.T) {
 	}
 }
 
-func TestWithError(t *testing.T) {
+func TestWithError_SetsSpecifiedErrorOnPipe(t *testing.T) {
 	t.Parallel()
-	p := script.File("testdata/empty.txt")
-	want := "fake error"
-	_, gotErr := p.WithError(errors.New(want)).String()
-	if gotErr.Error() != "fake error" {
-		t.Errorf("want %q, got %q", want, gotErr.Error())
-	}
-	_, err := ioutil.ReadAll(p.Reader)
-	if err == nil {
-		t.Error("input not closed after reading")
-	}
-	p = script.File("testdata/empty.txt")
-	_, gotErr = p.WithError(nil).String()
-	if gotErr != nil {
-		t.Errorf("got unexpected error: %q", gotErr.Error())
+	fakeErr := errors.New("oh no")
+	p := script.NewPipe().WithError(fakeErr)
+	if p.Error() != fakeErr {
+		t.Errorf("want %q, got %q", fakeErr, p.Error())
 	}
 }
 
@@ -1421,7 +1381,7 @@ func TestExitStatus(t *testing.T) {
 func TestPipeIsReader(t *testing.T) {
 	t.Parallel()
 	var p io.Reader = script.NewPipe()
-	_, err := ioutil.ReadAll(p)
+	_, err := io.ReadAll(p)
 	if err != nil {
 		t.Error(err)
 	}

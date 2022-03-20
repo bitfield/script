@@ -44,6 +44,7 @@ func TestExecRunsShWithinShWithEchoInceptionAndGetsOutputInception(t *testing.T)
 func TestExecErrorsRunningShellCommandWithUnterminatedStringArgument(t *testing.T) {
 	t.Parallel()
 	p := script.Exec("sh -c 'echo oh no")
+	p.Wait()
 	if p.Error() == nil {
 		t.Error("want error running 'sh' command line containing unterminated string")
 	}
