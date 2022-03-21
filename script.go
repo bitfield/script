@@ -368,12 +368,12 @@ func (p *Pipe) Dirname() *Pipe {
 	return p.FilterLine(func(line string) string {
 		// filepath.Dir() does not handle trailing slashes correctly
 		if len(line) > 1 && strings.HasSuffix(line, "/") {
-			line = line[0 : len(line)-1]
+			line = line[:len(line)-1]
 		}
 		dirname := filepath.Dir(line)
 		// filepath.Dir() does not preserve a leading './'
-		if len(dirname) > 1 && strings.HasPrefix(line, "./") {
-			dirname = "./" + dirname
+		if strings.HasPrefix(line, "./") {
+			return "./" + dirname
 		}
 		return dirname
 	})
