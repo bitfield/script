@@ -312,6 +312,25 @@ func TestFilterByCopyPassesInputThroughUnchanged(t *testing.T) {
 	}
 }
 
+func TestFilterCanChainFilters(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("hello").Filter(func(r io.Reader, w io.Writer) error {
+		_, err := io.Copy(w, r)
+		return err
+	}).Filter(func(r io.Reader, w io.Writer) error {
+		_, err := io.Copy(w, r)
+		return err
+	})
+	want := "hello"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestFilterByCopyToDiscardGivesNoOutput(t *testing.T) {
 	t.Parallel()
 	p := script.Echo("hello").Filter(func(r io.Reader, w io.Writer) error {
@@ -1491,6 +1510,45 @@ func ExamplePipe_First() {
 	// Output:
 	// a
 	// b
+}
+
+func ExamplePipe_Filter() {
+	script.Echo("hello world").Filter(func(r io.Reader, w io.Writer) error {
+		n, err := io.Copy(w, r)
+		fmt.Fprintf(w, "\nfiltered %d bytes\n", n)
+		return err
+	}).Stdout()
+	// Output:
+	// hello world
+	// filtered 11 bytes
+}
+
+func ExamplePipe_FilterScan() {
+	script.Echo("a\nb\nc").FilterScan(func(line string, w io.Writer) {
+		fmt.Fprintf(w, "scanned line: %q\n", line)
+	}).Stdout()
+	// Output:
+	// scanned line: "a"
+	// scanned line: "b"
+	// scanned line: "c"
+}
+
+func ExamplePipe_FilterLine_user() {
+	script.Echo("a\nb\nc").FilterLine(func(line string) string {
+		return "> " + line
+	}).Stdout()
+	// Output:
+	// > a
+	// > b
+	// > c
+}
+
+func ExamplePipe_FilterLine_stdlib() {
+	script.Echo("a\nb\nc").FilterLine(strings.ToUpper).Stdout()
+	// Output:
+	// A
+	// B
+	// C
 }
 
 func ExamplePipe_Freq() {
