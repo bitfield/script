@@ -289,10 +289,19 @@ func TestEchoReplacesInputWithSuppliedStringWhenUsedAsFilter(t *testing.T) {
 
 func TestExecForEach_ErrorsOnInvalidTemplateSyntax(t *testing.T) {
 	t.Parallel()
-	p := script.Echo("a\nb\nc\n")
-	p.ExecForEach("{{invalid template syntax}}")
+	p := script.Echo("a\nb\nc\n").ExecForEach("{{invalid template syntax}}")
+	p.Wait()
 	if p.Error() == nil {
 		t.Error("want error with invalid template syntax")
+	}
+}
+
+func TestExecForEach_ErrorsOnUnbalancedQuotes(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("a\nb\nc\n").ExecForEach("echo \"{{.}}")
+	p.Wait()
+	if p.Error() == nil {
+		t.Error("want error with unbalanced quotes in command line")
 	}
 }
 

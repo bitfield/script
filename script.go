@@ -445,26 +445,29 @@ func (p *Pipe) ExecForEach(command string) *Pipe {
 	if err != nil {
 		return p.WithError(err)
 	}
-	return p.FilterScan(func(line string, w io.Writer) {
-		cmdLine := strings.Builder{}
-		err := tpl.Execute(&cmdLine, line)
-		if err != nil {
-			p.SetError(err)
-			return
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		scanner := bufio.NewScanner(r)
+		for scanner.Scan() {
+			cmdLine := strings.Builder{}
+			err := tpl.Execute(&cmdLine, scanner.Text())
+			if err != nil {
+				return err
+			}
+			args, ok := shell.Split(cmdLine.String()) // strings.Fields doesn't handle quotes
+			if !ok {
+				return fmt.Errorf("unbalanced quotes or backslashes in [%s]", cmdLine.String())
+			}
+			cmd := exec.Command(args[0], args[1:]...)
+			cmd.Stdout = w
+			cmd.Stderr = w
+			err = cmd.Start()
+			if err != nil {
+				fmt.Fprintln(w, err)
+				continue
+			}
+			cmd.Wait()
 		}
-		args, ok := shell.Split(cmdLine.String()) // strings.Fields doesn't handle quotes
-		if !ok {
-			p.SetError(fmt.Errorf("unbalanced quotes or backslashes in [%s]", cmdLine.String()))
-		}
-		cmd := exec.Command(args[0], args[1:]...)
-		cmd.Stdout = w
-		cmd.Stderr = w
-		err = cmd.Start()
-		if err != nil {
-			fmt.Fprintln(w, err)
-			p.SetError(err)
-		}
-		cmd.Wait()
+		return scanner.Err()
 	})
 }
 
