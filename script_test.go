@@ -1,15 +1,16 @@
 package script_test
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -30,7 +31,7 @@ func TestMain(m *testing.M) {
 	}
 }
 
-func TestArgs(t *testing.T) {
+func TestArgsSuppliesCommandLineArgumentsAsInputToPipeOnePerLine(t *testing.T) {
 	t.Parallel()
 	// dummy test to prove coverage
 	script.Args()
@@ -47,20 +48,7 @@ func TestArgs(t *testing.T) {
 	}
 }
 
-func TestEcho(t *testing.T) {
-	t.Parallel()
-	want := "Hello, world."
-	p := script.Echo(want)
-	got, err := p.String()
-	if err != nil {
-		t.Error(err)
-	}
-	if got != want {
-		t.Errorf("want %q, got %q", want, got)
-	}
-}
-
-func TestBasename(t *testing.T) {
+func TestBasenameRemovesLeadingPathComponentsFromInputLines(t *testing.T) {
 	t.Parallel()
 	tcs := []struct {
 		path string
@@ -224,13 +212,14 @@ func TestConcatOutputsContentsOfSpecifiedFilesInOrder(t *testing.T) {
 	}
 }
 
-func TestDirname(t *testing.T) {
+func TestDirname_RemovesFilenameComponentFromInputLines(t *testing.T) {
 	t.Parallel()
 	tcs := []struct {
 		path string
 		want string
 	}{
 		{"/", "/\n"},
+		{"./", ".\n"},
 		{"\n", ".\n"},
 		{"/root", "/\n"},
 		{"/tmp/example.php", "/tmp\n"},
@@ -256,7 +245,7 @@ func TestDirname(t *testing.T) {
 	}
 }
 
-func TestEachLine(t *testing.T) {
+func TestEachLine_FiltersInputThroughSuppliedFunction(t *testing.T) {
 	t.Parallel()
 	p := script.Echo("Hello\nGoodbye")
 	q := p.EachLine(func(line string, out *strings.Builder) {
@@ -272,10 +261,23 @@ func TestEachLine(t *testing.T) {
 	}
 }
 
-func TestEchoFilter(t *testing.T) {
+func TestEchoProducesSuppliedString(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world."
-	p := script.NewPipe().Echo(want)
+	p := script.Echo(want)
+	got, err := p.String()
+	if err != nil {
+		t.Error(err)
+	}
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestEchoReplacesInputWithSuppliedStringWhenUsedAsFilter(t *testing.T) {
+	t.Parallel()
+	want := "Hello, world."
+	p := script.Echo("bogus").Echo(want)
 	got, err := p.String()
 	if err != nil {
 		t.Error(err)
@@ -287,10 +289,160 @@ func TestEchoFilter(t *testing.T) {
 
 func TestExecForEach_ErrorsOnInvalidTemplateSyntax(t *testing.T) {
 	t.Parallel()
-	p := script.Echo("a\nb\nc\n")
-	p.ExecForEach("{{invalid template syntax}}")
+	p := script.Echo("a\nb\nc\n").ExecForEach("{{invalid template syntax}}")
+	p.Wait()
 	if p.Error() == nil {
 		t.Error("want error with invalid template syntax")
+	}
+}
+
+func TestExecForEach_ErrorsOnUnbalancedQuotes(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("a\nb\nc\n").ExecForEach("echo \"{{.}}")
+	p.Wait()
+	if p.Error() == nil {
+		t.Error("want error with unbalanced quotes in command line")
+	}
+}
+
+func TestFilterByCopyPassesInputThroughUnchanged(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("hello").Filter(func(r io.Reader, w io.Writer) error {
+		_, err := io.Copy(w, r)
+		return err
+	})
+	want := "hello"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestFilterCanChainFilters(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("hello").Filter(func(r io.Reader, w io.Writer) error {
+		_, err := io.Copy(w, r)
+		return err
+	}).Filter(func(r io.Reader, w io.Writer) error {
+		_, err := io.Copy(w, r)
+		return err
+	})
+	want := "hello"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestFilterByCopyToDiscardGivesNoOutput(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("hello").Filter(func(r io.Reader, w io.Writer) error {
+		_, err := io.Copy(io.Discard, r)
+		return err
+	})
+	want := ""
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestFilterReadsNoMoreThanRequested(t *testing.T) {
+	t.Parallel()
+	input := "firstline\nsecondline"
+	source := bytes.NewBufferString(input)
+	p := script.NewPipe().WithReader(source).Filter(func(r io.Reader, w io.Writer) error {
+		// read just the first line of input
+		var text string
+		_, err := fmt.Fscanln(r, &text)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(w, text)
+		return nil
+	})
+	runtime.Gosched() // give filter goroutine a chance to run
+	want := "firstline\n"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+	wantRemaining := "secondline"
+	if wantRemaining != source.String() {
+		t.Errorf("want %q remaining, got %q", wantRemaining, source.String())
+	}
+}
+
+func TestFilterByFirstLineOnlyGivesFirstLineOfInput(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("hello\nworld").Filter(func(r io.Reader, w io.Writer) error {
+		scanner := bufio.NewScanner(r)
+		for scanner.Scan() {
+			fmt.Fprintln(w, scanner.Text())
+			break
+		}
+		return scanner.Err()
+	})
+	want := "hello\n"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestFilterSetsErrorOnPipeIfFilterFuncReturnsError(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("hello").Filter(func(io.Reader, io.Writer) error {
+		return errors.New("oh no")
+	})
+	io.ReadAll(p)
+	if p.Error() == nil {
+		t.Error("no error")
+	}
+}
+
+func TestFilterLine_FiltersEachLineThroughSuppliedFunction(t *testing.T) {
+	t.Parallel()
+	input := "hello\nworld"
+	want := "HELLO\nWORLD\n"
+	got, err := script.Echo(input).FilterLine(strings.ToUpper).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestFilterScan_FiltersInputLineByLine(t *testing.T) {
+	t.Parallel()
+	input := "hello\nworld\ngoodbye"
+	want := "world\n"
+	got, err := script.Echo(input).FilterScan(func(line string, w io.Writer) {
+		if strings.HasPrefix(line, "w") {
+			fmt.Fprintln(w, line)
+		}
+	}).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
 	}
 }
 
@@ -379,20 +531,11 @@ func TestFreqProducesCorrectFrequencyTableForInput(t *testing.T) {
 	}
 }
 
-func TestJoin(t *testing.T) {
+func TestJoinJoinsInputLinesIntoSpaceSeparatedString(t *testing.T) {
 	t.Parallel()
-	input := "hello\nfrom\nthe\njoin\ntest\n"
+	input := "hello\nfrom\nthe\njoin\ntest"
 	want := "hello from the join test\n"
 	got, err := script.Echo(input).Join().String()
-	if err != nil {
-		t.Error(err)
-	}
-	if got != want {
-		t.Errorf("want %q, got %q", want, got)
-	}
-	input = "hello\nworld"
-	want = "hello world"
-	got, err = script.Echo(input).Join().String()
 	if err != nil {
 		t.Error(err)
 	}
@@ -491,14 +634,6 @@ func TestMatchOutputsNothingGivenEmptyInput(t *testing.T) {
 	}
 	if got != "" {
 		t.Error("want no output given empty input")
-	}
-}
-
-func TestMatchRegexp_ErrorsGivenANilRegexp(t *testing.T) {
-	t.Parallel()
-	p := script.NewPipe().MatchRegexp(nil)
-	if p.Error() == nil {
-		t.Error("want error on nil regexp")
 	}
 }
 
@@ -705,6 +840,7 @@ func TestSHA256Sums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
 func TestExecErrorsWhenTheSpecifiedCommandDoesNotExist(t *testing.T) {
 	t.Parallel()
 	p := script.Exec("doesntexist")
+	p.Wait()
 	if p.Error() == nil {
 		t.Error("want error running non-existent command")
 	}
@@ -715,17 +851,12 @@ func TestExecRunsGoWithNoArgsAndGetsUsageMessagePlusErrorExitStatus2(t *testing.
 	// We can't make many cross-platform assumptions about what external
 	// commands will be available, but it seems logical that 'go' would be
 	// (though it may not be in the user's path)
-	p := script.Exec("go")
-	if p.Error() == nil {
-		t.Error("want error running 'go' with no arguments (because this command returns a non-zero exit status")
+	got, err := script.Exec("go").String()
+	if err == nil {
+		t.Error("want error when command returns a non-zero exit status")
 	}
-	p.SetError(nil) // else p.String() would be a no-op
-	output, err := p.String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(output, "Usage") {
-		t.Fatalf("want output containing the word 'usage', got %q", output)
+	if !strings.Contains(got, "Usage") {
+		t.Fatalf("want output containing the word 'usage', got %q", got)
 	}
 }
 
@@ -808,15 +939,27 @@ func TestFindFiles_InNonexistentPathReturnsError(t *testing.T) {
 	}
 }
 
-func TestIfExists(t *testing.T) {
+func TestIfExists_ProducesErrorPlusNoOutputForNonexistentFile(t *testing.T) {
 	t.Parallel()
-	p := script.IfExists("testdata/doesntexist")
-	if p.Error() == nil {
-		t.Errorf("want error from IfExists on non-existent file, but got nil")
+	want := ""
+	got, err := script.IfExists("testdata/doesntexist").Echo("hello").String()
+	if err == nil {
+		t.Error("want error")
 	}
-	p = script.IfExists("testdata/empty.txt")
-	if p.Error() != nil {
-		t.Errorf("want no error from IfExists on existing file, but got %v", p.Error())
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestIfExists_ProducesOutputAndNoErrorWhenFileExists(t *testing.T) {
+	t.Parallel()
+	want := "hello"
+	got, err := script.IfExists("testdata/empty.txt").Echo("hello").String()
+	if err != nil {
+		t.Error(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
 	}
 }
 
@@ -885,7 +1028,7 @@ func TestReadAutoCloser_ReadsAllDataFromSourceAndClosesItAutomatically(t *testin
 	}
 }
 
-func TestSlice(t *testing.T) {
+func TestSliceProducesElementsOfSpecifiedSliceOnePerLine(t *testing.T) {
 	t.Parallel()
 	want := "1\n2\n3\n"
 	got, err := script.Slice([]string{"1", "2", "3"}).String()
@@ -897,7 +1040,7 @@ func TestSlice(t *testing.T) {
 	}
 }
 
-func TestStdin(t *testing.T) {
+func TestStdinReadsFromProgramStandardInput(t *testing.T) {
 	t.Parallel()
 	// dummy test to prove coverage
 	script.Stdin()
@@ -905,7 +1048,7 @@ func TestStdin(t *testing.T) {
 	want := "hello world"
 	cmd := exec.Command(os.Args[0])
 	cmd.Env = append(os.Environ(), "SCRIPT_TEST=stdin")
-	cmd.Stdin = script.Echo(want).Reader
+	cmd.Stdin = script.Echo(want)
 	got, err := cmd.Output()
 	if err != nil {
 		t.Error(err)
@@ -915,63 +1058,36 @@ func TestStdin(t *testing.T) {
 	}
 }
 
-func TestSinksOnNilPipes(t *testing.T) {
+func TestStdoutSendsPipeContentsToConfiguredStandardOutput(t *testing.T) {
 	t.Parallel()
-	doSinksOnPipe(t, nil, "nil")
-}
-
-func TestSinksOnZeroPipes(t *testing.T) {
-	t.Parallel()
-	doSinksOnPipe(t, &script.Pipe{}, "zero")
-}
-
-// doSinksOnPipe calls every kind of sink method on the supplied pipe and
-// tries to trigger a panic.
-func doSinksOnPipe(t *testing.T, p *script.Pipe, kind string) {
-	var action string
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("panic: %s on %s pipe", action, kind)
-		}
-	}()
-	action = "String()"
-	_, err := p.String()
+	buf := &bytes.Buffer{}
+	want := "hello world"
+	p := script.File("testdata/hello.txt").WithStdout(buf)
+	wrote, err := p.Stdout()
 	if err != nil {
 		t.Error(err)
 	}
-	action = "CountLines()"
-	_, err = p.CountLines()
-	if err != nil {
-		t.Error(err)
+	if wrote != len(want) {
+		t.Errorf("want %d bytes written, got %d", len(want), wrote)
 	}
-	action = "SHA256Sum()"
-	_, err = p.SHA256Sum()
-	if err != nil {
-		t.Error(err)
+	got := buf.String()
+	if want != got {
+		t.Errorf("want %q, got %q", want, string(got))
 	}
-	action = "Slice()"
-	_, err = p.Slice()
-	if err != nil {
-		t.Error(err)
-	}
-	action = "WriteFile()"
-	_, err = p.WriteFile(t.TempDir() + "/" + kind)
-	if err != nil {
-		t.Error(err)
-	}
-	action = "AppendFile()"
-	_, err = p.AppendFile(t.TempDir() + "/" + kind)
-	if err != nil {
-		t.Error(err)
+	_, err = p.String()
+	if err == nil {
+		t.Error("input not closed after reading")
 	}
 }
 
-func TestAppendFile(t *testing.T) {
+func TestAppendFile_AppendsAllItsInputToSpecifiedFile(t *testing.T) {
 	t.Parallel()
 	orig := "Hello, world"
 	path := t.TempDir() + "/" + t.Name()
-	// ignore results; we're testing AppendFile, not WriteFile
-	_, _ = script.Echo(orig).WriteFile(path)
+	_, err := script.Echo(orig).WriteFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
 	extra := " and goodbye"
 	wrote, err := script.Echo(extra).AppendFile(path)
 	if err != nil {
@@ -1003,43 +1119,27 @@ func TestBytesOutputsInputBytesUnchanged(t *testing.T) {
 	}
 }
 
-func TestCountLines(t *testing.T) {
+func TestCountLines_CountsCorrectNumberOfLinesInInput(t *testing.T) {
 	t.Parallel()
 	want := 3
-	got, err := script.File("testdata/test.txt").CountLines()
+	got, err := script.Echo("a\nb\nc").CountLines()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if got != want {
-		t.Errorf("counting non-empty file: want %d, got %d", want, got)
+		t.Errorf("want %d, got %d", want, got)
 	}
-	want = 0
-	got, err = script.File("testdata/empty.txt").CountLines()
+}
+
+func TestCountLines_Counts0LinesInEmptyInput(t *testing.T) {
+	t.Parallel()
+	want := 0
+	got, err := script.Echo("").CountLines()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if got != want {
-		t.Errorf("counting empty file: want %d, got %d", want, got)
-	}
-	want = 3
-	p := script.File("testdata/test.txt")
-	got, err = p.CountLines()
-	if err != nil {
-		t.Error(err)
-	}
-	if got != want {
-		t.Errorf("want %d lines, got %d", want, got)
-	}
-	_, err = ioutil.ReadAll(p.Reader)
-	if err == nil {
-		t.Error("input not closed after reading")
-	}
-	_, err = p.CountLines() // result should be zero
-	if p.Error() == nil {
-		t.Error("want error reading closed pipe, got nil")
-	}
-	if err != p.Error() {
-		t.Errorf("got error %v but pipe error status was %v", err, p.Error())
+		t.Errorf("want %d, got %d", want, got)
 	}
 }
 
@@ -1078,100 +1178,54 @@ func TestSHA256Sum_OutputsCorrectHash(t *testing.T) {
 	}
 }
 
-func TestSliceSink(t *testing.T) {
+func TestSliceSink_(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name    string
-		fields  *script.Pipe
-		want    []string
-		wantErr bool
+		name string
+		pipe *script.Pipe
+		want []string
 	}{
 		{
-			name:   "Multiple lines pipe",
-			fields: script.Echo("testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip\n"),
+			name: "returns three elements for three lines of input",
+			pipe: script.Echo("testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\ntestdata/multiple_files/3.tar.zip\n"),
 			want: []string{
 				"testdata/multiple_files/1.txt",
 				"testdata/multiple_files/2.txt",
 				"testdata/multiple_files/3.tar.zip",
 			},
-			wantErr: false,
 		},
 		{
-			name:    "Empty pipe",
-			fields:  script.Echo(""),
-			want:    []string{},
-			wantErr: false,
+			name: "returns an empty slice given empty input",
+			pipe: script.Echo(""),
+			want: []string{},
 		},
 		{
-			name:    "Single newline",
-			fields:  script.Echo("\n"),
-			want:    []string{""},
-			wantErr: false,
+			name: "returns one empty string given input containing a single newline",
+			pipe: script.Echo("\n"),
+			want: []string{""},
 		},
 		{
-			name:   "Empty line between two existing lines",
-			fields: script.Echo("testdata/multiple_files/1.txt\n\ntestdata/multiple_files/3.tar.zip"),
+			name: "returns an empty string for each empty input line",
+			pipe: script.Echo("testdata/multiple_files/1.txt\n\ntestdata/multiple_files/3.tar.zip"),
 			want: []string{
 				"testdata/multiple_files/1.txt",
 				"",
 				"testdata/multiple_files/3.tar.zip",
 			},
-			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := tt.fields
+			p := tt.pipe
 			got, err := p.Slice()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Slice() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if err != nil {
+				t.Fatal(err)
 			}
 			if !cmp.Equal(tt.want, got) {
 				t.Error(cmp.Diff(tt.want, got))
 			}
 		})
 	}
-}
-
-func TestStdout(t *testing.T) {
-	t.Parallel()
-	buf := &bytes.Buffer{}
-	want := "hello world"
-	p := script.File("testdata/hello.txt").WithStdout(buf)
-	wrote, err := p.Stdout()
-	if err != nil {
-		t.Error(err)
-	}
-	if wrote != len(want) {
-		t.Errorf("want %d bytes written, got %d", len(want), wrote)
-	}
-	got := buf.String()
-	if want != got {
-		t.Errorf("want %q, got %q", want, string(got))
-	}
-	_, err = p.String()
-	if err == nil {
-		t.Error("input not closed after reading")
-	}
-}
-
-func TestStdoutNoPanicOnNilOrZero(t *testing.T) {
-	t.Parallel()
-	kind := "nil pipe"
-	defer func() {
-		if r := recover(); r != nil {
-			t.Fatalf("panic: Stdout on %s", kind)
-		}
-	}()
-	var p *script.Pipe
-	_, _ = p.Stdout()
-	kind = "zero pipe"
-	p = &script.Pipe{}
-	_, _ = p.Stdout()
-	kind = "zero pipe with non-empty reader"
-	p.Reader = script.NewReadAutoCloser(strings.NewReader("bogus"))
-	_, _ = p.Stdout()
 }
 
 func TestStringOutputsInputStringUnchanged(t *testing.T) {
@@ -1186,7 +1240,16 @@ func TestStringOutputsInputStringUnchanged(t *testing.T) {
 	}
 }
 
-func TestWriteFileNew(t *testing.T) {
+func TestWaitReadsPipeSourceToCompletion(t *testing.T) {
+	t.Parallel()
+	source := bytes.NewBufferString("hello")
+	script.NewPipe().WithReader(source).FilterLine(strings.ToUpper).Wait()
+	if source.Len() > 0 {
+		t.Errorf("incomplete read: %d bytes of input remaining: %q", source.Len(), source.String())
+	}
+}
+
+func TestWriteFile_WritesInputToFileCreatingItIfNecessary(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world"
 	path := t.TempDir() + "/" + t.Name()
@@ -1206,7 +1269,7 @@ func TestWriteFileNew(t *testing.T) {
 	}
 }
 
-func TestWriteFileTruncatesExisting(t *testing.T) {
+func TestWriteFile_TruncatesExistingFile(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world"
 	path := t.TempDir() + "/" + t.Name()
@@ -1235,7 +1298,7 @@ func TestWriteFileTruncatesExisting(t *testing.T) {
 	}
 }
 
-func TestWithReader(t *testing.T) {
+func TestWithReader_SetsSuppliedReaderOnPipe(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world."
 	p := script.NewPipe().WithReader(strings.NewReader(want))
@@ -1248,26 +1311,16 @@ func TestWithReader(t *testing.T) {
 	}
 }
 
-func TestWithError(t *testing.T) {
+func TestWithError_SetsSpecifiedErrorOnPipe(t *testing.T) {
 	t.Parallel()
-	p := script.File("testdata/empty.txt")
-	want := "fake error"
-	_, gotErr := p.WithError(errors.New(want)).String()
-	if gotErr.Error() != "fake error" {
-		t.Errorf("want %q, got %q", want, gotErr.Error())
-	}
-	_, err := ioutil.ReadAll(p.Reader)
-	if err == nil {
-		t.Error("input not closed after reading")
-	}
-	p = script.File("testdata/empty.txt")
-	_, gotErr = p.WithError(nil).String()
-	if gotErr != nil {
-		t.Errorf("got unexpected error: %q", gotErr.Error())
+	fakeErr := errors.New("oh no")
+	p := script.NewPipe().WithError(fakeErr)
+	if p.Error() != fakeErr {
+		t.Errorf("want %q, got %q", fakeErr, p.Error())
 	}
 }
 
-func TestWithStdout(t *testing.T) {
+func TestWithStdout_SetsSpecifiedWriterAsStdout(t *testing.T) {
 	t.Parallel()
 	buf := &bytes.Buffer{}
 	want := "Hello, world."
@@ -1281,26 +1334,17 @@ func TestWithStdout(t *testing.T) {
 	}
 }
 
-func TestError(t *testing.T) {
+func TestErrorReturnsErrorSetByPreviousPipeStage(t *testing.T) {
 	t.Parallel()
 	p := script.File("testdata/nonexistent.txt")
 	if p.Error() == nil {
 		t.Error("want error status reading nonexistent file, but got nil")
 	}
-	defer func() {
-		// Reading an erroneous pipe should not panic.
-		if r := recover(); r != nil {
-			t.Errorf("panic reading erroneous pipe: %v", r)
-		}
-	}()
-	_, err := p.String()
-	if err != p.Error() {
-		t.Error(err)
-	}
-	_, err = p.CountLines()
-	if err != p.Error() {
-		t.Error(err)
-	}
+}
+
+func TestSetError_SetsSuppliedErrorOnPipe(t *testing.T) {
+	t.Parallel()
+	p := script.NewPipe()
 	e := errors.New("fake error")
 	p.SetError(e)
 	if p.Error() != e {
@@ -1308,7 +1352,7 @@ func TestError(t *testing.T) {
 	}
 }
 
-func TestExitStatus(t *testing.T) {
+func TestExitStatus_CorrectlyParsesExitStatusValueFromErrorMessage(t *testing.T) {
 	t.Parallel()
 	tcs := []struct {
 		input string
@@ -1336,106 +1380,29 @@ func TestExitStatus(t *testing.T) {
 	}
 }
 
-// doMethodsOnPipe calls every kind of method on the supplied pipe and
-// tries to trigger a panic.
-func doMethodsOnPipe(t *testing.T, p *script.Pipe, kind string) {
-	var action string
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("panic: %s on %s pipe", action, kind)
-		}
-	}()
-	action = "AppendFile()"
-	p.AppendFile(t.TempDir() + "/AppendFile")
-	action = "Basename()"
-	p.Basename()
-	action = "Bytes()"
-	p.Bytes()
-	action = "Close()"
-	p.Close()
-	action = "Column()"
-	p.Column(2)
-	action = "Concat()"
-	p.Concat()
-	action = "CountLines()"
-	p.CountLines()
-	action = "Dirname()"
-	p.Dirname()
-	action = "EachLine()"
-	p.EachLine(func(string, *strings.Builder) {})
-	action = "Echo()"
-	p.Echo("bogus")
-	action = "Error()"
-	p.Error()
-	action = "Exec()"
-	p.Exec("bogus")
-	action = "ExecForEach()"
-	p.ExecForEach("bogus")
-	action = "ExitStatus()"
-	p.ExitStatus()
-	action = "First()"
-	p.First(1)
-	action = "Freq()"
-	p.Freq()
-	action = "Join()"
-	p.Join()
-	action = "Last()"
-	p.Last(1)
-	action = "Match()"
-	p.Match("foo")
-	action = "MatchRegexp()"
-	p.MatchRegexp(regexp.MustCompile(".*"))
-	action = "Read()"
-	p.Read([]byte{})
-	action = "Reject()"
-	p.Reject("")
-	action = "RejectRegexp"
-	p.RejectRegexp(regexp.MustCompile(".*"))
-	action = "Replace()"
-	p.Replace("old", "new")
-	action = "ReplaceRegexp()"
-	p.ReplaceRegexp(regexp.MustCompile(".*"), "")
-	action = "SetError()"
-	p.SetError(nil)
-	action = "SHA256Sums()"
-	p.SHA256Sums()
-	action = "SHA256Sum()"
-	p.SHA256Sum()
-	action = "Slice()"
-	p.Slice()
-	action = "Stdout()"
-	p.Stdout()
-	action = "String()"
-	p.String()
-	action = "WithError()"
-	p.WithError(nil)
-	action = "WithReader()"
-	p.WithReader(strings.NewReader(""))
-	action = "WriteFile()"
-	p.WriteFile(t.TempDir() + "bogus.txt")
-}
-
-func TestNilPipes(t *testing.T) {
+func TestReadProducesCompletePipeContents(t *testing.T) {
 	t.Parallel()
-	doMethodsOnPipe(t, nil, "nil")
-}
-
-func TestZeroPipes(t *testing.T) {
-	t.Parallel()
-	doMethodsOnPipe(t, &script.Pipe{}, "zero")
-}
-
-func TestNewPipes(t *testing.T) {
-	t.Parallel()
-	doMethodsOnPipe(t, script.NewPipe(), "new")
-}
-
-func TestPipeIsReader(t *testing.T) {
-	t.Parallel()
-	var p io.Reader = script.NewPipe()
-	_, err := ioutil.ReadAll(p)
+	want := []byte("hello")
+	p := script.Echo("hello")
+	got, err := io.ReadAll(p)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestReadReturnsEOFOnUninitialisedPipe(t *testing.T) {
+	t.Parallel()
+	p := &script.Pipe{}
+	buf := []byte{0} // try to read at least 1 byte
+	n, err := p.Read(buf)
+	if !errors.Is(err, io.EOF) {
+		t.Errorf("want EOF, got %v", err)
+	}
+	if n > 0 {
+		t.Errorf("unexpectedly read %d bytes", n)
 	}
 }
 
@@ -1552,6 +1519,45 @@ func ExamplePipe_First() {
 	// Output:
 	// a
 	// b
+}
+
+func ExamplePipe_Filter() {
+	script.Echo("hello world").Filter(func(r io.Reader, w io.Writer) error {
+		n, err := io.Copy(w, r)
+		fmt.Fprintf(w, "\nfiltered %d bytes\n", n)
+		return err
+	}).Stdout()
+	// Output:
+	// hello world
+	// filtered 11 bytes
+}
+
+func ExamplePipe_FilterScan() {
+	script.Echo("a\nb\nc").FilterScan(func(line string, w io.Writer) {
+		fmt.Fprintf(w, "scanned line: %q\n", line)
+	}).Stdout()
+	// Output:
+	// scanned line: "a"
+	// scanned line: "b"
+	// scanned line: "c"
+}
+
+func ExamplePipe_FilterLine_user() {
+	script.Echo("a\nb\nc").FilterLine(func(line string) string {
+		return "> " + line
+	}).Stdout()
+	// Output:
+	// > a
+	// > b
+	// > c
+}
+
+func ExamplePipe_FilterLine_stdlib() {
+	script.Echo("a\nb\nc").FilterLine(strings.ToUpper).Stdout()
+	// Output:
+	// A
+	// B
+	// C
 }
 
 func ExamplePipe_Freq() {

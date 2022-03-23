@@ -14,6 +14,9 @@ Why shouldn't it be as easy to write system administration programs in Go as it 
 
 Shell scripts often compose a sequence of operations on a stream of data (a _pipeline_). This is how `script` works, too.
 
+> *This is one absolutely superb API design. Taking inspiration from shell pipes and turning it into a Go library with syntax this clean is really impressive.*\
+> —[Simon Willison](https://news.ycombinator.com/item?id=30649524)
+
 Read more: [Scripting with Go](https://bitfieldconsulting.com/golang/scripting)
 
 # Quick start: Unix equivalents
@@ -70,6 +73,12 @@ But what if, instead of reading a specific file, we want to simply pipe input in
 script.Stdin().Match("Error").Stdout()
 ```
 
+Just for fun, let's filter all the results through some arbitrary Go function:
+
+```go
+script.Stdin().Match("Error").FilterLine(strings.ToUpper).Stdout()
+```
+
 That was almost too easy! So let's pass in a list of files on the command line, and have our program read them all in sequence and output the matching lines:
 
 ```go
@@ -88,7 +97,48 @@ What's that? You want to append that output to a file instead of printing it to 
 script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt")
 ```
 
-# Real use cases
+Suppose we want to execute some external program instead of doing the work ourselves. We can do that too:
+
+```go
+script.Exec("ping 127.0.0.1").Stdout()
+```
+
+But maybe we don't know the arguments yet; we might get them from the user, for example. We'd like to be able to run the external command repeatedly, each time passing it the next line of input. No worries:
+
+```go
+script.Args().ExecForEach("ping -c 1 {{.}}").Stdout()
+```
+
+If there isn't a built-in operation that does what we want, we can just write our own:
+
+```go
+script.Echo("hello world").Filter(func (r io.Reader, w io.Writer) error {
+	n, err := io.Copy(w, r)
+	fmt.Fprintf(w, "\nfiltered %d bytes\n", n)
+	return err
+}).Stdout()
+// Output:
+// hello world
+// filtered 11 bytes
+```
+
+Notice that the "hello world" appeared before the "filtered n bytes". Filters run concurrently, so the pipeline can start producing output before the input has been fully read.
+
+If we want to scan input line by line, we could do that with a `Filter` function that creates a `bufio.Scanner` on its input, but we don't need to:
+
+```go
+script.Echo("a\nb\nc").FilterScan(func(line string, w io.Writer) {
+	fmt.Fprintf(w, "scanned line: %q\n", line)
+}).Stdout()
+// Output:
+// scanned line: "a"
+// scanned line: "b"
+// scanned line: "c"
+```
+
+And there's more. Much more. [Read the docs](https://pkg.go.dev/github.com/bitfield/script) for full details, and more examples.
+
+# A realistic use case
 
 Let's use `script` to write a program that system administrators might actually need. One thing I often find myself doing is counting the most frequent visitors to a website over a given period of time. Given an Apache log in the Common Log Format like this:
 
@@ -158,21 +208,25 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`Column`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) | Nth column of input |
 | [`Concat`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) | contents of multiple files |
 | [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) | removes filename from each line, leaving only leading path components |
-| [`EachLine`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EachLine) | user-supplied function |
 | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Echo) | all input replaced by given string |
 | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Exec) | filtered through external command |
 | [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) | execute given command template for each line of input |
-| [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) | first N lines |
+| [`Filter`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Filter) | user-supplied function filtering a reader to a writer |
+| [`FilterLine`](https://pkg.go.dev/github.com/bitfield/script#Pipe.FilterLine) | user-supplied function filtering each line to a string|
+| [`FilterScan`](https://pkg.go.dev/github.com/bitfield/script#Pipe.FilterScan) | user-supplied function filtering each line to a writer |
+| [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) | first N lines of input |
 | [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) | frequency count of unique input lines, most frequent first |
 | [`Join`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Join) | replace all newlines with spaces |
-| [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) | last N lines |
-| [`Match`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) | matching lines |
-| [`MatchRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) | matching lines |
-| [`Reject`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) | non-matching lines |
-| [`RejectRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) | non-matching lines |
-| [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) | matching lines replaced with string |
-| [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) | matching lines replaced with string |
+| [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) | last N lines of input|
+| [`Match`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) | lines matching given string |
+| [`MatchRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) | lines matching given regexp |
+| [`Reject`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) | lines not matching given string |
+| [`RejectRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) | lines not matching given regexp |
+| [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) | matching text replaced with given string |
+| [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) | matching text replaced with given string |
 | [`SHA256Sums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sums) | SHA-256 hashes of each listed file |
+
+Note that filters run concurrently, rather than producing nothing until each stage has fully read its input. This is convenient for executing long-running comands, for example. If you do need to wait for the pipeline to complete, call `Wait`.
 
 ## Sinks
 
@@ -188,11 +242,8 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 | [`Slice`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Slice) | | data as `[]string`, error  |
 | [`Stdout`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Stdout) | standard output | bytes written, error  |
 | [`String`](https://pkg.go.dev/github.com/bitfield/script#Pipe.String) | | data as `string`, error  |
+| [`Wait`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Wait) | | none  |
 | [`WriteFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) | specified file, truncating if it exists | bytes written, error  |
-
-## Examples
-
-Since `script` is designed to help you write system administration programs, a few simple examples of such programs are included in the [examples](examples/) directory.
 
 # Contributing
 
