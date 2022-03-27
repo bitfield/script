@@ -166,10 +166,7 @@ func main() {
 }
 ```
 
-Let's try it out with some [sample data](examples/visitors/access.log):
-
-**`cd examples/visitors`**\
-**`go run main.go <access.log`**
+Let's try it out with some [sample data](testdata/access.log):
 
 ```
 16 176.182.2.191
