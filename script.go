@@ -292,6 +292,11 @@ func Slice(s []string) *Pipe {
 	return Echo(strings.Join(s, "\n") + "\n")
 }
 
+// Env sets environment variables
+func Env(variable string, value string) {
+	os.Setenv(variable, value)
+}
+
 // Stdin creates a pipe that reads from os.Stdin.
 func Stdin() *Pipe {
 	return NewPipe().WithReader(os.Stdin)
