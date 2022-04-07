@@ -5,6 +5,7 @@ import (
 	"container/ring"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -802,4 +803,97 @@ func (p *Pipe) writeOrAppendFile(fileName string, mode int) (int64, error) {
 		return 0, err
 	}
 	return wrote, nil
+}
+
+// AppendFileUnique uniquely appends the received lines to the specified file.
+// Creates the specified file if it doesn't exist.
+func (p *Pipe) AppendFileUnique(fileName string) ([]string, error) {
+	return p.writeOrAppendFileUnique(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY)
+}
+
+func (p *Pipe) writeOrAppendFileUnique(fileName string, mode int) ([]string, error) {
+
+	lines := make(map[string]bool)
+
+	// Create the file to read if it doesn't exist
+	if !fileExists(fileName) {
+		f, e := os.Create(fileName)
+		if e != nil {
+			return nil, fmt.Errorf("File creation attempt failed :", e)
+		}
+		f.Close()
+	}
+
+	// read the file into a map
+	f, err := os.Open(fileName)
+	if err != nil {
+		p.SetError(err)
+		return nil, err
+	}
+
+	// Uniquely add to the map
+	sc := bufio.NewScanner(f)
+	for sc.Scan() {
+		lines[strings.TrimSpace(sc.Text())] = true
+	}
+	f.Close()
+
+	// reopen the file for appending
+	file, err := os.OpenFile(fileName, mode, 0644)
+	if err != nil {
+		p.SetError(err)
+		return nil, err
+	}
+	defer file.Close()
+
+	// read the incoming data
+	d, err := io.ReadAll(p.Reader.r)
+	if err != nil {
+		p.SetError(err)
+		return nil, err
+	}
+
+	pipeLines := strings.Split(string(d), "\n")
+
+	// map to store results
+	resultMap := make(map[string]bool)
+
+	for _, i := range pipeLines {
+
+		l := strings.TrimSpace(i)
+
+		// ignore if line already exists in the map
+		if lines[l] {
+			continue
+		}
+
+		// add line to the map to avoid duplicates
+		lines[l] = true
+		// add line to output map
+		resultMap[l] = true
+
+		// write to the file
+		fmt.Fprintln(file, l)
+	}
+
+	// return all the uniquely added new lines as slice
+	var outputSlice []string
+	for x, _ := range resultMap {
+		outputSlice = append(outputSlice, x)
+	}
+
+	return outputSlice, nil
+
+}
+
+// Checks whether file exists
+func fileExists(filepath string) bool {
+	if _, err := os.Stat(filepath); err == nil {
+		return true
+	} else if errors.Is(err, os.ErrNotExist) {
+		return false
+	} else {
+		return false
+	}
+	return false
 }
