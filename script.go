@@ -5,6 +5,7 @@ import (
 	"container/ring"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -18,6 +19,7 @@ import (
 	"text/template"
 
 	"bitbucket.org/creachadair/shell"
+	"github.com/itchyny/gojq"
 )
 
 // ReadAutoCloser represents a pipe source that will be automatically closed
@@ -600,6 +602,42 @@ func (p *Pipe) Join() *Pipe {
 		}
 		fmt.Fprintln(w)
 		return scanner.Err()
+	})
+}
+
+// JQ takes a query in the 'jq' language and applies it to the input (presumed
+// to be JSON), producing the result. An invalid query will set the appropriate
+// error on the pipe.
+//
+// The exact dialect of JQ supported is that provided by
+// github.com/itchyny/gojq, whose documentation explains the differences between
+// it and 'standard' JQ.
+func (p *Pipe) JQ(query string) *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		q, err := gojq.Parse(query)
+		if err != nil {
+			return err
+		}
+		var input interface{}
+		err = json.NewDecoder(r).Decode(&input)
+		if err != nil {
+			return err
+		}
+		iter := q.Run(input)
+		for {
+			v, ok := iter.Next()
+			if !ok {
+				return nil
+			}
+			if err, ok := v.(error); ok {
+				return err
+			}
+			result, err := gojq.Marshal(v)
+			if err != nil {
+				return err
+			}
+			fmt.Fprintln(w, string(result))
+		}
 	})
 }
 
