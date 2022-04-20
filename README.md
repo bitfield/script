@@ -39,6 +39,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `grep -v`          | [`Reject()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) / [`RejectRegexp()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) |
 | `head`             | [`First()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) |
 | `find -type f`     | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) |
+| `jq`     | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) |
 | `ls`               | [`ListFiles()`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) |
 | `sed`              | [`Replace()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) / [`ReplaceRegexp()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) |
 | `sha256sum`        | [`SHA256Sum()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sum) / [`SHA256Sums()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sums) |
@@ -95,6 +96,12 @@ What's that? You want to append that output to a file instead of printing it to 
 
 ```go
 script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt")
+```
+
+If the data is JSON, we can do better than simple string-matching. We can use [JQ](https://stedolan.github.io/jq/) queries:
+
+```go
+script.File("commits.json").JQ(".[0] | {message: .commit.message, name: .commit.committer.name}").Stdout()
 ```
 
 Suppose we want to execute some external program instead of doing the work ourselves. We can do that too:
@@ -214,6 +221,7 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) | first N lines of input |
 | [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) | frequency count of unique input lines, most frequent first |
 | [`Join`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Join) | replace all newlines with spaces |
+| [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) | result of `jq` query |
 | [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) | last N lines of input|
 | [`Match`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) | lines matching given string |
 | [`MatchRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) | lines matching given regexp |
@@ -241,6 +249,12 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 | [`String`](https://pkg.go.dev/github.com/bitfield/script#Pipe.String) | | data as `string`, error  |
 | [`Wait`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Wait) | | none  |
 | [`WriteFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) | specified file, truncating if it exists | bytes written, error  |
+
+# What's new
+
+| Version | New |
+| ----------- | ------- |
+| v0.20.0 | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) |
 
 # Contributing
 

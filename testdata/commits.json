@@ -1,0 +1,402 @@
+[
+  {
+    "sha": "0f734f4dfd5bcdb38d8309f9c0d8c515732c7bdf",
+    "node_id": "C_kwDOCt91vdoAKDBmNzM0ZjRkZmQ1YmNkYjM4ZDgzMDlmOWMwZDhjNTE1NzMyYzdiZGY",
+    "commit": {
+      "author": {
+        "name": "John Arundel",
+        "email": "john@bitfieldconsulting.com",
+        "date": "2022-03-27T09:53:42Z"
+      },
+      "committer": {
+        "name": "John Arundel",
+        "email": "john@bitfieldconsulting.com",
+        "date": "2022-03-27T09:53:42Z"
+      },
+      "message": "restore sample log data (fixes #102)",
+      "tree": {
+        "sha": "848dd685e8a12f5d02ccfa5696ad73fb56bbe4e1",
+        "url": "https://api.github.com/repos/bitfield/script/git/trees/848dd685e8a12f5d02ccfa5696ad73fb56bbe4e1"
+      },
+      "url": "https://api.github.com/repos/bitfield/script/git/commits/0f734f4dfd5bcdb38d8309f9c0d8c515732c7bdf",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null
+      }
+    },
+    "url": "https://api.github.com/repos/bitfield/script/commits/0f734f4dfd5bcdb38d8309f9c0d8c515732c7bdf",
+    "html_url": "https://github.com/bitfield/script/commit/0f734f4dfd5bcdb38d8309f9c0d8c515732c7bdf",
+    "comments_url": "https://api.github.com/repos/bitfield/script/commits/0f734f4dfd5bcdb38d8309f9c0d8c515732c7bdf/comments",
+    "author": {
+      "login": "bitfield",
+      "id": 142262,
+      "node_id": "MDQ6VXNlcjE0MjI2Mg==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/142262?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/bitfield",
+      "html_url": "https://github.com/bitfield",
+      "followers_url": "https://api.github.com/users/bitfield/followers",
+      "following_url": "https://api.github.com/users/bitfield/following{/other_user}",
+      "gists_url": "https://api.github.com/users/bitfield/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/bitfield/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/bitfield/subscriptions",
+      "organizations_url": "https://api.github.com/users/bitfield/orgs",
+      "repos_url": "https://api.github.com/users/bitfield/repos",
+      "events_url": "https://api.github.com/users/bitfield/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/bitfield/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "bitfield",
+      "id": 142262,
+      "node_id": "MDQ6VXNlcjE0MjI2Mg==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/142262?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/bitfield",
+      "html_url": "https://github.com/bitfield",
+      "followers_url": "https://api.github.com/users/bitfield/followers",
+      "following_url": "https://api.github.com/users/bitfield/following{/other_user}",
+      "gists_url": "https://api.github.com/users/bitfield/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/bitfield/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/bitfield/subscriptions",
+      "organizations_url": "https://api.github.com/users/bitfield/orgs",
+      "repos_url": "https://api.github.com/users/bitfield/repos",
+      "events_url": "https://api.github.com/users/bitfield/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/bitfield/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "85fa6426e7dcadb70cca582f028445ceafb1963b",
+        "url": "https://api.github.com/repos/bitfield/script/commits/85fa6426e7dcadb70cca582f028445ceafb1963b",
+        "html_url": "https://github.com/bitfield/script/commit/85fa6426e7dcadb70cca582f028445ceafb1963b"
+      }
+    ]
+  },
+  {
+    "sha": "85fa6426e7dcadb70cca582f028445ceafb1963b",
+    "node_id": "C_kwDOCt91vdoAKDg1ZmE2NDI2ZTdkY2FkYjcwY2NhNTgyZjAyODQ0NWNlYWZiMTk2M2I",
+    "commit": {
+      "author": {
+        "name": "John Arundel",
+        "email": "john@bitfieldconsulting.com",
+        "date": "2022-03-23T09:36:44Z"
+      },
+      "committer": {
+        "name": "GitHub",
+        "email": "noreply@github.com",
+        "date": "2022-03-23T09:36:44Z"
+      },
+      "message": "Merge pull request #101 from bitfield/filter\n\nMake pipe filters concurrent\r\n\r\nCo-authored-by: Puchen Xu <korolxu@umich.edu>\r\nCo-authored-by: Christoph Petrausch <263448+hikhvar@users.noreply.github.com>",
+      "tree": {
+        "sha": "549df3edaccf5afc94b6089496b03cbb68677050",
+        "url": "https://api.github.com/repos/bitfield/script/git/trees/549df3edaccf5afc94b6089496b03cbb68677050"
+      },
+      "url": "https://api.github.com/repos/bitfield/script/git/commits/85fa6426e7dcadb70cca582f028445ceafb1963b",
+      "comment_count": 0,
+      "verification": {
+        "verified": true,
+        "reason": "valid",
+        "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsBcBAABCAAQBQJiOuosCRBK7hj4Ov3rIwAAJKIIAAiUbw1SJOa4OxKHKAb8YZFF\nxIqe9ezhC0vynjWenmqDjIQ5G3slSU5faCwmmaSfWf09HxBmohqiWWkfsS1Ifk6n\nIV6eSDFxuGpqP/Oyar+n+BjDL3QOl79nVbfTIhgGuQQinwyV97002QqCBDRxDD6X\nulTaR+bZxB6iBlJ/nKT7BZEAU7AG6UQeE7lyULDA7z2fzoUFA6J1yF8XU/4aLI3s\nV9KOBUUC3xPZ7JllExagKbM4CTIlpXHD4wFqG7BuSUWDTqmwaQ27Pi8a05M+2Qzy\nR1fm/LYH5OD/NkmDoLINZfPRIJmNyM4/xAxR/vPIHCiPTi74+V74zKoNfdk0I5Y=\n=uhmg\n-----END PGP SIGNATURE-----\n",
+        "payload": "tree 549df3edaccf5afc94b6089496b03cbb68677050\nparent 7955ae56a26545e9f54ee707d190398559ba2841\nparent 3418243ce0a037990ed3303b70b2f4511ec430ce\nauthor John Arundel <john@bitfieldconsulting.com> 1648028204 +0000\ncommitter GitHub <noreply@github.com> 1648028204 +0000\n\nMerge pull request #101 from bitfield/filter\n\nMake pipe filters concurrent\r\n\r\nCo-authored-by: Puchen Xu <korolxu@umich.edu>\r\nCo-authored-by: Christoph Petrausch <263448+hikhvar@users.noreply.github.com>"
+      }
+    },
+    "url": "https://api.github.com/repos/bitfield/script/commits/85fa6426e7dcadb70cca582f028445ceafb1963b",
+    "html_url": "https://github.com/bitfield/script/commit/85fa6426e7dcadb70cca582f028445ceafb1963b",
+    "comments_url": "https://api.github.com/repos/bitfield/script/commits/85fa6426e7dcadb70cca582f028445ceafb1963b/comments",
+    "author": {
+      "login": "bitfield",
+      "id": 142262,
+      "node_id": "MDQ6VXNlcjE0MjI2Mg==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/142262?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/bitfield",
+      "html_url": "https://github.com/bitfield",
+      "followers_url": "https://api.github.com/users/bitfield/followers",
+      "following_url": "https://api.github.com/users/bitfield/following{/other_user}",
+      "gists_url": "https://api.github.com/users/bitfield/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/bitfield/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/bitfield/subscriptions",
+      "organizations_url": "https://api.github.com/users/bitfield/orgs",
+      "repos_url": "https://api.github.com/users/bitfield/repos",
+      "events_url": "https://api.github.com/users/bitfield/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/bitfield/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "web-flow",
+      "id": 19864447,
+      "node_id": "MDQ6VXNlcjE5ODY0NDQ3",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19864447?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/web-flow",
+      "html_url": "https://github.com/web-flow",
+      "followers_url": "https://api.github.com/users/web-flow/followers",
+      "following_url": "https://api.github.com/users/web-flow/following{/other_user}",
+      "gists_url": "https://api.github.com/users/web-flow/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/web-flow/subscriptions",
+      "organizations_url": "https://api.github.com/users/web-flow/orgs",
+      "repos_url": "https://api.github.com/users/web-flow/repos",
+      "events_url": "https://api.github.com/users/web-flow/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/web-flow/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "7955ae56a26545e9f54ee707d190398559ba2841",
+        "url": "https://api.github.com/repos/bitfield/script/commits/7955ae56a26545e9f54ee707d190398559ba2841",
+        "html_url": "https://github.com/bitfield/script/commit/7955ae56a26545e9f54ee707d190398559ba2841"
+      },
+      {
+        "sha": "3418243ce0a037990ed3303b70b2f4511ec430ce",
+        "url": "https://api.github.com/repos/bitfield/script/commits/3418243ce0a037990ed3303b70b2f4511ec430ce",
+        "html_url": "https://github.com/bitfield/script/commit/3418243ce0a037990ed3303b70b2f4511ec430ce"
+      }
+    ]
+  },
+  {
+    "sha": "3418243ce0a037990ed3303b70b2f4511ec430ce",
+    "node_id": "C_kwDOCt91vdoAKDM0MTgyNDNjZTBhMDM3OTkwZWQzMzAzYjcwYjJmNDUxMWVjNDMwY2U",
+    "commit": {
+      "author": {
+        "name": "John Arundel",
+        "email": "john@bitfieldconsulting.com",
+        "date": "2022-03-23T09:31:53Z"
+      },
+      "committer": {
+        "name": "John Arundel",
+        "email": "john@bitfieldconsulting.com",
+        "date": "2022-03-23T09:31:53Z"
+      },
+      "message": "refactor",
+      "tree": {
+        "sha": "549df3edaccf5afc94b6089496b03cbb68677050",
+        "url": "https://api.github.com/repos/bitfield/script/git/trees/549df3edaccf5afc94b6089496b03cbb68677050"
+      },
+      "url": "https://api.github.com/repos/bitfield/script/git/commits/3418243ce0a037990ed3303b70b2f4511ec430ce",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null
+      }
+    },
+    "url": "https://api.github.com/repos/bitfield/script/commits/3418243ce0a037990ed3303b70b2f4511ec430ce",
+    "html_url": "https://github.com/bitfield/script/commit/3418243ce0a037990ed3303b70b2f4511ec430ce",
+    "comments_url": "https://api.github.com/repos/bitfield/script/commits/3418243ce0a037990ed3303b70b2f4511ec430ce/comments",
+    "author": {
+      "login": "bitfield",
+      "id": 142262,
+      "node_id": "MDQ6VXNlcjE0MjI2Mg==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/142262?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/bitfield",
+      "html_url": "https://github.com/bitfield",
+      "followers_url": "https://api.github.com/users/bitfield/followers",
+      "following_url": "https://api.github.com/users/bitfield/following{/other_user}",
+      "gists_url": "https://api.github.com/users/bitfield/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/bitfield/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/bitfield/subscriptions",
+      "organizations_url": "https://api.github.com/users/bitfield/orgs",
+      "repos_url": "https://api.github.com/users/bitfield/repos",
+      "events_url": "https://api.github.com/users/bitfield/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/bitfield/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "bitfield",
+      "id": 142262,
+      "node_id": "MDQ6VXNlcjE0MjI2Mg==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/142262?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/bitfield",
+      "html_url": "https://github.com/bitfield",
+      "followers_url": "https://api.github.com/users/bitfield/followers",
+      "following_url": "https://api.github.com/users/bitfield/following{/other_user}",
+      "gists_url": "https://api.github.com/users/bitfield/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/bitfield/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/bitfield/subscriptions",
+      "organizations_url": "https://api.github.com/users/bitfield/orgs",
+      "repos_url": "https://api.github.com/users/bitfield/repos",
+      "events_url": "https://api.github.com/users/bitfield/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/bitfield/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "caf0a29bf28531a1caf82c768a1348e9f8fbf990",
+        "url": "https://api.github.com/repos/bitfield/script/commits/caf0a29bf28531a1caf82c768a1348e9f8fbf990",
+        "html_url": "https://github.com/bitfield/script/commit/caf0a29bf28531a1caf82c768a1348e9f8fbf990"
+      }
+    ]
+  },
+  {
+    "sha": "caf0a29bf28531a1caf82c768a1348e9f8fbf990",
+    "node_id": "C_kwDOCt91vdoAKGNhZjBhMjliZjI4NTMxYTFjYWY4MmM3NjhhMTM0OGU5ZjhmYmY5OTA",
+    "commit": {
+      "author": {
+        "name": "John Arundel",
+        "email": "john@bitfieldconsulting.com",
+        "date": "2022-03-22T18:48:25Z"
+      },
+      "committer": {
+        "name": "John Arundel",
+        "email": "john@bitfieldconsulting.com",
+        "date": "2022-03-22T18:48:25Z"
+      },
+      "message": "Update README",
+      "tree": {
+        "sha": "99d2e875cac437fcc1aaacc649dd85785de234c9",
+        "url": "https://api.github.com/repos/bitfield/script/git/trees/99d2e875cac437fcc1aaacc649dd85785de234c9"
+      },
+      "url": "https://api.github.com/repos/bitfield/script/git/commits/caf0a29bf28531a1caf82c768a1348e9f8fbf990",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null
+      }
+    },
+    "url": "https://api.github.com/repos/bitfield/script/commits/caf0a29bf28531a1caf82c768a1348e9f8fbf990",
+    "html_url": "https://github.com/bitfield/script/commit/caf0a29bf28531a1caf82c768a1348e9f8fbf990",
+    "comments_url": "https://api.github.com/repos/bitfield/script/commits/caf0a29bf28531a1caf82c768a1348e9f8fbf990/comments",
+    "author": {
+      "login": "bitfield",
+      "id": 142262,
+      "node_id": "MDQ6VXNlcjE0MjI2Mg==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/142262?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/bitfield",
+      "html_url": "https://github.com/bitfield",
+      "followers_url": "https://api.github.com/users/bitfield/followers",
+      "following_url": "https://api.github.com/users/bitfield/following{/other_user}",
+      "gists_url": "https://api.github.com/users/bitfield/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/bitfield/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/bitfield/subscriptions",
+      "organizations_url": "https://api.github.com/users/bitfield/orgs",
+      "repos_url": "https://api.github.com/users/bitfield/repos",
+      "events_url": "https://api.github.com/users/bitfield/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/bitfield/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "bitfield",
+      "id": 142262,
+      "node_id": "MDQ6VXNlcjE0MjI2Mg==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/142262?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/bitfield",
+      "html_url": "https://github.com/bitfield",
+      "followers_url": "https://api.github.com/users/bitfield/followers",
+      "following_url": "https://api.github.com/users/bitfield/following{/other_user}",
+      "gists_url": "https://api.github.com/users/bitfield/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/bitfield/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/bitfield/subscriptions",
+      "organizations_url": "https://api.github.com/users/bitfield/orgs",
+      "repos_url": "https://api.github.com/users/bitfield/repos",
+      "events_url": "https://api.github.com/users/bitfield/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/bitfield/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "33444c3941ecca0b6749642c8150802a82214f01",
+        "url": "https://api.github.com/repos/bitfield/script/commits/33444c3941ecca0b6749642c8150802a82214f01",
+        "html_url": "https://github.com/bitfield/script/commit/33444c3941ecca0b6749642c8150802a82214f01"
+      }
+    ]
+  },
+  {
+    "sha": "33444c3941ecca0b6749642c8150802a82214f01",
+    "node_id": "C_kwDOCt91vdoAKDMzNDQ0YzM5NDFlY2NhMGI2NzQ5NjQyYzgxNTA4MDJhODIyMTRmMDE",
+    "commit": {
+      "author": {
+        "name": "John Arundel",
+        "email": "john@bitfieldconsulting.com",
+        "date": "2022-03-22T17:53:28Z"
+      },
+      "committer": {
+        "name": "John Arundel",
+        "email": "john@bitfieldconsulting.com",
+        "date": "2022-03-22T17:53:28Z"
+      },
+      "message": "Migrate example programs to executable examples",
+      "tree": {
+        "sha": "97559517268ea225c557767cadcd3e18e333f1ed",
+        "url": "https://api.github.com/repos/bitfield/script/git/trees/97559517268ea225c557767cadcd3e18e333f1ed"
+      },
+      "url": "https://api.github.com/repos/bitfield/script/git/commits/33444c3941ecca0b6749642c8150802a82214f01",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null
+      }
+    },
+    "url": "https://api.github.com/repos/bitfield/script/commits/33444c3941ecca0b6749642c8150802a82214f01",
+    "html_url": "https://github.com/bitfield/script/commit/33444c3941ecca0b6749642c8150802a82214f01",
+    "comments_url": "https://api.github.com/repos/bitfield/script/commits/33444c3941ecca0b6749642c8150802a82214f01/comments",
+    "author": {
+      "login": "bitfield",
+      "id": 142262,
+      "node_id": "MDQ6VXNlcjE0MjI2Mg==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/142262?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/bitfield",
+      "html_url": "https://github.com/bitfield",
+      "followers_url": "https://api.github.com/users/bitfield/followers",
+      "following_url": "https://api.github.com/users/bitfield/following{/other_user}",
+      "gists_url": "https://api.github.com/users/bitfield/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/bitfield/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/bitfield/subscriptions",
+      "organizations_url": "https://api.github.com/users/bitfield/orgs",
+      "repos_url": "https://api.github.com/users/bitfield/repos",
+      "events_url": "https://api.github.com/users/bitfield/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/bitfield/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "bitfield",
+      "id": 142262,
+      "node_id": "MDQ6VXNlcjE0MjI2Mg==",
+      "avatar_url": "https://avatars.githubusercontent.com/u/142262?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/bitfield",
+      "html_url": "https://github.com/bitfield",
+      "followers_url": "https://api.github.com/users/bitfield/followers",
+      "following_url": "https://api.github.com/users/bitfield/following{/other_user}",
+      "gists_url": "https://api.github.com/users/bitfield/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/bitfield/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/bitfield/subscriptions",
+      "organizations_url": "https://api.github.com/users/bitfield/orgs",
+      "repos_url": "https://api.github.com/users/bitfield/repos",
+      "events_url": "https://api.github.com/users/bitfield/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/bitfield/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "49b2e75023d8229bffd733eb0690a14f4a077904",
+        "url": "https://api.github.com/repos/bitfield/script/commits/49b2e75023d8229bffd733eb0690a14f4a077904",
+        "html_url": "https://github.com/bitfield/script/commit/49b2e75023d8229bffd733eb0690a14f4a077904"
+      }
+    ]
+  }
+]
