@@ -917,6 +917,29 @@ func TestSHA256Sums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
 	}
 }
 
+func TestSHA512Sums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		testFileName string
+		want         string
+	}{
+		// To get the checksum run: openssl dgst -sha512 <file_name>
+		{"testdata/sha256Sum.input.txt", "3543bd0d68129e860598ccabcee1beb6bb90d91105cea74a8e555588634ec6f6d6d02033139972da2dc4929b1fb61bd24c91c8e82054e9ae865cf7f70909be8c\n"},
+		{"testdata/sha512Sum.input.txt", "3543bd0d68129e860598ccabcee1beb6bb90d91105cea74a8e555588634ec6f6d6d02033139972da2dc4929b1fb61bd24c91c8e82054e9ae865cf7f70909be8c\n"},
+		{"testdata/hello.txt", "309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f\n"},
+		{"testdata/multiple_files", "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e\ncf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e\ncf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e\n"},
+	}
+	for _, tc := range tcs {
+		got, err := script.ListFiles(tc.testFileName).SHA512Sums().String()
+		if err != nil {
+			t.Error(err)
+		}
+		if got != tc.want {
+			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
+		}
+	}
+}
+
 func TestExecErrorsWhenTheSpecifiedCommandDoesNotExist(t *testing.T) {
 	t.Parallel()
 	p := script.Exec("doesntexist")
@@ -1248,6 +1271,41 @@ func TestSHA256Sum_OutputsCorrectHash(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := script.Echo(tc.input).SHA256Sum()
+			if err != nil {
+				t.Error(err)
+			}
+			if got != tc.want {
+				t.Errorf("want %q, got %q", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestSHA512Sum_OutputsCorrectHash(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		name, input, want string
+	}{
+		{
+			name:  "for no data",
+			input: "",
+			want:  "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",
+		},
+		{
+			name:  "for short string",
+			input: "hello, world",
+			want:  "8710339dcb6814d0d9d2290ef422285c9322b7163951f9a0ca8f883d3305286f44139aa374848e4174f5aada663027e4548637b6d19894aec4fb6c46a139fbf9",
+		},
+		{
+			name:  "for string containing newline",
+			input: "The tao that can be told\nis not the eternal Tao",
+			want:  "112ed5fbb7d91fca168c32c25334c15bbedd46e8ee44bf73cb6011fb37b5157ee8ffaef03ced4b555226fc39c15ed132c22fac1454a25f20b5caf97c4f1ed4cc",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := script.Echo(tc.input).SHA512Sum()
 			if err != nil {
 				t.Error(err)
 			}
@@ -1760,6 +1818,22 @@ func ExamplePipe_SHA256Sums() {
 	script.Echo("testdata/test.txt").SHA256Sums().Stdout()
 	// Output:
 	// a562c9c95e2ff3403e7ffcd8508c6b54d47d5f251387758d3e63dbaaa8296341
+}
+
+func ExamplePipe_SHA512Sum() {
+	sum, err := script.Echo("hello world").SHA512Sum()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(sum)
+	// Output:
+	// 309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f
+}
+
+func ExamplePipe_SHA512Sums() {
+	script.Echo("testdata/test.txt").SHA512Sums().Stdout()
+	// Output:
+	// a81e91cdb58da070f529f2024e3852f919d25eb56daad8a30ede46f719677fcddeb7a01b6823d0d1a3a150eac4b0921ee37374fd8362c4e6516c6e515f235550
 }
 
 func ExamplePipe_Slice() {

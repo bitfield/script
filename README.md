@@ -244,6 +244,7 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 | [`CountLines`](https://pkg.go.dev/github.com/bitfield/script#Pipe.CountLines) | |number of lines, error  |
 | [`Read`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Read) | given `[]byte` | bytes read, error  |
 | [`SHA256Sum`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sum) | | SHA-256 hash, error  |
+| [`SHA512Sum`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA512Sum) | | SHA-512 hash, error  |
 | [`Slice`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Slice) | | data as `[]string`, error  |
 | [`Stdout`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Stdout) | standard output | bytes written, error  |
 | [`String`](https://pkg.go.dev/github.com/bitfield/script#Pipe.String) | | data as `string`, error  |

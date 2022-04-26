@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"container/ring"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -738,6 +739,25 @@ func (p *Pipe) SHA256Sums() *Pipe {
 	})
 }
 
+// SHA512Sums reads a list of file paths from the pipe, one per line, and
+// produces the hex-encoded SHA-512 hash of each file. Any files that cannot be
+// opened or read will be ignored.
+func (p *Pipe) SHA512Sums() *Pipe {
+	return p.FilterScan(func(line string, w io.Writer) {
+		f, err := os.Open(line)
+		if err != nil {
+			return // skip unopenable files
+		}
+		defer f.Close()
+		h := sha512.New()
+		_, err = io.Copy(h, f)
+		if err != nil {
+			return // skip unreadable files
+		}
+		fmt.Fprintln(w, hex.EncodeToString(h.Sum(nil)))
+	})
+}
+
 // AppendFile appends the contents of the pipe to the specified file, and
 // returns the number of bytes successfully written, or an error. If the file
 // does not exist, it is created.
@@ -766,6 +786,17 @@ func (p *Pipe) CountLines() (int, error) {
 // SHA256Sum returns the hex-encoded SHA-256 hash of its input, or an error.
 func (p *Pipe) SHA256Sum() (string, error) {
 	hasher := sha256.New()
+	_, err := io.Copy(hasher, p)
+	if err != nil {
+		p.SetError(err)
+		return "", err
+	}
+	return hex.EncodeToString(hasher.Sum(nil)), p.Error()
+}
+
+// SHA512Sum returns the hex-encoded SHA-512 hash of its input, or an error.
+func (p *Pipe) SHA512Sum() (string, error) {
+	hasher := sha512.New()
 	_, err := io.Copy(hasher, p)
 	if err != nil {
 		p.SetError(err)
