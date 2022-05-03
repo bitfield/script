@@ -1076,6 +1076,8 @@ func TestListFiles_OutputsSingleFileGivenFilePath(t *testing.T) {
 }
 
 func TestListFiles_DoesNotOutputNewLineIfProvidedSliceIsEmpty(t *testing.T) {
+	// TODO: Add unit tests
+
 	t.Parallel()
 }
 
