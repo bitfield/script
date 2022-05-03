@@ -291,6 +291,9 @@ func ListFiles(path string) *Pipe {
 // Slice creates a pipe containing each element of the supplied slice of
 // strings, one per line.
 func Slice(s []string) *Pipe {
+	if len(s) <= 0 {
+		return Echo(strings.Join(s, ""))
+	}
 	return Echo(strings.Join(s, "\n") + "\n")
 }
 
