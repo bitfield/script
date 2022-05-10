@@ -1075,12 +1075,6 @@ func TestListFiles_OutputsSingleFileGivenFilePath(t *testing.T) {
 	}
 }
 
-func TestListFiles_DoesNotOutputNewLineIfProvidedSliceIsEmpty(t *testing.T) {
-	// TODO: Add unit tests
-
-	t.Parallel()
-}
-
 func TestListFiles_OutputsAllFilesMatchingSpecifiedGlobExpression(t *testing.T) {
 	t.Parallel()
 	want := filepath.Clean("testdata/multiple_files/1.txt\ntestdata/multiple_files/2.txt\n")
