@@ -1132,7 +1132,6 @@ func TestSliceProducesNoElementsWhenProvidedWithAnEmptyList(t *testing.T) {
 	// TODO: Properly add tests
 	want := ""
 	got, err := script.ListFiles("../example").String()
-	//got, err := script.Slice([]string{}).String()
 
 	if err != nil {
 		t.Fatal(err)
