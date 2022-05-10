@@ -1123,7 +1123,6 @@ func TestSliceProducesElementsOfSpecifiedSliceOnePerLine(t *testing.T) {
 func TestSliceProducesNoElementsWhenProvidedWithAnEmptyList(t *testing.T) {
 	t.Parallel()
 
-	// TODO: Properly add tests
 	want := ""
 	got, err := script.ListFiles("../example").String()
 
