@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -1124,7 +1125,7 @@ func TestSliceProducesNoElementsWhenProvidedWithAnEmptyList(t *testing.T) {
 	t.Parallel()
 
 	want := ""
-	got, err := script.ListFiles("../example").String()
+	got, err := script.Slice([]string{}).String()
 
 	if err != nil {
 		t.Fatal(err)
