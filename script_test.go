@@ -1507,6 +1507,7 @@ func ExampleExec_exitstatus() {
 
 func ExampleExec_failedexitstatus() {
 	p := script.Exec("false")
+	p.Wait()
 	fmt.Println(p.ExitStatus())
 	// Output:
 	// 1
