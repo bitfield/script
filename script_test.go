@@ -1505,6 +1505,13 @@ func ExampleExec_exitstatus() {
 	// 0
 }
 
+func ExampleExec_failedexitstatus() {
+	p := script.Exec("false")
+	fmt.Println(p.ExitStatus())
+	// Output:
+	// 1
+}
+
 func ExampleFile() {
 	script.File("testdata/hello.txt").Stdout()
 	// Output:
