@@ -199,9 +199,7 @@ func Echo(s string) *Pipe {
 // Note that Exec can also be used as a filter, in which case the given command
 // will read from the pipe as its standard input.
 func Exec(s string) *Pipe {
-	p := NewPipe().Exec(s)
-	p.Wait()
-	return p
+	return NewPipe().Exec(s)
 }
 
 // File creates a pipe that reads from the file at the specified path.
