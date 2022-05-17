@@ -1440,6 +1440,7 @@ func TestExitStatus_CorrectlyParsesExitStatusValueFromErrorMessage(t *testing.T)
 	}{
 		{"", 0},
 		{"bogus", 0},
+		{`exec: "non-existant-command": executable file not found in $PATH`, 127},
 		{"exit status bogus", 0},
 		{"exit status 127", 127},
 		{"exit status 1", 1},
