@@ -103,6 +103,7 @@ func (p *Pipe) Error() error {
 }
 
 var exitStatusPattern = regexp.MustCompile(`exit status (\d+)$`)
+var nonExistentCmdPattern = regexp.MustCompile(`executable file not found in`)
 
 // ExitStatus returns the integer exit status of a previous command, if the
 // pipe's error status is set, and if the error matches the pattern "exit status
@@ -111,6 +112,10 @@ func (p *Pipe) ExitStatus() int {
 	if p.Error() == nil {
 		return 0
 	}
+	if nonExistentCmdPattern.MatchString(p.Error().Error()) {
+		return 127
+	}
+
 	match := exitStatusPattern.FindStringSubmatch(p.Error().Error())
 	if len(match) < 2 {
 		return 0

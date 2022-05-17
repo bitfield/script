@@ -924,6 +924,11 @@ func TestExecErrorsWhenTheSpecifiedCommandDoesNotExist(t *testing.T) {
 	if p.Error() == nil {
 		t.Error("want error running non-existent command")
 	}
+	want := 127
+	got := p.ExitStatus()
+	if want != got {
+		t.Errorf("want exit status %d, got %d", want, got)
+	}
 }
 
 func TestExecRunsGoWithNoArgsAndGetsUsageMessagePlusErrorExitStatus2(t *testing.T) {
