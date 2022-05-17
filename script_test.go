@@ -1510,6 +1510,7 @@ func ExampleEcho() {
 
 func ExampleExec_exitstatus() {
 	p := script.Exec("echo")
+	p.Wait()
 	fmt.Println(p.ExitStatus())
 	// Output:
 	// 0
