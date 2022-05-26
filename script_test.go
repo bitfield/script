@@ -931,12 +931,18 @@ func TestExecRunsGoWithNoArgsAndGetsUsageMessagePlusErrorExitStatus2(t *testing.
 	// We can't make many cross-platform assumptions about what external
 	// commands will be available, but it seems logical that 'go' would be
 	// (though it may not be in the user's path)
-	got, err := script.Exec("go").String()
+	p := script.Exec("go")
+	output, err := p.String()
 	if err == nil {
 		t.Error("want error when command returns a non-zero exit status")
 	}
-	if !strings.Contains(got, "Usage") {
-		t.Fatalf("want output containing the word 'usage', got %q", got)
+	if !strings.Contains(output, "Usage") {
+		t.Fatalf("want output containing the word 'usage', got %q", output)
+	}
+	want := 2
+	got := p.ExitStatus()
+	if want != got {
+		t.Errorf("want exit status %d, got %d", want, got)
 	}
 }
 
@@ -1497,11 +1503,20 @@ func ExampleEcho() {
 	// Hello, world!
 }
 
-func ExampleExec_exitstatus() {
+func ExampleExec_exit_status_zero() {
 	p := script.Exec("echo")
+	p.Wait()
 	fmt.Println(p.ExitStatus())
 	// Output:
 	// 0
+}
+
+func ExampleExec_exit_status_not_zero() {
+	p := script.Exec("false")
+	p.Wait()
+	fmt.Println(p.ExitStatus())
+	// Output:
+	// 1
 }
 
 func ExampleFile() {
