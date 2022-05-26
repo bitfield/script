@@ -111,7 +111,6 @@ func (p *Pipe) ExitStatus() int {
 	if p.Error() == nil {
 		return 0
 	}
-
 	match := exitStatusPattern.FindStringSubmatch(p.Error().Error())
 	if len(match) < 2 {
 		return 0
