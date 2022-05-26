@@ -917,17 +917,12 @@ func TestSHA256Sums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
 	}
 }
 
-func TestExecErrorsWhenTheSpecifiedCommandDoesNotExistPlusExitStatus127(t *testing.T) {
+func TestExecErrorsWhenTheSpecifiedCommandDoesNotExist(t *testing.T) {
 	t.Parallel()
 	p := script.Exec("doesntexist")
 	p.Wait()
 	if p.Error() == nil {
 		t.Error("want error running non-existent command")
-	}
-	want := 127
-	got := p.ExitStatus()
-	if want != got {
-		t.Errorf("want exit status %d, got %d", want, got)
 	}
 }
 
