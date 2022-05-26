@@ -1503,12 +1503,20 @@ func ExampleEcho() {
 	// Hello, world!
 }
 
-func ExampleExec_exitstatus() {
+func ExampleExec_exit_status_zero() {
 	p := script.Exec("echo")
 	p.Wait()
 	fmt.Println(p.ExitStatus())
 	// Output:
 	// 0
+}
+
+func ExampleExec_exit_status_not_zero() {
+	p := script.Exec("false")
+	p.Wait()
+	fmt.Println(p.ExitStatus())
+	// Output:
+	// 1
 }
 
 func ExampleFile() {
