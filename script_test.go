@@ -1017,14 +1017,6 @@ func TestFindFiles_RecursesIntoSubdirectories(t *testing.T) {
 	}
 }
 
-func TestFindFiles_InNonexistentPathReturnsError(t *testing.T) {
-	t.Parallel()
-	p := script.FindFiles("nonexistent_path")
-	if p.Error() == nil {
-		t.Fatal("want error for nonexistent path")
-	}
-}
-
 func TestIfExists_ProducesErrorPlusNoOutputForNonexistentFile(t *testing.T) {
 	t.Parallel()
 	want := ""
