@@ -239,7 +239,7 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 
 | Sink | Destination | Results |
 | ---- | ----------- | ------- |
-| [`AppendFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) | appended to file, creating if it doesn't exists | bytes written, error |
+| [`AppendFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) | appended to file, creating if it doesn't exist | bytes written, error |
 | [`Bytes`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Bytes) | | data as `[]byte`, error
 | [`CountLines`](https://pkg.go.dev/github.com/bitfield/script#Pipe.CountLines) | |number of lines, error  |
 | [`Read`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Read) | given `[]byte` | bytes read, error  |
