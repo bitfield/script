@@ -1017,6 +1017,25 @@ func TestFindFiles_RecursesIntoSubdirectories(t *testing.T) {
 	}
 }
 
+// FindFiles has been updated to ignore all errors
+// see [github issue #99]
+// (https://github.com/bitfield/script/issues/99)
+func TestFindFiles_FailsSilently(t *testing.T) {
+	t.Parallel()
+	want := "\n"
+	p := script.FindFiles("testdata/nonexistent")
+	if p.Error() != nil {
+		t.Fatal(p.Error())
+	}
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestIfExists_ProducesErrorPlusNoOutputForNonexistentFile(t *testing.T) {
 	t.Parallel()
 	want := ""
