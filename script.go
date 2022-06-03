@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -219,20 +220,25 @@ func File(name string) *Pipe {
 //
 // test/1.txt
 // test/2.txt
-func FindFiles(path string) *Pipe {
+func FindFiles(root string) *Pipe {
 	var fileNames []string
-	walkFn := func(path string, info os.FileInfo, err error) error {
+	walkFn := func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() {
-			fileNames = append(fileNames, path)
+		if !d.IsDir() {
+			fileNames = append(fileNames, filepath.Join(root, path))
 		}
 		return nil
 	}
-	if err := filepath.Walk(path, walkFn); err != nil {
-		return NewPipe().WithError(err)
-	}
+
+	// ignoring any errors here to more closely align
+	// behavior with `find`. for example, we wouldn't
+	// expect `find` to return an error without results
+	// if it encountered any permissions errors during
+	// its execution. see [github issue #99]
+	// (https://github.com/bitfield/script/issues/99)
+	_ = fs.WalkDir(os.DirFS(root), ".", walkFn)
 	return Slice(fileNames)
 }
 
