@@ -3,7 +3,7 @@ package script
 import (
 	"bufio"
 	"container/ring"
-	"crypto/sha256"
+	"crypto"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -20,6 +20,8 @@ import (
 
 	"bitbucket.org/creachadair/shell"
 	"github.com/itchyny/gojq"
+
+	_ "crypto/sha256"
 )
 
 // ReadAutoCloser represents a pipe source that will be automatically closed
@@ -716,25 +718,6 @@ func (p *Pipe) ReplaceRegexp(re *regexp.Regexp, replace string) *Pipe {
 	})
 }
 
-// SHA256Sums reads a list of file paths from the pipe, one per line, and
-// produces the hex-encoded SHA-256 hash of each file. Any files that cannot be
-// opened or read will be ignored.
-func (p *Pipe) SHA256Sums() *Pipe {
-	return p.FilterScan(func(line string, w io.Writer) {
-		f, err := os.Open(line)
-		if err != nil {
-			return // skip unopenable files
-		}
-		defer f.Close()
-		h := sha256.New()
-		_, err = io.Copy(h, f)
-		if err != nil {
-			return // skip unreadable files
-		}
-		fmt.Fprintln(w, hex.EncodeToString(h.Sum(nil)))
-	})
-}
-
 // AppendFile appends the contents of the pipe to the specified file, and
 // returns the number of bytes successfully written, or an error. If the file
 // does not exist, it is created.
@@ -760,15 +743,77 @@ func (p *Pipe) CountLines() (int, error) {
 	return lines, p.Error()
 }
 
+// SHA256Sums reads a list of file paths from the pipe, one per line, and
+// produces the hex-encoded SHA-256 hash of each file. Any files that cannot be
+// opened or read will be ignored.
+func (p *Pipe) SHA256Sums() *Pipe {
+	return p.HashSums(crypto.SHA256)
+}
+
 // SHA256Sum returns the hex-encoded SHA-256 hash of its input, or an error.
 func (p *Pipe) SHA256Sum() (string, error) {
-	hasher := sha256.New()
-	_, err := io.Copy(hasher, p)
+	return p.HashSum(crypto.SHA256)
+}
+
+// HashSums reads a list of file paths from the pipe, one per line, and
+// produces the hex-encoded hash of each file. Any files that cannot be
+// opened or read will be ignored. See HashSum for list of hashes
+func (p *Pipe) HashSums(hash crypto.Hash) *Pipe {
+	return p.FilterScan(func(line string, w io.Writer) {
+		f, err := os.Open(line)
+		if err != nil {
+			return // skip unopenable files
+		}
+		defer f.Close()
+
+		hex, err := hasher(hash, f)
+
+		if err != nil {
+			return // skip unreadable files
+		}
+		fmt.Fprintln(w, hex)
+	})
+}
+
+// HashSum returns the hex-encoded hash of its input, or an error.
+//
+// The current list of hash consts is
+// crypto.MD4         // import golang.org/x/crypto/md4
+// crypto.MD5         // import crypto/md5
+// crypto.SHA1        // import crypto/sha1
+// crypto.SHA224      // import crypto/sha256
+// crypto.SHA256      // import crypto/sha256
+// crypto.SHA384      // import crypto/sha512
+// crypto.SHA512      // import crypto/sha512
+// crypto.MD5SHA1     // no implementation; MD5+SHA1 used for TLS RSA
+// crypto.RIPEMD160   // import golang.org/x/crypto/ripemd160
+// crypto.SHA3_224    // import golang.org/x/crypto/sha3
+// crypto.SHA3_256    // import golang.org/x/crypto/sha3
+// crypto.SHA3_384    // import golang.org/x/crypto/sha3
+// crypto.SHA3_512    // import golang.org/x/crypto/sha3
+// crypto.SHA512_224  // import crypto/sha512
+// crypto.SHA512_256  // import crypto/sha512
+// crypto.BLAKE2s_256 // import golang.org/x/crypto/blake2s
+// crypto.BLAKE2b_256 // import golang.org/x/crypto/blake2b
+// crypto.BLAKE2b_384 // import golang.org/x/crypto/blake2b
+// crypto.BLAKE2b_512 // import golang.org/x/crypto/blake2b
+func (p *Pipe) HashSum(hash crypto.Hash) (string, error) {
+	hex, err := hasher(hash, p)
+
 	if err != nil {
 		p.SetError(err)
 		return "", err
 	}
-	return hex.EncodeToString(hasher.Sum(nil)), p.Error()
+
+	return hex, p.Error()
+}
+
+func hasher(hash crypto.Hash, src io.Reader) (string, error) {
+	hasher := hash.New()
+	if _, err := io.Copy(hasher, src); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
 // Slice returns the input as a slice of strings, one element per line, or an
