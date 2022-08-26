@@ -40,7 +40,7 @@ func TestArgsSuppliesCommandLineArgumentsAsInputToPipeOnePerLine(t *testing.T) {
 	cmd.Env = append(os.Environ(), "SCRIPT_TEST=args")
 	got, err := cmd.Output()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	want := "hello\nworld\n"
 	if string(got) != want {
@@ -69,7 +69,7 @@ func TestBasenameRemovesLeadingPathComponentsFromInputLines(t *testing.T) {
 		want := filepath.Clean(tc.want)
 		got, err := script.Echo(tc.path).Basename().String()
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 		if want != got {
 			t.Errorf("%q: want %q, got %q", tc.path, want, got)
@@ -237,7 +237,7 @@ func TestDirname_RemovesFilenameComponentFromInputLines(t *testing.T) {
 		want := filepath.Clean(tc.want)
 		got, err := script.Echo(tc.path).Dirname().String()
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 		if want != got {
 			t.Errorf("%q: want %q, got %q", tc.path, want, got)
@@ -254,7 +254,7 @@ func TestEachLine_FiltersInputThroughSuppliedFunction(t *testing.T) {
 	want := "Hello world\nGoodbye world\n"
 	got, err := q.String()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
@@ -267,7 +267,7 @@ func TestEchoProducesSuppliedString(t *testing.T) {
 	p := script.Echo(want)
 	got, err := p.String()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
@@ -280,7 +280,7 @@ func TestEchoReplacesInputWithSuppliedStringWhenUsedAsFilter(t *testing.T) {
 	p := script.Echo("bogus").Echo(want)
 	got, err := p.String()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
@@ -524,7 +524,7 @@ func TestFreqProducesCorrectFrequencyTableForInput(t *testing.T) {
 	want := "10 apple\n 4 banana\n 4 orange\n 1 kumquat\n"
 	got, err := script.Echo(input).Freq().String()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if want != got {
 		t.Error(cmp.Diff(want, got))
@@ -537,7 +537,7 @@ func TestJoinJoinsInputLinesIntoSpaceSeparatedString(t *testing.T) {
 	want := "hello from the join test\n"
 	got, err := script.Echo(input).Join().String()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
@@ -909,7 +909,7 @@ func TestSHA256Sums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
 	for _, tc := range tcs {
 		got, err := script.ListFiles(tc.testFileName).SHA256Sums().String()
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 		if got != tc.want {
 			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
@@ -931,12 +931,18 @@ func TestExecRunsGoWithNoArgsAndGetsUsageMessagePlusErrorExitStatus2(t *testing.
 	// We can't make many cross-platform assumptions about what external
 	// commands will be available, but it seems logical that 'go' would be
 	// (though it may not be in the user's path)
-	got, err := script.Exec("go").String()
+	p := script.Exec("go")
+	output, err := p.String()
 	if err == nil {
 		t.Error("want error when command returns a non-zero exit status")
 	}
-	if !strings.Contains(got, "Usage") {
-		t.Fatalf("want output containing the word 'usage', got %q", got)
+	if !strings.Contains(output, "Usage") {
+		t.Errorf("want output containing the word 'usage', got %q", output)
+	}
+	want := 2
+	got := p.ExitStatus()
+	if want != got {
+		t.Errorf("want exit status %d, got %d", want, got)
 	}
 }
 
@@ -1024,7 +1030,7 @@ func TestIfExists_ProducesErrorPlusNoOutputForNonexistentFile(t *testing.T) {
 	want := ""
 	got, err := script.IfExists("testdata/doesntexist").Echo("hello").String()
 	if err == nil {
-		t.Error("want error")
+		t.Fatal("want error")
 	}
 	if want != got {
 		t.Error(cmp.Diff(want, got))
@@ -1036,7 +1042,7 @@ func TestIfExists_ProducesOutputAndNoErrorWhenFileExists(t *testing.T) {
 	want := "hello"
 	got, err := script.IfExists("testdata/empty.txt").Echo("hello").String()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if want != got {
 		t.Error(cmp.Diff(want, got))
@@ -1097,7 +1103,7 @@ func TestReadAutoCloser_ReadsAllDataFromSourceAndClosesItAutomatically(t *testin
 	acr := script.NewReadAutoCloser(input)
 	got, err := io.ReadAll(acr)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if !cmp.Equal(want, got) {
 		t.Error(cmp.Diff(want, got))
@@ -1146,7 +1152,7 @@ func TestStdinReadsFromProgramStandardInput(t *testing.T) {
 	cmd.Stdin = script.Echo(want)
 	got, err := cmd.Output()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if string(got) != want {
 		t.Errorf("want %q, got %q", want, string(got))
@@ -1160,7 +1166,7 @@ func TestStdoutSendsPipeContentsToConfiguredStandardOutput(t *testing.T) {
 	p := script.File("testdata/hello.txt").WithStdout(buf)
 	wrote, err := p.Stdout()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if wrote != len(want) {
 		t.Errorf("want %d bytes written, got %d", len(want), wrote)
@@ -1186,7 +1192,7 @@ func TestAppendFile_AppendsAllItsInputToSpecifiedFile(t *testing.T) {
 	extra := " and goodbye"
 	wrote, err := script.Echo(extra).AppendFile(path)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if int(wrote) != len(extra) {
 		t.Errorf("want %d bytes written, got %d", len(extra), int(wrote))
@@ -1194,7 +1200,7 @@ func TestAppendFile_AppendsAllItsInputToSpecifiedFile(t *testing.T) {
 	// check file contains both contents
 	got, err := script.File(path).String()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if got != orig+extra {
 		t.Errorf("want %q, got %q", orig+extra, got)
@@ -1264,7 +1270,7 @@ func TestSHA256Sum_OutputsCorrectHash(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := script.Echo(tc.input).SHA256Sum()
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 			if got != tc.want {
 				t.Errorf("want %q, got %q", tc.want, got)
@@ -1328,7 +1334,7 @@ func TestStringOutputsInputStringUnchanged(t *testing.T) {
 	want := "hello, world"
 	got, err := script.Echo(want).String()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if want != got {
 		t.Error(cmp.Diff(want, got))
@@ -1350,14 +1356,14 @@ func TestWriteFile_WritesInputToFileCreatingItIfNecessary(t *testing.T) {
 	path := t.TempDir() + "/" + t.Name()
 	wrote, err := script.Echo(want).WriteFile(path)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if int(wrote) != len(want) {
 		t.Errorf("want %d bytes written, got %d", len(want), int(wrote))
 	}
 	got, err := script.File(path).String()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
@@ -1376,17 +1382,17 @@ func TestWriteFile_TruncatesExistingFile(t *testing.T) {
 	}
 	wrote, err := script.Echo(want).WriteFile(path)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if int(wrote) != len(want) {
 		t.Errorf("want %d bytes written, got %d", len(want), int(wrote))
 	}
 	got, err := script.File(path).String()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if got == want+"\x00\x00\x00" {
-		t.Fatalf("file not truncated on write")
+		t.Errorf("file not truncated on write")
 	}
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
@@ -1399,7 +1405,7 @@ func TestWithReader_SetsSuppliedReaderOnPipe(t *testing.T) {
 	p := script.NewPipe().WithReader(strings.NewReader(want))
 	got, err := p.String()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
@@ -1512,11 +1518,20 @@ func ExampleEcho() {
 	// Hello, world!
 }
 
-func ExampleExec_exitstatus() {
+func ExampleExec_exit_status_zero() {
 	p := script.Exec("echo")
+	p.Wait()
 	fmt.Println(p.ExitStatus())
 	// Output:
 	// 0
+}
+
+func ExampleExec_exit_status_not_zero() {
+	p := script.Exec("false")
+	p.Wait()
+	fmt.Println(p.ExitStatus())
+	// Output:
+	// 1
 }
 
 func ExampleFile() {

@@ -22,7 +22,7 @@ func TestDirnameReturnsExpectedResultsOnPlatformsWithBackslashPathSeparator(t *t
 	for _, tc := range testCases {
 		got, err := script.Echo(tc.path).Dirname().String()
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 		if tc.want != got {
 			t.Errorf("%q: want %q, got %q", tc.path, tc.want, got)

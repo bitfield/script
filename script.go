@@ -140,9 +140,6 @@ func (p *Pipe) SetError(err error) {
 	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if err != nil {
-		p.Close()
-	}
 	p.err = err
 }
 
