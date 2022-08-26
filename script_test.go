@@ -1126,6 +1126,18 @@ func TestSliceProducesElementsOfSpecifiedSliceOnePerLine(t *testing.T) {
 	}
 }
 
+func TestSliceGivenEmptySliceProducesEmptyPipe(t *testing.T) {
+	t.Parallel()
+	want := ""
+	got, err := script.Slice([]string{}).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestStdinReadsFromProgramStandardInput(t *testing.T) {
 	t.Parallel()
 	// dummy test to prove coverage
