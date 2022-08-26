@@ -1128,7 +1128,7 @@ func TestSliceProducesElementsOfSpecifiedSliceOnePerLine(t *testing.T) {
 
 func TestSliceGivenEmptySliceProducesEmptyPipe(t *testing.T) {
 	t.Parallel()
-	want := "\n"
+	want := ""
 	got, err := script.Slice([]string{}).String()
 	if err != nil {
 		t.Fatal(err)
