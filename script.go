@@ -288,8 +288,8 @@ func ListFiles(path string) *Pipe {
 // Slice creates a pipe containing each element of the supplied slice of
 // strings, one per line.
 func Slice(s []string) *Pipe {
-	if len(s) <= 0 {
-		return Echo(strings.Join(s, ""))
+	if len(s) == 0 {
+		return NewPipe()
 	}
 	return Echo(strings.Join(s, "\n") + "\n")
 }
@@ -548,9 +548,10 @@ func (p *Pipe) First(n int) *Pipe {
 // easier to read:
 //
 // 10 apple
-//  4 banana
-//  2 orange
-//  1 kumquat
+//
+//	4 banana
+//	2 orange
+//	1 kumquat
 func (p *Pipe) Freq() *Pipe {
 	freq := map[string]int{}
 	type frequency struct {
