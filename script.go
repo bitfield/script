@@ -2,12 +2,15 @@ package script
 
 import (
 	"bufio"
+	"bytes"
 	"container/ring"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,6 +20,7 @@ import (
 	"strings"
 	"sync"
 	"text/template"
+	"time"
 
 	"bitbucket.org/creachadair/shell"
 	"github.com/itchyny/gojq"
@@ -83,6 +87,18 @@ func NewPipe() *Pipe {
 		mu:     &sync.Mutex{},
 		err:    nil,
 		stdout: os.Stdout,
+	}
+}
+
+type HttpRequest struct {
+	URL    string
+	Method string
+}
+
+func NewHttpRequest(url string) *HttpRequest {
+	return &HttpRequest{
+		URL:    url,
+		Method: "GET",
 	}
 }
 
@@ -545,9 +561,10 @@ func (p *Pipe) First(n int) *Pipe {
 // easier to read:
 //
 // 10 apple
-//  4 banana
-//  2 orange
-//  1 kumquat
+//
+//	4 banana
+//	2 orange
+//	1 kumquat
 func (p *Pipe) Freq() *Pipe {
 	freq := map[string]int{}
 	type frequency struct {
@@ -837,4 +854,44 @@ func (p *Pipe) writeOrAppendFile(fileName string, mode int) (int64, error) {
 		return 0, err
 	}
 	return wrote, nil
+}
+
+func Http(url string) *HttpRequest {
+	h := NewHttpRequest(url)
+
+	return h
+}
+
+func (h *HttpRequest) Get() (int, []byte, error) {
+	return h.send()
+}
+
+func (h *HttpRequest) send() (int, []byte, error) {
+	var b *bytes.Buffer = &bytes.Buffer{}
+
+	req, err := http.NewRequest(h.Method, h.URL, b)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return resp.StatusCode, nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		return resp.StatusCode, nil, err
+	}
+
+	return resp.StatusCode, body, nil
 }

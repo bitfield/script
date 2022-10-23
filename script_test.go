@@ -1492,6 +1492,24 @@ func TestReadReturnsEOFOnUninitialisedPipe(t *testing.T) {
 	}
 }
 
+func TestHttpGetRequest(t *testing.T) {
+	t.Parallel()
+	expectedStatusCode := 200
+	statusCode, body, err := script.Http("https://postman-echo.com/get?foo1=bar1&foo2=bar2").Get()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if statusCode != expectedStatusCode {
+		t.Errorf("Expected status code %d but got %d", expectedStatusCode, statusCode)
+	}
+
+	if body == nil {
+		t.Error("Expected body to be not nil")
+	}
+}
+
 func ExampleArgs() {
 	script.Args().Stdout()
 	// prints command-line arguments
