@@ -95,6 +95,8 @@ type HttpRequest struct {
 	Method string
 }
 
+// Returns pointer to a new HttpRequest.
+// Defaults to HTTP GET.
 func NewHttpRequest(url string) *HttpRequest {
 	return &HttpRequest{
 		URL:    url,
@@ -856,16 +858,21 @@ func (p *Pipe) writeOrAppendFile(fileName string, mode int) (int64, error) {
 	return wrote, nil
 }
 
+// Instantiates an HttpRequest object, sets the target URL, and defaults
+// the HTTP Method to GET.
 func Http(url string) *HttpRequest {
 	h := NewHttpRequest(url)
 
 	return h
 }
 
+// Sends an HTTP GET request to the target resource (URL).
 func (h *HttpRequest) Get() (int, []byte, error) {
 	return h.send()
 }
 
+// Sends HTTP request using the underlying HTTP client.
+// When an error is returned, []byte (body) will be nil.
 func (h *HttpRequest) send() (int, []byte, error) {
 	var b *bytes.Buffer = &bytes.Buffer{}
 

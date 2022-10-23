@@ -1506,7 +1506,7 @@ func TestHttpGetRequest(t *testing.T) {
 	}
 
 	if body == nil {
-		t.Error("Expected body to be not nil")
+		t.Error("Expected body to not be nil")
 	}
 }
 
