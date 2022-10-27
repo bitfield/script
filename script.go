@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -378,6 +380,40 @@ func (p *Pipe) Dirname() *Pipe {
 	})
 }
 
+// MkTempFile creates a temporary file and writes it under the /tmp directory
+func (p *Pipe) MkTempFile(suffix ...string) string {
+	if suffix == nil {
+		file, err := ioutil.TempFile("/tmp", "tmp.*")
+		if err != nil {
+			log.Fatal(err)
+		}
+		return file.Name()
+	} else {
+		file, err := ioutil.TempFile("/tmp", "tmp.*."+suffix[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+		return file.Name()
+	}
+}
+
+// MkTempDir creates a temporary directory and writes it under the /tmp directory
+func (p *Pipe) MkTempDir(suffix ...string) string {
+	if suffix == nil {
+		dir, err := ioutil.TempDir("/tmp", "tmp.*")
+		if err != nil {
+			log.Fatal(err)
+		}
+		return dir
+	} else {
+		dir, err := ioutil.TempDir("/tmp", "tmp.*."+suffix[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+		return dir
+	}
+}
+
 // EachLine calls the specified function for each line of input, passing it the
 // line as a string, and a *strings.Builder to write its output to.
 //
@@ -545,9 +581,10 @@ func (p *Pipe) First(n int) *Pipe {
 // easier to read:
 //
 // 10 apple
-//  4 banana
-//  2 orange
-//  1 kumquat
+//
+//	4 banana
+//	2 orange
+//	1 kumquat
 func (p *Pipe) Freq() *Pipe {
 	freq := map[string]int{}
 	type frequency struct {

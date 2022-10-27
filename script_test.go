@@ -245,6 +245,50 @@ func TestDirname_RemovesFilenameComponentFromInputLines(t *testing.T) {
 	}
 }
 
+func TestTempFile_wopattern(t *testing.T) {
+	filename := script.Args().MkTempFile()
+	os.Remove(filename)
+	filename, _ = script.Echo(filename).Basename().String()
+	if !strings.HasPrefix(filename, "tmp") {
+		t.Errorf("expected filename to start with 'temp', got %q", filename)
+	}
+}
+
+func TestTempFile_withPattern(t *testing.T) {
+	filename := script.Args().MkTempFile("XYZ")
+	os.Remove(filename)
+	filename, _ = script.Echo(filename).Basename().String()
+	if !strings.HasPrefix(filename, "tmp") {
+		t.Errorf("expected filename to start with 'tmp', got %q", filename)
+	}
+	suffix := "XYZ\n"
+	if !strings.HasSuffix(filename, suffix) {
+		t.Errorf("expected filename to end with %q, got %q", suffix, filename)
+	}
+}
+
+func TestTempDir_wopattern(t *testing.T) {
+	dirname := script.Args().MkTempDir()
+	os.Remove(dirname)
+	dirname, _ = script.Echo(dirname).Basename().String()
+	if !strings.HasPrefix(dirname, "tmp") {
+		t.Errorf("expected dirname to start with 'temp', got %q", dirname)
+	}
+}
+
+func TestTempDir_withPattern(t *testing.T) {
+	dirname := script.Args().MkTempDir("XYZ")
+	os.Remove(dirname)
+	dirname, _ = script.Echo(dirname).Basename().String()
+	if !strings.HasPrefix(dirname, "tmp") {
+		t.Errorf("expected dirname to start with 'tmp', got %q", dirname)
+	}
+	suffix := "XYZ\n"
+	if !strings.HasSuffix(dirname, suffix) {
+		t.Errorf("expected dirname to end with %q, got %q", suffix, dirname)
+	}
+}
+
 func TestEachLine_FiltersInputThroughSuppliedFunction(t *testing.T) {
 	t.Parallel()
 	p := script.Echo("Hello\nGoodbye")
