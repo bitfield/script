@@ -169,4 +169,4 @@ Thanks again for helping out!
 
 ## Code of Conduct
 
-As a contributor you can help keep the script community inclusive and open to everyone. Please read and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
+As a contributor you can help keep the `script` community inclusive and open to everyone. Please read and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
