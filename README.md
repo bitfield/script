@@ -63,7 +63,7 @@ That looks straightforward enough, but suppose you now want to count the lines i
 numLines, err := script.File("test.txt").CountLines()
 ```
 
-For something a bit more challenging, let's try counting the number of lines in the file that match the string "Error":
+For something a bit more challenging, let's try counting the number of lines in the file that match the string `Error`:
 
 ```go
 numErrors, err := script.File("test.txt").Match("Error").CountLines()
@@ -138,7 +138,7 @@ script.Echo("hello world").Filter(func (r io.Reader, w io.Writer) error {
 // filtered 11 bytes
 ```
 
-Notice that the "hello world" appeared before the "filtered n bytes". Filters run concurrently, so the pipeline can start producing output before the input has been fully read.
+Notice that the `hello world` appeared *before* the `filtered n bytes`. Filters run concurrently, so the pipeline can start producing output before the input has been fully read.
 
 If we want to scan input line by line, we could do that with a `Filter` function that creates a `bufio.Scanner` on its input, but we don't need to:
 
@@ -246,7 +246,7 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) | matching text replaced with given string |
 | [`SHA256Sums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sums) | SHA-256 hashes of each listed file |
 
-Note that filters run concurrently, rather than producing nothing until each stage has fully read its input. This is convenient for executing long-running comands, for example. If you do need to wait for the pipeline to complete, call `Wait`.
+Note that filters run concurrently, rather than producing nothing until each stage has fully read its input. This is convenient for executing long-running comands, for example. If you do need to wait for the pipeline to complete, call [`Wait`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Wait).
 
 ## Sinks
 
