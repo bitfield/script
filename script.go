@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -68,8 +69,9 @@ func NewReadAutoCloser(r io.Reader) ReadAutoCloser {
 
 // Pipe represents a pipe object with an associated ReadAutoCloser.
 type Pipe struct {
-	Reader ReadAutoCloser
-	stdout io.Writer
+	Reader     ReadAutoCloser
+	stdout     io.Writer
+	httpClient *http.Client
 
 	// because pipe stages are concurrent, protect 'err'
 	mu  *sync.Mutex
@@ -79,10 +81,11 @@ type Pipe struct {
 // NewPipe returns a pointer to a new empty pipe.
 func NewPipe() *Pipe {
 	return &Pipe{
-		Reader: ReadAutoCloser{},
-		mu:     &sync.Mutex{},
-		err:    nil,
-		stdout: os.Stdout,
+		Reader:     ReadAutoCloser{},
+		mu:         &sync.Mutex{},
+		err:        nil,
+		stdout:     os.Stdout,
+		httpClient: http.DefaultClient,
 	}
 }
 
@@ -143,6 +146,13 @@ func (p *Pipe) SetError(err error) {
 	p.err = err
 }
 
+// WithHTTPClient sets the pipe's HTTP client to the specified client. This will
+// be used for HTTP requests with [*Pipe.Do], [*Pipe.Get], or [*Pipe.Post].
+func (p *Pipe) WithHTTPClient(client *http.Client) *Pipe {
+	p.httpClient = client
+	return p
+}
+
 // WithReader sets the pipe's input to the specified reader. If necessary, the
 // reader will be automatically closed once it has been completely read.
 func (p *Pipe) WithReader(r io.Reader) *Pipe {
@@ -171,6 +181,12 @@ func Args() *Pipe {
 		s.WriteString(a + "\n")
 	}
 	return Echo(s.String())
+}
+
+// Do creates a pipe that produces the response to the supplied HTTP request.
+// See [*Pipe.Do] for how the HTTP response status is interpreted.
+func Do(req *http.Request) *Pipe {
+	return NewPipe().Do(req)
 }
 
 // Echo creates a pipe containing the supplied string.
@@ -236,6 +252,13 @@ func FindFiles(path string) *Pipe {
 	return Slice(fileNames)
 }
 
+// Get creates a pipe that makes an HTTP GET request to the specified URL, and
+// produces the response. See [*Pipe.Do] for how the HTTP response status is
+// interpreted.
+func Get(URL string) *Pipe {
+	return NewPipe().Get(URL)
+}
+
 // IfExists tests whether the specified file exists, and creates a pipe whose
 // error status reflects the result. If the file doesn't exist, the pipe's error
 // status will be set, and if the file does exist, the pipe will have no error
@@ -283,6 +306,13 @@ func ListFiles(path string) *Pipe {
 		fileNames[i] = filepath.Join(path, f.Name())
 	}
 	return Slice(fileNames)
+}
+
+// Post creates a pipe that makes an HTTP POST request to the specified URL,
+// with an empty body, and produces the response. See [*Pipe.Do] for how the
+// HTTP response status is interpreted.
+func Post(URL string) *Pipe {
+	return NewPipe().Post(URL)
 }
 
 // Slice creates a pipe containing each element of the supplied slice of
@@ -375,6 +405,30 @@ func (p *Pipe) Dirname() *Pipe {
 			return "./" + dirname
 		}
 		return dirname
+	})
+}
+
+// Do performs the specified HTTP request using the pipe's configured HTTP
+// client, as set by [*Pipe.WithHTTPClient], or [http.DefaultClient] otherwise.
+// The response body is streamed concurrently to the pipe's output. If the
+// response status is anything other than HTTP 200-299, the pipe's error status
+// is set.
+func (p *Pipe) Do(req *http.Request) *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		resp, err := p.httpClient.Do(req)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		// Any HTTP 2xx status code is considered okay
+		if resp.StatusCode/100 != 2 {
+			return fmt.Errorf("unexpected HTTP response status: %s", resp.Status)
+		}
+		_, err = io.Copy(w, resp.Body)
+		if err != nil {
+			return err
+		}
+		return nil
 	})
 }
 
@@ -545,9 +599,10 @@ func (p *Pipe) First(n int) *Pipe {
 // easier to read:
 //
 // 10 apple
-//  4 banana
-//  2 orange
-//  1 kumquat
+//
+//	4 banana
+//	2 orange
+//	1 kumquat
 func (p *Pipe) Freq() *Pipe {
 	freq := map[string]int{}
 	type frequency struct {
@@ -580,6 +635,17 @@ func (p *Pipe) Freq() *Pipe {
 		}
 		return nil
 	})
+}
+
+// Get makes an HTTP GET request to the specified URL, using the contents of the
+// pipe as the request body, and produces the server's response. See [*Pipe.Do]
+// for how the HTTP response status is interpreted.
+func (p *Pipe) Get(URL string) *Pipe {
+	req, err := http.NewRequest(http.MethodGet, URL, p.Reader)
+	if err != nil {
+		return p.WithError(err)
+	}
+	return p.Do(req)
 }
 
 // Join produces its input as a single space-separated string, which will always
@@ -677,6 +743,17 @@ func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
 			fmt.Fprintln(w, line)
 		}
 	})
+}
+
+// Post makes an HTTP POST request to the specified URL, using the contents of
+// the pipe as the request body, and produces the server's response. See
+// [*Pipe.Do] for how the HTTP response status is interpreted.
+func (p *Pipe) Post(URL string) *Pipe {
+	req, err := http.NewRequest(http.MethodPost, URL, p.Reader)
+	if err != nil {
+		return p.WithError(err)
+	}
+	return p.Do(req)
 }
 
 // Reject produces only lines that do not contain the specified string.

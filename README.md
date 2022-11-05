@@ -25,28 +25,29 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 
 | Unix / shell       | `script` equivalent |
 | ------------------ | ------------------- |
-| (any program name) | [`Exec()`](https://pkg.go.dev/github.com/bitfield/script#Exec) |
-| `[ -f FILE ]`      | [`IfExists()`](https://pkg.go.dev/github.com/bitfield/script#IfExists) |
-| `>`                | [`WriteFile()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) |
-| `>>`               | [`AppendFile()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) |
-| `$*`               | [`Args()`](https://pkg.go.dev/github.com/bitfield/script#Args) |
-| `basename`         | [`Basename()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Basename) |
-| `cat`              | [`File()`](https://pkg.go.dev/github.com/bitfield/script#File) / [`Concat()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) |
-| `cut`              | [`Column()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) |
-| `dirname`          | [`Dirname()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) |
-| `echo`             | [`Echo()`](https://pkg.go.dev/github.com/bitfield/script#Echo) |
-| `grep`             | [`Match()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) / [`MatchRegexp()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) |
-| `grep -v`          | [`Reject()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) / [`RejectRegexp()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) |
-| `head`             | [`First()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) |
+| (any program name) | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) |
+| `[ -f FILE ]`      | [`IfExists`](https://pkg.go.dev/github.com/bitfield/script#IfExists) |
+| `>`                | [`WriteFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) |
+| `>>`               | [`AppendFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) |
+| `$*`               | [`Args`](https://pkg.go.dev/github.com/bitfield/script#Args) |
+| `basename`         | [`Basename`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Basename) |
+| `cat`              | [`File`](https://pkg.go.dev/github.com/bitfield/script#File) / [`Concat`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) |
+| `curl`             | [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do) / [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get) / [`Post`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Post) |
+| `cut`              | [`Column`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) |
+| `dirname`          | [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) |
+| `echo`             | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) |
+| `grep`             | [`Match`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) / [`MatchRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) |
+| `grep -v`          | [`Reject`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) / [`RejectRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) |
+| `head`             | [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) |
 | `find -type f`     | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) |
 | `jq`     | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) |
-| `ls`               | [`ListFiles()`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) |
-| `sed`              | [`Replace()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) / [`ReplaceRegexp()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) |
-| `sha256sum`        | [`SHA256Sum()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sum) / [`SHA256Sums()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sums) |
-| `tail`             | [`Last()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) |
-| `uniq -c`          | [`Freq()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) |
-| `wc -l`            | [`CountLines()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.CountLines) |
-| `xargs`            | [`ExecForEach()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) |
+| `ls`               | [`ListFiles`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) |
+| `sed`              | [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) / [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) |
+| `sha256sum`        | [`SHA256Sum`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sum) / [`SHA256Sums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sums) |
+| `tail`             | [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) |
+| `uniq -c`          | [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) |
+| `wc -l`            | [`CountLines`](https://pkg.go.dev/github.com/bitfield/script#Pipe.CountLines) |
+| `xargs`            | [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) |
 
 # Some examples
 
@@ -98,10 +99,18 @@ What's that? You want to append that output to a file instead of printing it to 
 script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt")
 ```
 
+We're not limited to getting data only from files or standard input. We can get it with HTTP requests too:
+
+```go
+script.Get("https://wttr.in/London?format=3").Stdout()
+// Output:
+// London: 🌦   +13°C
+```
+
 If the data is JSON, we can do better than simple string-matching. We can use [JQ](https://stedolan.github.io/jq/) queries:
 
 ```go
-script.File("commits.json").JQ(".[0] | {message: .commit.message, name: .commit.committer.name}").Stdout()
+script.Do(req).JQ(".[0] | {message: .commit.message, name: .commit.committer.name}").Stdout()
 ```
 
 Suppose we want to execute some external program instead of doing the work ourselves. We can do that too:
@@ -193,12 +202,15 @@ These are functions that create a pipe with a given contents:
 | Source | Contents |
 | -------- | ------------- |
 | [`Args`](https://pkg.go.dev/github.com/bitfield/script#Args) | command-line arguments
+| [`Do`](https://pkg.go.dev/github.com/bitfield/script#Do) | HTTP response
 | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) | a string
 | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) | command output
 | [`File`](https://pkg.go.dev/github.com/bitfield/script#File) | file contents
 | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) | recursive file listing
+| [`Get`](https://pkg.go.dev/github.com/bitfield/script#Get) | HTTP response
 | [`IfExists`](https://pkg.go.dev/github.com/bitfield/script#IfExists) | do something only if some file exists
 | [`ListFiles`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) | file listing (including wildcards)
+| [`Post`](https://pkg.go.dev/github.com/bitfield/script#Post) | HTTP response
 | [`Slice`](https://pkg.go.dev/github.com/bitfield/script#Slice) | slice elements, one per line
 | [`Stdin`](https://pkg.go.dev/github.com/bitfield/script#Stdin) | standard input
 
@@ -212,6 +224,7 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`Column`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) | Nth column of input |
 | [`Concat`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) | contents of multiple files |
 | [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) | removes filename from each line, leaving only leading path components |
+| [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do) | response to supplied HTTP request |
 | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Echo) | all input replaced by given string |
 | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Exec) | filtered through external command |
 | [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) | execute given command template for each line of input |
@@ -220,11 +233,13 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`FilterScan`](https://pkg.go.dev/github.com/bitfield/script#Pipe.FilterScan) | user-supplied function filtering each line to a writer |
 | [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) | first N lines of input |
 | [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) | frequency count of unique input lines, most frequent first |
+| [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get) | response to HTTP GET on supplied URL |
 | [`Join`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Join) | replace all newlines with spaces |
 | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) | result of `jq` query |
 | [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) | last N lines of input|
 | [`Match`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) | lines matching given string |
 | [`MatchRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) | lines matching given regexp |
+| [`Post`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Post) | response to HTTP POST on supplied URL |
 | [`Reject`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) | lines not matching given string |
 | [`RejectRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) | lines not matching given regexp |
 | [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) | matching text replaced with given string |
@@ -254,6 +269,7 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 
 | Version | New |
 | ----------- | ------- |
+| v0.21.0 | HTTP support: [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do), [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get), [`Post`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Post) |
 | v0.20.0 | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) |
 
 # Contributing
