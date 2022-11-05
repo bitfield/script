@@ -23,50 +23,6 @@ import (
 	"github.com/itchyny/gojq"
 )
 
-// ReadAutoCloser represents a pipe source that will be automatically closed
-// once it has been fully read.
-type ReadAutoCloser struct {
-	r io.ReadCloser
-}
-
-// Read reads up to len(buf) bytes from the data source into buf. It returns the
-// number of bytes read and any error encountered. At end of file, Read returns
-// 0, io.EOF. In the EOF case, the data source will be closed.
-func (a ReadAutoCloser) Read(buf []byte) (n int, err error) {
-	if a.r == nil {
-		return 0, io.EOF
-	}
-	n, err = a.r.Read(buf)
-	if err == io.EOF {
-		a.Close()
-	}
-	return n, err
-}
-
-// Close closes the data source associated with a, and returns the result of
-// that close operation.
-func (a ReadAutoCloser) Close() error {
-	if a.r == nil {
-		return nil
-	}
-	return a.r.(io.Closer).Close()
-}
-
-// NewReadAutoCloser returns an ReadAutoCloser wrapping the supplied Reader. If
-// the Reader is not a Closer, it will be wrapped in a NopCloser to make it
-// closable.
-func NewReadAutoCloser(r io.Reader) ReadAutoCloser {
-	if _, ok := r.(io.Closer); !ok {
-		return ReadAutoCloser{io.NopCloser(r)}
-	}
-	rc, ok := r.(io.ReadCloser)
-	if !ok {
-		// This can never happen, but just in case it does...
-		panic("internal error: type assertion to io.ReadCloser failed")
-	}
-	return ReadAutoCloser{rc}
-}
-
 // Pipe represents a pipe object with an associated ReadAutoCloser.
 type Pipe struct {
 	Reader     ReadAutoCloser
@@ -76,101 +32,6 @@ type Pipe struct {
 	// because pipe stages are concurrent, protect 'err'
 	mu  *sync.Mutex
 	err error
-}
-
-// NewPipe returns a pointer to a new empty pipe.
-func NewPipe() *Pipe {
-	return &Pipe{
-		Reader:     ReadAutoCloser{},
-		mu:         &sync.Mutex{},
-		err:        nil,
-		stdout:     os.Stdout,
-		httpClient: http.DefaultClient,
-	}
-}
-
-// Close closes the pipe's associated reader. This is a no-op if the reader is
-// not also a Closer.
-func (p *Pipe) Close() error {
-	return p.Reader.Close()
-}
-
-// Error returns any error present on the pipe, or nil otherwise.
-func (p *Pipe) Error() error {
-	if p.mu == nil { // uninitialised pipe
-		return nil
-	}
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	return p.err
-}
-
-var exitStatusPattern = regexp.MustCompile(`exit status (\d+)$`)
-
-// ExitStatus returns the integer exit status of a previous command, if the
-// pipe's error status is set, and if the error matches the pattern "exit status
-// %d". Otherwise, it returns zero.
-func (p *Pipe) ExitStatus() int {
-	if p.Error() == nil {
-		return 0
-	}
-	match := exitStatusPattern.FindStringSubmatch(p.Error().Error())
-	if len(match) < 2 {
-		return 0
-	}
-	status, err := strconv.Atoi(match[1])
-	if err != nil {
-		// This seems unlikely, but...
-		return 0
-	}
-	return status
-}
-
-// Read reads up to len(b) bytes from the data source into b. It returns the
-// number of bytes read and any error encountered. At end of file, or on a nil
-// pipe, Read returns 0, io.EOF.
-//
-// Unlike most sinks, Read does not necessarily read the whole contents of the
-// pipe. It will read as many bytes as it takes to fill the slice.
-func (p *Pipe) Read(b []byte) (int, error) {
-	return p.Reader.Read(b)
-}
-
-// SetError sets the specified error on the pipe.
-func (p *Pipe) SetError(err error) {
-	if p.mu == nil { // uninitialised pipe
-		return
-	}
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	p.err = err
-}
-
-// WithHTTPClient sets the pipe's HTTP client to the specified client. This will
-// be used for HTTP requests with [*Pipe.Do], [*Pipe.Get], or [*Pipe.Post].
-func (p *Pipe) WithHTTPClient(client *http.Client) *Pipe {
-	p.httpClient = client
-	return p
-}
-
-// WithReader sets the pipe's input to the specified reader. If necessary, the
-// reader will be automatically closed once it has been completely read.
-func (p *Pipe) WithReader(r io.Reader) *Pipe {
-	p.Reader = NewReadAutoCloser(r)
-	return p
-}
-
-// WithStdout sets the pipe's standard output to the specified reader, instead
-// of the default os.Stdout.
-func (p *Pipe) WithStdout(w io.Writer) *Pipe {
-	p.stdout = w
-	return p
-}
-
-// WithError sets the specified error on the pipe and returns the modified pipe.
-func (p *Pipe) WithError(err error) *Pipe {
-	p.SetError(err)
-	return p
 }
 
 // Args creates a pipe containing the program's command-line arguments, one per
@@ -308,6 +169,17 @@ func ListFiles(path string) *Pipe {
 	return Slice(fileNames)
 }
 
+// NewPipe returns a pointer to a new empty pipe.
+func NewPipe() *Pipe {
+	return &Pipe{
+		Reader:     ReadAutoCloser{},
+		mu:         &sync.Mutex{},
+		err:        nil,
+		stdout:     os.Stdout,
+		httpClient: http.DefaultClient,
+	}
+}
+
 // Post creates a pipe that makes an HTTP POST request to the specified URL,
 // with an empty body, and produces the response. See [*Pipe.Do] for how the
 // HTTP response status is interpreted.
@@ -326,6 +198,15 @@ func Stdin() *Pipe {
 	return NewPipe().WithReader(os.Stdin)
 }
 
+// AppendFile appends the contents of the pipe to the specified file, and
+// returns the number of bytes successfully written, or an error. If the file
+// does not exist, it is created.
+func (p *Pipe) AppendFile(fileName string) (int64, error) {
+	return p.writeOrAppendFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY)
+}
+
+var exitStatusPattern = regexp.MustCompile(`exit status (\d+)$`)
+
 // Basename reads a list of filepaths from the pipe, one per line, and removes
 // any leading directory components from each line. So, for example,
 // `/usr/local/bin/foo` would become just `foo`. This is the complementary
@@ -335,6 +216,21 @@ func Stdin() *Pipe {
 // The behaviour of Basename is the same as filepath.Base (not by coincidence).
 func (p *Pipe) Basename() *Pipe {
 	return p.FilterLine(filepath.Base)
+}
+
+// Bytes returns the contents of the pipe as a []]byte, or an error.
+func (p *Pipe) Bytes() ([]byte, error) {
+	res, err := io.ReadAll(p)
+	if err != nil {
+		p.SetError(err)
+	}
+	return res, err
+}
+
+// Close closes the pipe's associated reader. This is a no-op if the reader is
+// not also a Closer.
+func (p *Pipe) Close() error {
+	return p.Reader.Close()
 }
 
 // Column produces only the Nth column of each line of input, where '1' is the
@@ -383,6 +279,15 @@ func (p *Pipe) Concat() *Pipe {
 		readers = append(readers, NewReadAutoCloser(input))
 	}).Wait()
 	return p.WithReader(io.MultiReader(readers...))
+}
+
+// CountLines returns the number of lines of input, or an error.
+func (p *Pipe) CountLines() (int, error) {
+	lines := 0
+	p.FilterScan(func(line string, w io.Writer) {
+		lines++
+	}).Wait()
+	return lines, p.Error()
 }
 
 // Dirname reads a list of pathnames from the pipe, one per line, and produces
@@ -457,6 +362,16 @@ func (p *Pipe) Echo(s string) *Pipe {
 	return p.WithReader(NewReadAutoCloser(strings.NewReader(s)))
 }
 
+// Error returns any error present on the pipe, or nil otherwise.
+func (p *Pipe) Error() error {
+	if p.mu == nil { // uninitialised pipe
+		return nil
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.err
+}
+
 // Exec runs an external command, sending it the contents of the pipe as input,
 // and produces the command's combined output (`stdout` and `stderr`). The
 // effect of this is to filter the contents of the pipe through the external
@@ -522,6 +437,25 @@ func (p *Pipe) ExecForEach(command string) *Pipe {
 		}
 		return scanner.Err()
 	})
+}
+
+// ExitStatus returns the integer exit status of a previous command, if the
+// pipe's error status is set, and if the error matches the pattern "exit status
+// %d". Otherwise, it returns zero.
+func (p *Pipe) ExitStatus() int {
+	if p.Error() == nil {
+		return 0
+	}
+	match := exitStatusPattern.FindStringSubmatch(p.Error().Error())
+	if len(match) < 2 {
+		return 0
+	}
+	status, err := strconv.Atoi(match[1])
+	if err != nil {
+		// This seems unlikely, but...
+		return 0
+	}
+	return status
 }
 
 // Filter filters the contents of the pipe through the supplied function, which
@@ -756,6 +690,16 @@ func (p *Pipe) Post(URL string) *Pipe {
 	return p.Do(req)
 }
 
+// Read reads up to len(b) bytes from the data source into b. It returns the
+// number of bytes read and any error encountered. At end of file, or on a nil
+// pipe, Read returns 0, io.EOF.
+//
+// Unlike most sinks, Read does not necessarily read the whole contents of the
+// pipe. It will read as many bytes as it takes to fill the slice.
+func (p *Pipe) Read(b []byte) (int, error) {
+	return p.Reader.Read(b)
+}
+
 // Reject produces only lines that do not contain the specified string.
 func (p *Pipe) Reject(s string) *Pipe {
 	return p.FilterScan(func(line string, w io.Writer) {
@@ -793,6 +737,27 @@ func (p *Pipe) ReplaceRegexp(re *regexp.Regexp, replace string) *Pipe {
 	})
 }
 
+// SetError sets the specified error on the pipe.
+func (p *Pipe) SetError(err error) {
+	if p.mu == nil { // uninitialised pipe
+		return
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.err = err
+}
+
+// SHA256Sum returns the hex-encoded SHA-256 hash of its input, or an error.
+func (p *Pipe) SHA256Sum() (string, error) {
+	hasher := sha256.New()
+	_, err := io.Copy(hasher, p)
+	if err != nil {
+		p.SetError(err)
+		return "", err
+	}
+	return hex.EncodeToString(hasher.Sum(nil)), p.Error()
+}
+
 // SHA256Sums reads a list of file paths from the pipe, one per line, and
 // produces the hex-encoded SHA-256 hash of each file. Any files that cannot be
 // opened or read will be ignored.
@@ -810,42 +775,6 @@ func (p *Pipe) SHA256Sums() *Pipe {
 		}
 		fmt.Fprintln(w, hex.EncodeToString(h.Sum(nil)))
 	})
-}
-
-// AppendFile appends the contents of the pipe to the specified file, and
-// returns the number of bytes successfully written, or an error. If the file
-// does not exist, it is created.
-func (p *Pipe) AppendFile(fileName string) (int64, error) {
-	return p.writeOrAppendFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY)
-}
-
-// Bytes returns the contents of the pipe as a []]byte, or an error.
-func (p *Pipe) Bytes() ([]byte, error) {
-	res, err := io.ReadAll(p)
-	if err != nil {
-		p.SetError(err)
-	}
-	return res, err
-}
-
-// CountLines returns the number of lines of input, or an error.
-func (p *Pipe) CountLines() (int, error) {
-	lines := 0
-	p.FilterScan(func(line string, w io.Writer) {
-		lines++
-	}).Wait()
-	return lines, p.Error()
-}
-
-// SHA256Sum returns the hex-encoded SHA-256 hash of its input, or an error.
-func (p *Pipe) SHA256Sum() (string, error) {
-	hasher := sha256.New()
-	_, err := io.Copy(hasher, p)
-	if err != nil {
-		p.SetError(err)
-		return "", err
-	}
-	return hex.EncodeToString(hasher.Sum(nil)), p.Error()
 }
 
 // Slice returns the input as a slice of strings, one element per line, or an
@@ -894,6 +823,33 @@ func (p *Pipe) Wait() {
 	}
 }
 
+// WithError sets the specified error on the pipe and returns the modified pipe.
+func (p *Pipe) WithError(err error) *Pipe {
+	p.SetError(err)
+	return p
+}
+
+// WithHTTPClient sets the pipe's HTTP client to the specified client. This will
+// be used for HTTP requests with [*Pipe.Do], [*Pipe.Get], or [*Pipe.Post].
+func (p *Pipe) WithHTTPClient(client *http.Client) *Pipe {
+	p.httpClient = client
+	return p
+}
+
+// WithReader sets the pipe's input to the specified reader. If necessary, the
+// reader will be automatically closed once it has been completely read.
+func (p *Pipe) WithReader(r io.Reader) *Pipe {
+	p.Reader = NewReadAutoCloser(r)
+	return p
+}
+
+// WithStdout sets the pipe's standard output to the specified reader, instead
+// of the default os.Stdout.
+func (p *Pipe) WithStdout(w io.Writer) *Pipe {
+	p.stdout = w
+	return p
+}
+
 // WriteFile writes the input to the specified file, and returns the number of
 // bytes successfully written, or an error. If the file already exists, it is
 // truncated and the new data will replace the old.
@@ -914,4 +870,48 @@ func (p *Pipe) writeOrAppendFile(fileName string, mode int) (int64, error) {
 		return 0, err
 	}
 	return wrote, nil
+}
+
+// ReadAutoCloser represents a pipe source that will be automatically closed
+// once it has been fully read.
+type ReadAutoCloser struct {
+	r io.ReadCloser
+}
+
+// NewReadAutoCloser returns an ReadAutoCloser wrapping the supplied Reader. If
+// the Reader is not a Closer, it will be wrapped in a NopCloser to make it
+// closable.
+func NewReadAutoCloser(r io.Reader) ReadAutoCloser {
+	if _, ok := r.(io.Closer); !ok {
+		return ReadAutoCloser{io.NopCloser(r)}
+	}
+	rc, ok := r.(io.ReadCloser)
+	if !ok {
+		// This can never happen, but just in case it does...
+		panic("internal error: type assertion to io.ReadCloser failed")
+	}
+	return ReadAutoCloser{rc}
+}
+
+// Close closes the data source associated with a, and returns the result of
+// that close operation.
+func (a ReadAutoCloser) Close() error {
+	if a.r == nil {
+		return nil
+	}
+	return a.r.(io.Closer).Close()
+}
+
+// Read reads up to len(buf) bytes from the data source into buf. It returns the
+// number of bytes read and any error encountered. At end of file, Read returns
+// 0, io.EOF. In the EOF case, the data source will be closed.
+func (a ReadAutoCloser) Read(buf []byte) (n int, err error) {
+	if a.r == nil {
+		return 0, io.EOF
+	}
+	n, err = a.r.Read(buf)
+	if err == io.EOF {
+		a.Close()
+	}
+	return n, err
 }
