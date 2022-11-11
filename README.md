@@ -93,13 +93,13 @@ Maybe we're only interested in the first 10 matches. No problem:
 script.Args().Concat().Match("Error").First(10).Stdout()
 ```
 
-What's that? You want to append that output to a file instead of printing it to the terminal? _You've got some attitude, mister_.
+What's that? You want to append that output to a file instead of printing it to the terminal? *You've got some attitude, mister*. But okay:
 
 ```go
 script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt")
 ```
 
-We're not limited to getting data only from files or standard input. We can get it with HTTP requests too:
+We're not limited to getting data only from files or standard input. We can get it from HTTP requests too:
 
 ```go
 script.Get("https://wttr.in/London?format=3").Stdout()
@@ -107,25 +107,77 @@ script.Get("https://wttr.in/London?format=3").Stdout()
 // London: 🌦   +13°C
 ```
 
-If the data is JSON, we can do better than simple string-matching. We can use [JQ](https://stedolan.github.io/jq/) queries:
+That's great for simple GET requests, but suppose we want to *send* some data in the body of a POST request, for example. Here's how that works:
 
 ```go
-script.Do(req).JQ(".[0] | {message: .commit.message, name: .commit.committer.name}").Stdout()
+script.Echo(data).Post(URL).Stdout()
 ```
 
-Suppose we want to execute some external program instead of doing the work ourselves. We can do that too:
+If we need to customise the HTTP behaviour in some way, such as using our own HTTP client, we can do that:
+
+```go
+script.NewPipe().WithHTTPClient(&http.Client{
+	Timeout: 10 * time.Second,
+}).Get("https://example.com").Stdout()
+```
+
+Or maybe we need to set some custom header on the request. No problem. We can just create the request in the usual way, and set it up however we want. Then we pass it to `Do`, which will actually perform the request:
+
+```go
+req, err := http.NewRequest(http.MethodGet, "http://example.com", nil)
+req.Header.Add("Authorization", "Bearer "+token)
+script.Do(req).Stdout()
+```
+
+The HTTP server could return some non-okay response, though; for example, “404 Not Found”. So what happens then?
+
+In general, when any pipe stage (such as `Do`) encounters an error, it produces no output to subsequent stages. And `script` treats HTTP response status codes outside the range 200-299 as errors. So the answer for the previous example is that we just won't *see* any output from this program if the server returns an error response.
+
+Instead, the pipe “remembers” any error that occurs, and we can retrieve it later by calling its `Error` method, or by using a *sink* method such as `String`, which returns an `error` value along with the result.
+
+`Stdout` also returns an error, plus the number of bytes successfully written (which we don't care about for this particular case). So we can check that error, which is always a good idea in Go:
+
+```go
+_, err := script.Do(req).Stdout()
+if err != nil {
+	log.Fatal(err)
+}
+```
+
+If, as is common, the data we get from an HTTP request is in JSON format, we can use [JQ](https://stedolan.github.io/jq/) queries to interrogate it:
+
+```go
+data, err := script.Do(req).JQ(".[0] | {message: .commit.message, name: .commit.committer.name}").String()
+```
+
+We can also run external programs and get their output:
 
 ```go
 script.Exec("ping 127.0.0.1").Stdout()
 ```
 
-But maybe we don't know the arguments yet; we might get them from the user, for example. We'd like to be able to run the external command repeatedly, each time passing it the next line of input. No worries:
+Note that `Exec` runs the command concurrently: it doesn't wait for the command to complete before returning any output. That's good, because this `ping` command will run forever (or until we get bored).
+
+Instead, when we read from the pipe using `Stdout`, we see each line of output as it's produced:
+
+```
+PING 127.0.0.1 (127.0.0.1): 56 data bytes
+64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.056 ms
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.054 ms
+...
+```
+
+In the `ping` example, we knew the exact arguments we wanted to send the command, and we just needed to run it once. But what if we don't know the arguments yet? We might get them from the user, for example.
+
+We might like to be able to run the external command repeatedly, each time passing it the next line of data from the pipe as an argument. No worries:
 
 ```go
 script.Args().ExecForEach("ping -c 1 {{.}}").Stdout()
 ```
 
-If there isn't a built-in operation that does what we want, we can just write our own:
+That `{{.}}` is standard Go template syntax; it'll substitute each line of data from the pipe into the command line before it's executed. You can write as fancy a Go template expression as you want here (but this simple example probably covers most use cases).
+
+If there isn't a built-in operation that does what we want, we can just write our own, using `Filter`:
 
 ```go
 script.Echo("hello world").Filter(func (r io.Reader, w io.Writer) error {
@@ -138,7 +190,11 @@ script.Echo("hello world").Filter(func (r io.Reader, w io.Writer) error {
 // filtered 11 bytes
 ```
 
-Notice that the `hello world` appeared *before* the `filtered n bytes`. Filters run concurrently, so the pipeline can start producing output before the input has been fully read.
+The `func` we supply to `Filter` takes just two parameters: a reader to read from, and a writer to write to. The reader reads the previous stages of the pipe, as you might expect, and anything written to the writer goes to the *next* stage of the pipe.
+
+If our `func` returns some error, then, just as with the `Do` example, the pipe's error status is set, and subsequent stages become a no-op.
+
+Filters run concurrently, so the pipeline can start producing output before the input has been fully read, as it did in the `ping` example. In fact, most built-in pipe methods, including `Exec`, are implemented *using* `Filter`.
 
 If we want to scan input line by line, we could do that with a `Filter` function that creates a `bufio.Scanner` on its input, but we don't need to:
 
