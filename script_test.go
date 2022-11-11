@@ -6,11 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -245,6 +247,26 @@ func TestDirname_RemovesFilenameComponentFromInputLines(t *testing.T) {
 	}
 }
 
+func TestDoPerformsSuppliedHTTPRequest(t *testing.T) {
+	t.Parallel()
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "some data")
+	}))
+	defer ts.Close()
+	req, err := http.NewRequest(http.MethodGet, ts.URL, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "some data\n"
+	got, err := script.Do(req).String()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestEachLine_FiltersInputThroughSuppliedFunction(t *testing.T) {
 	t.Parallel()
 	p := script.Echo("Hello\nGoodbye")
@@ -370,7 +392,6 @@ func TestFilterReadsNoMoreThanRequested(t *testing.T) {
 		fmt.Fprintln(w, text)
 		return nil
 	})
-	runtime.Gosched() // give filter goroutine a chance to run
 	want := "firstline\n"
 	got, err := p.String()
 	if err != nil {
@@ -528,6 +549,73 @@ func TestFreqProducesCorrectFrequencyTableForInput(t *testing.T) {
 	}
 	if want != got {
 		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestGetMakesHTTPGetRequestToGivenURL(t *testing.T) {
+	t.Parallel()
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Errorf("want HTTP method GET, got %q", r.Method)
+		}
+		fmt.Fprintln(w, "some data")
+	}))
+	defer ts.Close()
+	want := "some data\n"
+	got, err := script.Get(ts.URL).String()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestGetSetsErrorStatusWhenHTTPResponseStatusIsNotOK(t *testing.T) {
+	t.Parallel()
+	// With no handler, all requests will get 404
+	ts := httptest.NewServer(nil)
+	defer ts.Close()
+	p := script.Get(ts.URL)
+	p.Wait()
+	if p.Error() == nil {
+		t.Fatalf("want error for non-OK request, got nil")
+	}
+}
+
+func TestGetConsidersHTTPStatus201CreatedToBeOK(t *testing.T) {
+	t.Parallel()
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprintln(w, "some data")
+	}))
+	defer ts.Close()
+	want := "some data\n"
+	got, err := script.Get(ts.URL).String()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestGetUsesPipeContentsAsRequestBody(t *testing.T) {
+	t.Parallel()
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		want := []byte("request data")
+		got, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Fatal("reading request body", err)
+		}
+		if !cmp.Equal(want, got) {
+			t.Error(cmp.Diff(want, string(got)))
+		}
+	}))
+	defer ts.Close()
+	_, err := script.Echo("request data").Get(ts.URL).String()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
@@ -858,6 +946,33 @@ func TestRejectDropsMatchingLinesFromInput(t *testing.T) {
 		if tc.want != got {
 			t.Error(cmp.Diff(tc.want, got))
 		}
+	}
+}
+
+func TestPostPostsToGivenURLUsingPipeAsRequestBody(t *testing.T) {
+	t.Parallel()
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Errorf("want HTTP method POST, got %q", r.Method)
+		}
+		want := []byte("request data")
+		got, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Fatal("reading request body", err)
+		}
+		if !cmp.Equal(want, got) {
+			t.Error(cmp.Diff(want, string(got)))
+		}
+		fmt.Fprintln(w, "response data")
+	}))
+	defer ts.Close()
+	want := "response data\n"
+	got, err := script.Echo("request data").Post(ts.URL).String()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
 	}
 }
 
@@ -1384,6 +1499,28 @@ func TestWriteFile_TruncatesExistingFile(t *testing.T) {
 	}
 }
 
+func TestWithHTTPClient_SetsSuppliedClientOnPipe(t *testing.T) {
+	t.Parallel()
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "some data")
+	}))
+	defer ts.Close()
+	req, err := http.NewRequest(http.MethodGet, ts.URL, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "some data\n"
+	// Unless the pipe uses the supplied ts.Client, we'll get a
+	// 'certificate is not trusted' error on making the request
+	got, err := script.NewPipe().WithHTTPClient(ts.Client()).Do(req).String()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestWithReader_SetsSuppliedReaderOnPipe(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world."
@@ -1497,6 +1634,20 @@ func ExampleArgs() {
 	// prints command-line arguments
 }
 
+func ExampleDo() {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "some data")
+	}))
+	defer ts.Close()
+	req, err := http.NewRequest(http.MethodGet, ts.URL, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	script.Do(req).Stdout()
+	// Output:
+	// some data
+}
+
 func ExampleEcho() {
 	script.Echo("Hello, world!").Stdout()
 	// Output:
@@ -1523,6 +1674,16 @@ func ExampleFile() {
 	script.File("testdata/hello.txt").Stdout()
 	// Output:
 	// hello world
+}
+
+func ExampleGet() {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "some data")
+	}))
+	defer ts.Close()
+	script.Get(ts.URL).Stdout()
+	// Output:
+	// some data
 }
 
 func ExampleIfExists_true() {
@@ -1584,6 +1745,24 @@ func ExamplePipe_CountLines() {
 	fmt.Println(n)
 	// Output:
 	// 3
+}
+
+func ExamplePipe_Do() {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		data, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Fprintf(w, "You said: %s", data)
+	}))
+	defer ts.Close()
+	req, err := http.NewRequest(http.MethodGet, ts.URL, strings.NewReader("hello"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	script.NewPipe().Do(req).Stdout()
+	// Output:
+	// You said: hello
 }
 
 func ExamplePipe_EachLine() {
@@ -1685,6 +1864,20 @@ func ExamplePipe_Freq() {
 	//  1 kumquat
 }
 
+func ExamplePipe_Get() {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		data, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Fprintf(w, "You said: %s", data)
+	}))
+	defer ts.Close()
+	script.Echo("hello").Get(ts.URL).Stdout()
+	// Output:
+	// You said: hello
+}
+
 func ExamplePipe_Join() {
 	script.Echo("hello\nworld\n").Join().Stdout()
 	// Output:
@@ -1718,6 +1911,20 @@ func ExamplePipe_MatchRegexp() {
 	script.Echo("hello\nworld\n").MatchRegexp(re).Stdout()
 	// Output:
 	// world
+}
+
+func ExamplePipe_Post() {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		data, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Fprintf(w, "You said: %s", data)
+	}))
+	defer ts.Close()
+	script.Echo("hello").Post(ts.URL).Stdout()
+	// Output:
+	// You said: hello
 }
 
 func ExamplePipe_Read() {
