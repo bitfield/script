@@ -83,14 +83,14 @@ func File(path string) *Pipe {
 // Each line of the output consists of a slash-separated path, starting with
 // the initial directory. For example, if the directory looks like this:
 //
-//      test/
-//              1.txt
-//              2.txt
+//	test/
+//	        1.txt
+//	        2.txt
 //
 // the pipe's output will be:
 //
-//      test/1.txt
-//      test/2.txt
+//	test/1.txt
+//	test/2.txt
 func FindFiles(path string) *Pipe {
 	var fileNames []string
 	walkFn := func(path string, info os.FileInfo, err error) error {
@@ -119,7 +119,7 @@ func Get(URL string) *Pipe {
 // be set, and if the file does exist, the pipe will have no error status. This
 // can be used to do some operation only if a given file exists:
 //
-//      IfExists("/foo/bar").Exec("/usr/bin/something")
+//	IfExists("/foo/bar").Exec("/usr/bin/something")
 func IfExists(path string) *Pipe {
 	p := NewPipe()
 	_, err := os.Stat(path)
@@ -133,7 +133,7 @@ func IfExists(path string) *Pipe {
 // path, one per line. path can be a glob expression, as for [filepath.Match].
 // For example:
 //
-//      ListFiles("/data/*").Stdout()
+//	ListFiles("/data/*").Stdout()
 //
 // ListFiles does not recurse into subdirectories; use [FindFiles] instead.
 func ListFiles(path string) *Pipe {
@@ -212,7 +212,7 @@ func (p *Pipe) Basename() *Pipe {
 	return p.FilterLine(filepath.Base)
 }
 
-// Bytes returns the contents of the pipe as a []]byte, or an error.
+// Bytes returns the contents of the pipe as a []byte, or an error.
 func (p *Pipe) Bytes() ([]byte, error) {
 	res, err := io.ReadAll(p)
 	if err != nil {
@@ -247,15 +247,15 @@ func (p *Pipe) Column(col int) *Pipe {
 // This makes it convenient to write programs that take a list of paths on the
 // command line. For example:
 //
-//      script.Args().Concat().Stdout()
+//	script.Args().Concat().Stdout()
 //
 // The list of paths could also come from a file:
 //
-//      script.File("filelist.txt").Concat()
+//	script.File("filelist.txt").Concat()
 //
 // Or from the output of a command:
 //
-//      script.Exec("ls /var/app/config/").Concat().Stdout()
+//	script.Exec("ls /var/app/config/").Concat().Stdout()
 //
 // Each input file will be closed once it has been fully read. If any of the
 // files can't be opened or read, Concat will simply skip these and carry on,
@@ -403,7 +403,7 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 // This is mostly useful for substituting data into commands using Go template
 // syntax. For example:
 //
-//      ListFiles("*").ExecForEach("touch {{.}}").Wait()
+//	ListFiles("*").ExecForEach("touch {{.}}").Wait()
 func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 	if p.Error() != nil {
 		return p
@@ -420,7 +420,7 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 			if err != nil {
 				return err
 			}
-			 // strings.Fields doesn't handle quotes
+			// strings.Fields doesn't handle quotes
 			args, ok := shell.Split(cmdLine.String())
 			if !ok {
 				return fmt.Errorf("unbalanced quotes or backslashes in [%s]", cmdLine.String())
@@ -523,15 +523,15 @@ func (p *Pipe) First(n int) *Pipe {
 //
 // For example, we could take a common shell pipeline like this:
 //
-//      sort input.txt |uniq -c |sort -rn
+//	sort input.txt |uniq -c |sort -rn
 //
 // and replace it with:
 //
-//      File("input.txt").Freq().Stdout()
+//	File("input.txt").Freq().Stdout()
 //
 // Or to get only the ten most common lines:
 //
-//      File("input.txt").Freq().First(10).Stdout()
+//	File("input.txt").Freq().First(10).Stdout()
 //
 // Like Unix uniq(1), Freq right-justifies its count values in a column for
 // readability, padding with spaces if necessary.
@@ -828,9 +828,9 @@ func (p *Pipe) WithError(err error) *Pipe {
 // [Pipe.Do], [Pipe.Get], or [Pipe.Post]. For example, to make a request using
 // a client with a timeout:
 //
-//      NewPipe().WithHTTPClient(&http.Client{
-//              Timeout: 10 * time.Second,
-//      }).Get("https://example.com").Stdout()
+//	NewPipe().WithHTTPClient(&http.Client{
+//	        Timeout: 10 * time.Second,
+//	}).Get("https://example.com").Stdout()
 func (p *Pipe) WithHTTPClient(c *http.Client) *Pipe {
 	p.httpClient = c
 	return p

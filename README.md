@@ -36,10 +36,10 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `cut`              | [`Column`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) |
 | `dirname`          | [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) |
 | `echo`             | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) |
+| `find`             | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) |
 | `grep`             | [`Match`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) / [`MatchRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) |
 | `grep -v`          | [`Reject`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) / [`RejectRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) |
 | `head`             | [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) |
-| `find -type f`     | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) |
 | `jq`     | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) |
 | `ls`               | [`ListFiles`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) |
 | `sed`              | [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) / [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) |
