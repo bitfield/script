@@ -25,28 +25,29 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 
 | Unix / shell       | `script` equivalent |
 | ------------------ | ------------------- |
-| (any program name) | [`Exec()`](https://pkg.go.dev/github.com/bitfield/script#Exec) |
-| `[ -f FILE ]`      | [`IfExists()`](https://pkg.go.dev/github.com/bitfield/script#IfExists) |
-| `>`                | [`WriteFile()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) |
-| `>>`               | [`AppendFile()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) |
-| `$*`               | [`Args()`](https://pkg.go.dev/github.com/bitfield/script#Args) |
-| `basename`         | [`Basename()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Basename) |
-| `cat`              | [`File()`](https://pkg.go.dev/github.com/bitfield/script#File) / [`Concat()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) |
-| `cut`              | [`Column()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) |
-| `dirname`          | [`Dirname()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) |
-| `echo`             | [`Echo()`](https://pkg.go.dev/github.com/bitfield/script#Echo) |
-| `grep`             | [`Match()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) / [`MatchRegexp()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) |
-| `grep -v`          | [`Reject()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) / [`RejectRegexp()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) |
-| `head`             | [`First()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) |
-| `find -type f`     | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) |
+| (any program name) | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) |
+| `[ -f FILE ]`      | [`IfExists`](https://pkg.go.dev/github.com/bitfield/script#IfExists) |
+| `>`                | [`WriteFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) |
+| `>>`               | [`AppendFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) |
+| `$*`               | [`Args`](https://pkg.go.dev/github.com/bitfield/script#Args) |
+| `basename`         | [`Basename`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Basename) |
+| `cat`              | [`File`](https://pkg.go.dev/github.com/bitfield/script#File) / [`Concat`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) |
+| `curl`             | [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do) / [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get) / [`Post`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Post) |
+| `cut`              | [`Column`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) |
+| `dirname`          | [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) |
+| `echo`             | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) |
+| `find`             | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) |
+| `grep`             | [`Match`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) / [`MatchRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) |
+| `grep -v`          | [`Reject`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) / [`RejectRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) |
+| `head`             | [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) |
 | `jq`     | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) |
-| `ls`               | [`ListFiles()`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) |
-| `sed`              | [`Replace()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) / [`ReplaceRegexp()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) |
-| `sha256sum`        | [`SHA256Sum()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sum) / [`SHA256Sums()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sums) |
-| `tail`             | [`Last()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) |
-| `uniq -c`          | [`Freq()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) |
-| `wc -l`            | [`CountLines()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.CountLines) |
-| `xargs`            | [`ExecForEach()`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) |
+| `ls`               | [`ListFiles`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) |
+| `sed`              | [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) / [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) |
+| `sha256sum`        | [`SHA256Sum`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sum) / [`SHA256Sums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sums) |
+| `tail`             | [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) |
+| `uniq -c`          | [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) |
+| `wc -l`            | [`CountLines`](https://pkg.go.dev/github.com/bitfield/script#Pipe.CountLines) |
+| `xargs`            | [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) |
 
 # Some examples
 
@@ -62,7 +63,7 @@ That looks straightforward enough, but suppose you now want to count the lines i
 numLines, err := script.File("test.txt").CountLines()
 ```
 
-For something a bit more challenging, let's try counting the number of lines in the file that match the string "Error":
+For something a bit more challenging, let's try counting the number of lines in the file that match the string `Error`:
 
 ```go
 numErrors, err := script.File("test.txt").Match("Error").CountLines()
@@ -92,31 +93,91 @@ Maybe we're only interested in the first 10 matches. No problem:
 script.Args().Concat().Match("Error").First(10).Stdout()
 ```
 
-What's that? You want to append that output to a file instead of printing it to the terminal? _You've got some attitude, mister_.
+What's that? You want to append that output to a file instead of printing it to the terminal? *You've got some attitude, mister*. But okay:
 
 ```go
 script.Args().Concat().Match("Error").First(10).AppendFile("/var/log/errors.txt")
 ```
 
-If the data is JSON, we can do better than simple string-matching. We can use [JQ](https://stedolan.github.io/jq/) queries:
+We're not limited to getting data only from files or standard input. We can get it from HTTP requests too:
 
 ```go
-script.File("commits.json").JQ(".[0] | {message: .commit.message, name: .commit.committer.name}").Stdout()
+script.Get("https://wttr.in/London?format=3").Stdout()
+// Output:
+// London: 🌦   +13°C
 ```
 
-Suppose we want to execute some external program instead of doing the work ourselves. We can do that too:
+That's great for simple GET requests, but suppose we want to *send* some data in the body of a POST request, for example. Here's how that works:
+
+```go
+script.Echo(data).Post(URL).Stdout()
+```
+
+If we need to customise the HTTP behaviour in some way, such as using our own HTTP client, we can do that:
+
+```go
+script.NewPipe().WithHTTPClient(&http.Client{
+	Timeout: 10 * time.Second,
+}).Get("https://example.com").Stdout()
+```
+
+Or maybe we need to set some custom header on the request. No problem. We can just create the request in the usual way, and set it up however we want. Then we pass it to `Do`, which will actually perform the request:
+
+```go
+req, err := http.NewRequest(http.MethodGet, "http://example.com", nil)
+req.Header.Add("Authorization", "Bearer "+token)
+script.Do(req).Stdout()
+```
+
+The HTTP server could return some non-okay response, though; for example, “404 Not Found”. So what happens then?
+
+In general, when any pipe stage (such as `Do`) encounters an error, it produces no output to subsequent stages. And `script` treats HTTP response status codes outside the range 200-299 as errors. So the answer for the previous example is that we just won't *see* any output from this program if the server returns an error response.
+
+Instead, the pipe “remembers” any error that occurs, and we can retrieve it later by calling its `Error` method, or by using a *sink* method such as `String`, which returns an `error` value along with the result.
+
+`Stdout` also returns an error, plus the number of bytes successfully written (which we don't care about for this particular case). So we can check that error, which is always a good idea in Go:
+
+```go
+_, err := script.Do(req).Stdout()
+if err != nil {
+	log.Fatal(err)
+}
+```
+
+If, as is common, the data we get from an HTTP request is in JSON format, we can use [JQ](https://stedolan.github.io/jq/) queries to interrogate it:
+
+```go
+data, err := script.Do(req).JQ(".[0] | {message: .commit.message, name: .commit.committer.name}").String()
+```
+
+We can also run external programs and get their output:
 
 ```go
 script.Exec("ping 127.0.0.1").Stdout()
 ```
 
-But maybe we don't know the arguments yet; we might get them from the user, for example. We'd like to be able to run the external command repeatedly, each time passing it the next line of input. No worries:
+Note that `Exec` runs the command concurrently: it doesn't wait for the command to complete before returning any output. That's good, because this `ping` command will run forever (or until we get bored).
+
+Instead, when we read from the pipe using `Stdout`, we see each line of output as it's produced:
+
+```
+PING 127.0.0.1 (127.0.0.1): 56 data bytes
+64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.056 ms
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.054 ms
+...
+```
+
+In the `ping` example, we knew the exact arguments we wanted to send the command, and we just needed to run it once. But what if we don't know the arguments yet? We might get them from the user, for example.
+
+We might like to be able to run the external command repeatedly, each time passing it the next line of data from the pipe as an argument. No worries:
 
 ```go
 script.Args().ExecForEach("ping -c 1 {{.}}").Stdout()
 ```
 
-If there isn't a built-in operation that does what we want, we can just write our own:
+That `{{.}}` is standard Go template syntax; it'll substitute each line of data from the pipe into the command line before it's executed. You can write as fancy a Go template expression as you want here (but this simple example probably covers most use cases).
+
+If there isn't a built-in operation that does what we want, we can just write our own, using `Filter`:
 
 ```go
 script.Echo("hello world").Filter(func (r io.Reader, w io.Writer) error {
@@ -129,7 +190,11 @@ script.Echo("hello world").Filter(func (r io.Reader, w io.Writer) error {
 // filtered 11 bytes
 ```
 
-Notice that the "hello world" appeared before the "filtered n bytes". Filters run concurrently, so the pipeline can start producing output before the input has been fully read.
+The `func` we supply to `Filter` takes just two parameters: a reader to read from, and a writer to write to. The reader reads the previous stages of the pipe, as you might expect, and anything written to the writer goes to the *next* stage of the pipe.
+
+If our `func` returns some error, then, just as with the `Do` example, the pipe's error status is set, and subsequent stages become a no-op.
+
+Filters run concurrently, so the pipeline can start producing output before the input has been fully read, as it did in the `ping` example. In fact, most built-in pipe methods, including `Exec`, are implemented *using* `Filter`.
 
 If we want to scan input line by line, we could do that with a `Filter` function that creates a `bufio.Scanner` on its input, but we don't need to:
 
@@ -193,12 +258,15 @@ These are functions that create a pipe with a given contents:
 | Source | Contents |
 | -------- | ------------- |
 | [`Args`](https://pkg.go.dev/github.com/bitfield/script#Args) | command-line arguments
+| [`Do`](https://pkg.go.dev/github.com/bitfield/script#Do) | HTTP response
 | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) | a string
 | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) | command output
 | [`File`](https://pkg.go.dev/github.com/bitfield/script#File) | file contents
 | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) | recursive file listing
+| [`Get`](https://pkg.go.dev/github.com/bitfield/script#Get) | HTTP response
 | [`IfExists`](https://pkg.go.dev/github.com/bitfield/script#IfExists) | do something only if some file exists
 | [`ListFiles`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) | file listing (including wildcards)
+| [`Post`](https://pkg.go.dev/github.com/bitfield/script#Post) | HTTP response
 | [`Slice`](https://pkg.go.dev/github.com/bitfield/script#Slice) | slice elements, one per line
 | [`Stdin`](https://pkg.go.dev/github.com/bitfield/script#Stdin) | standard input
 
@@ -212,6 +280,7 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`Column`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) | Nth column of input |
 | [`Concat`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) | contents of multiple files |
 | [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) | removes filename from each line, leaving only leading path components |
+| [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do) | response to supplied HTTP request |
 | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Echo) | all input replaced by given string |
 | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Exec) | filtered through external command |
 | [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) | execute given command template for each line of input |
@@ -220,18 +289,20 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`FilterScan`](https://pkg.go.dev/github.com/bitfield/script#Pipe.FilterScan) | user-supplied function filtering each line to a writer |
 | [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) | first N lines of input |
 | [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) | frequency count of unique input lines, most frequent first |
+| [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get) | response to HTTP GET on supplied URL |
 | [`Join`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Join) | replace all newlines with spaces |
 | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) | result of `jq` query |
 | [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) | last N lines of input|
 | [`Match`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) | lines matching given string |
 | [`MatchRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) | lines matching given regexp |
+| [`Post`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Post) | response to HTTP POST on supplied URL |
 | [`Reject`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) | lines not matching given string |
 | [`RejectRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) | lines not matching given regexp |
 | [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) | matching text replaced with given string |
 | [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) | matching text replaced with given string |
 | [`SHA256Sums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sums) | SHA-256 hashes of each listed file |
 
-Note that filters run concurrently, rather than producing nothing until each stage has fully read its input. This is convenient for executing long-running comands, for example. If you do need to wait for the pipeline to complete, call `Wait`.
+Note that filters run concurrently, rather than producing nothing until each stage has fully read its input. This is convenient for executing long-running comands, for example. If you do need to wait for the pipeline to complete, call [`Wait`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Wait).
 
 ## Sinks
 
@@ -254,6 +325,7 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 
 | Version | New |
 | ----------- | ------- |
+| v0.21.0 | HTTP support: [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do), [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get), [`Post`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Post) |
 | v0.20.0 | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) |
 
 # Contributing
