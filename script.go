@@ -433,7 +433,11 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 				fmt.Fprintln(w, err)
 				continue
 			}
-			cmd.Wait()
+			err = cmd.Wait()
+			if err != nil {
+				fmt.Fprintln(w, err)
+				continue
+			}
 		}
 		return scanner.Err()
 	})
