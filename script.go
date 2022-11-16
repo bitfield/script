@@ -214,11 +214,14 @@ func (p *Pipe) Basename() *Pipe {
 
 // Bytes returns the contents of the pipe as a []byte, or an error.
 func (p *Pipe) Bytes() ([]byte, error) {
-	res, err := io.ReadAll(p)
+	if p.Error() != nil {
+		return nil, p.Error()
+	}
+	data, err := io.ReadAll(p)
 	if err != nil {
 		p.SetError(err)
 	}
-	return res, err
+	return data, nil
 }
 
 // Close closes the pipe's associated reader. This is a no-op if the reader is
@@ -405,9 +408,6 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 //
 //	ListFiles("*").ExecForEach("touch {{.}}").Wait()
 func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
-	if p.Error() != nil {
-		return p
-	}
 	tpl, err := template.New("").Parse(cmdLine)
 	if err != nil {
 		return p.WithError(err)
@@ -467,6 +467,9 @@ func (p *Pipe) ExitStatus() int {
 // been fully read. Use [Pipe.Wait] to wait for all concurrent filters to
 // complete.
 func (p *Pipe) Filter(filter func(io.Reader, io.Writer) error) *Pipe {
+	if p.Error() != nil {
+		return p
+	}
 	pr, pw := io.Pipe()
 	q := NewPipe().WithReader(pr)
 	go func() {
@@ -504,6 +507,9 @@ func (p *Pipe) FilterScan(filter func(string, io.Writer)) *Pipe {
 // lines if there are less than n. If n is zero or negative, there is no output
 // at all.
 func (p *Pipe) First(n int) *Pipe {
+	if p.Error() != nil {
+		return p
+	}
 	if n <= 0 {
 		return NewPipe()
 	}
@@ -639,6 +645,9 @@ func (p *Pipe) JQ(query string) *Pipe {
 // if there are less than n. If n is zero or negative, there is no output at
 // all.
 func (p *Pipe) Last(n int) *Pipe {
+	if p.Error() != nil {
+		return p
+	}
 	if n <= 0 {
 		return NewPipe()
 	}
@@ -691,6 +700,9 @@ func (p *Pipe) Post(URL string) *Pipe {
 // bytes read and any error encountered. At end of file, or on a nil pipe, Read
 // returns 0, [io.EOF].
 func (p *Pipe) Read(b []byte) (int, error) {
+	if p.Error() != nil {
+		return 0, p.Error()
+	}
 	return p.Reader.Read(b)
 }
 
@@ -742,6 +754,9 @@ func (p *Pipe) SetError(err error) {
 // SHA256Sum returns the hex-encoded SHA-256 hash of the entire contents of the
 // pipe, or an error.
 func (p *Pipe) SHA256Sum() (string, error) {
+	if p.Error() != nil {
+		return "", p.Error()
+	}
 	hasher := sha256.New()
 	_, err := io.Copy(hasher, p)
 	if err != nil {
@@ -788,6 +803,9 @@ func (p *Pipe) Slice() ([]string, error) {
 // [Pipe.WithStdout]), or to [os.Stdout] otherwise, and returns the number of
 // bytes successfully written, together with any error.
 func (p *Pipe) Stdout() (int, error) {
+	if p.Error() != nil {
+		return 0, p.Error()
+	}
 	n64, err := io.Copy(p.stdout, p)
 	if err != nil {
 		return 0, err
@@ -857,6 +875,9 @@ func (p *Pipe) WriteFile(path string) (int64, error) {
 }
 
 func (p *Pipe) writeOrAppendFile(path string, mode int) (int64, error) {
+	if p.Error() != nil {
+		return 0, p.Error()
+	}
 	out, err := os.OpenFile(path, mode, 0666)
 	if err != nil {
 		p.SetError(err)

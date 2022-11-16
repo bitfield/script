@@ -112,6 +112,18 @@ func ExampleFindFiles() {
 	// testdata/multiple_files_with_subdirectory/dir/2.txt
 }
 
+func ExampleIfExists_exec() {
+	script.IfExists("./testdata/hello.txt").Exec("echo hello").Stdout()
+	// Output:
+	// hello
+}
+
+func ExampleIfExists_noExec() {
+	script.IfExists("doesntexist").Exec("echo hello").Stdout()
+	// Output:
+	//
+}
+
 func ExampleListFiles() {
 	script.ListFiles("testdata/multiple_files_with_subdirectory").Stdout()
 	// Output:
