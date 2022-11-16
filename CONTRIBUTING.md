@@ -38,7 +38,7 @@ Test data should go in the `testdata` directory. If you create a file of data fo
 
 ### Use the standard library
 
- All `script` tests use the standard Go `testing` library; they don't use `testify` or `gock` or any of the other tempting and shiny test libraries. There's nothing wrong with those libraries, but it's good to keep things consistent, and not import any libraries we don't absolutely need.
+All `script` tests use the standard Go `testing` library; they don't use `testify` or `gock` or any of the other tempting and shiny test libraries. There's nothing wrong with those libraries, but it's good to keep things consistent, and not import any libraries we don't absolutely need.
 
 You'll get the feel of things by reading the existing tests, and maybe copying and adapting them for your own feature.
 
@@ -123,13 +123,13 @@ Any change to the `script` API should also be accompanied by an update to the RE
 
 Here's a handy checklist for making sure your PR will be accepted as quickly as possible.
 
- - [ ] Have you opened an issue to discuss the feature and agree its general design?
- - [ ] Do you have a use case and, ideally, an example program using the feature?
- - [ ] Do you have tests covering 90%+ of the feature code (and, of course passing)
- - [ ] Have you added your method to the `doMethodsOnPipe` stress tests?
- - [ ] Have you written complete and accurate doc comments?
- - [ ] Have you updated the README and its table of contents?
- - [ ] You rock. Thanks a lot.
+- [ ] Have you opened an issue to discuss the feature and agree its general design?
+- [ ] Do you have a use case and, ideally, an example program using the feature?
+- [ ] Do you have tests covering 90%+ of the feature code (and, of course passing)
+- [ ] Have you added your method to the `doMethodsOnPipe` stress tests?
+- [ ] Have you written complete and accurate doc comments?
+- [ ] Have you updated the README and its table of contents?
+- [ ] You rock. Thanks a lot.
 
 # After submitting your PR
 
@@ -166,3 +166,7 @@ In fact, doing a _proper_ and serious code review is a time-consuming business. 
 Open source maintainers are just regular folk with jobs, kids, and zero free time or energy. They may not be able to drop everything and put in several hours on your PR. The task may have to wait a week or two until they can get sufficient time and peace and quiet to work on it. Don't pester them. It's fine to add a comment on the PR if you haven't heard anything for a while, asking if the reviewer's been able to look at it and whether there's anything you can do to help speed things up. Comments like 'Y U NO MERGE' are unlikely to elicit a positive response.
 
 Thanks again for helping out!
+
+## Code of Conduct
+
+As a contributor you can help keep the `script` community inclusive and open to everyone. Please read and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
