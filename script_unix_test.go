@@ -52,7 +52,7 @@ func TestExecErrorsRunningShellCommandWithUnterminatedStringArgument(t *testing.
 
 func TestExecForEach_RunsEchoWithABCAndGetsOutputABC(t *testing.T) {
 	t.Parallel()
-	p := script.Echo("a\nb\nc\n").ExecForEach("echo {{.}}")
+	p := script.Echo("a\nb\nc\n").ExecForEach("echo {{.Raw}}")
 	if p.Error() != nil {
 		t.Fatal(p.Error())
 	}
@@ -73,6 +73,22 @@ func TestExecForEach_CorrectlyEvaluatesTemplateContainingIfStatement(t *testing.
 		t.Fatal(p.Error())
 	}
 	want := "it worked!\n"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestExecForEach_GetColunmsByIndex(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("a b c d e\naa bb cc dd ee").ExecForEach("echo {{index .Cols 1}} {{index .Cols 4}}; ")
+	if p.Error() != nil {
+		t.Fatal(p.Error())
+	}
+	want := "b e;\nbb ee;\n"
 	got, err := p.String()
 	if err != nil {
 		t.Fatal(err)
@@ -182,9 +198,13 @@ func ExamplePipe_Exec() {
 }
 
 func ExamplePipe_ExecForEach() {
-	script.Echo("a\nb\nc\n").ExecForEach("echo {{.}}").Stdout()
+	script.Echo("a\nb\nc\n").ExecForEach("echo {{.Raw}}").Stdout()
+	script.Echo("a aa\nb bb\nc cc\n").ExecForEach("echo {{index .Cols 1}} {{index .Cols 0}}").Stdout()
 	// Output:
 	// a
 	// b
 	// c
+	// aa a
+	// bb b
+	// cc c
 }

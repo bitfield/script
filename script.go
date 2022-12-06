@@ -399,6 +399,12 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 	})
 }
 
+// inputFields for Go template
+type inputFields struct {
+	Raw  string   // original input
+	Cols []string // columns of line
+}
+
 // ExecForEach renders cmdLine as a Go template for each line of input, running
 // the resulting command, and produces the combined output of all these
 // commands in sequence. See [Pipe.Exec] for error handling details.
@@ -416,7 +422,12 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 		scanner := bufio.NewScanner(r)
 		for scanner.Scan() {
 			cmdLine := strings.Builder{}
-			err := tpl.Execute(&cmdLine, scanner.Text())
+			line := scanner.Text()
+			fields := strings.Fields(line)
+			err := tpl.Execute(&cmdLine, inputFields{
+				Raw:  line,
+				Cols: fields,
+			})
 			if err != nil {
 				return err
 			}
