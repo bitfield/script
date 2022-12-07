@@ -475,13 +475,14 @@ func (p *Pipe) Filter(filter func(io.Reader, io.Writer) error) *Pipe {
 		return p
 	}
 	pr, pw := io.Pipe()
-	q := NewPipe().WithReader(pr)
+	origReader := p.Reader
+	p = p.WithReader(pr)
 	go func() {
 		defer pw.Close()
-		err := filter(p, pw)
-		q.SetError(err)
+		err := filter(origReader, pw)
+		p.SetError(err)
 	}()
-	return q
+	return p
 }
 
 // FilterLine sends the contents of the pipe to the function filter, a line at
