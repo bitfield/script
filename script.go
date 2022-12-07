@@ -480,7 +480,9 @@ func (p *Pipe) Filter(filter func(io.Reader, io.Writer) error) *Pipe {
 	go func() {
 		defer pw.Close()
 		err := filter(origReader, pw)
-		p.SetError(err)
+		if err != nil {
+			p.SetError(err)
+		}
 	}()
 	return p
 }
