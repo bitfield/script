@@ -199,6 +199,15 @@ func (p *Pipe) AppendFile(path string) (int64, error) {
 	return p.writeOrAppendFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY)
 }
 
+// MustAppendFile is the same as AppendFile but panics on an error.
+func (p *Pipe) MustAppendFile(path string) int64 {
+	cnt, err := p.writeOrAppendFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY)
+	if err != nil {
+		panic(err)
+	}
+	return cnt
+}
+
 var exitStatusPattern = regexp.MustCompile(`exit status (\d+)$`)
 
 // Basename reads paths from the pipe, one per line, and removes any leading
@@ -222,6 +231,18 @@ func (p *Pipe) Bytes() ([]byte, error) {
 		p.SetError(err)
 	}
 	return data, nil
+}
+
+// MustBytes is the same as Bytes but panics on error
+func (p *Pipe) MustBytes() []byte {
+	if err := p.Error(); err != nil {
+		panic(err)
+	}
+	data, err := io.ReadAll(p)
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // Close closes the pipe's associated reader. This is a no-op if the reader is
@@ -283,6 +304,18 @@ func (p *Pipe) CountLines() (int, error) {
 		lines++
 	}).Wait()
 	return lines, p.Error()
+}
+
+// MustCountLines is the same as CountLines but panics on an error.
+func (p *Pipe) MustCountLines() int {
+	lines := 0
+	p.FilterScan(func(line string, w io.Writer) {
+		lines++
+	}).Wait()
+	if err := p.Error(); err != nil {
+		panic(err)
+	}
+	return lines
 }
 
 // Dirname reads paths from the pipe, one per line, and produces only the
@@ -365,6 +398,17 @@ func (p *Pipe) Error() error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	return p.err
+}
+
+// Panic panics if there is any error present on the pipe, or continues otherwise.
+func (p *Pipe) Panic() *Pipe {
+	if p.mu == nil { // uninitialised pipe
+		return nil
+	}
+	if p.err != nil {
+		panic(p.err)
+	}
+	return p
 }
 
 // Exec runs cmdLine as an external command, sending it the contents of the
@@ -713,6 +757,18 @@ func (p *Pipe) Read(b []byte) (int, error) {
 	return p.Reader.Read(b)
 }
 
+// MustRead is the same as Read but panics on an error.
+func (p *Pipe) MustRead(b []byte) int {
+	if err := p.Error(); err != nil {
+		panic(err)
+	}
+	cnt, err := p.Reader.Read(b)
+	if err != nil {
+		panic(err)
+	}
+	return cnt
+}
+
 // Reject produces only lines that do not contain the string s.
 func (p *Pipe) Reject(s string) *Pipe {
 	return p.FilterScan(func(line string, w io.Writer) {
@@ -773,6 +829,19 @@ func (p *Pipe) SHA256Sum() (string, error) {
 	return hex.EncodeToString(hasher.Sum(nil)), p.Error()
 }
 
+// MustSHA256Sum is the same as SHA256Sum but panics on an error.
+func (p *Pipe) MustSHA256Sum() string {
+	if err := p.Error(); err != nil {
+		panic(err)
+	}
+	hasher := sha256.New()
+	_, err := io.Copy(hasher, p)
+	if err != nil {
+		panic(err)
+	}
+	return hex.EncodeToString(hasher.Sum(nil))
+}
+
 // SHA256Sums reads paths from the pipe, one per line, and produces the
 // hex-encoded SHA-256 hash of each corresponding file, one per line. Any files
 // that cannot be opened or read will be ignored.
@@ -806,6 +875,18 @@ func (p *Pipe) Slice() ([]string, error) {
 	return result, p.Error()
 }
 
+// MustSlice is the same as Slice but panics on an error
+func (p *Pipe) MustSlice() []string {
+	result := []string{}
+	p.FilterScan(func(line string, w io.Writer) {
+		result = append(result, line)
+	}).Wait()
+	if err := p.Error(); err != nil {
+		panic(err)
+	}
+	return result
+}
+
 // Stdout copies the pipe's contents to its configured standard output (using
 // [Pipe.WithStdout]), or to [os.Stdout] otherwise, and returns the number of
 // bytes successfully written, together with any error.
@@ -824,6 +905,25 @@ func (p *Pipe) Stdout() (int, error) {
 	return n, p.Error()
 }
 
+// MustStdout the same as Stdout but panics on an error.
+func (p *Pipe) MustStdout() int {
+	if err := p.Error(); err != nil {
+		panic(err)
+	}
+	n64, err := io.Copy(p.stdout, p)
+	if err != nil {
+		panic(err)
+	}
+	n := int(n64)
+	if int64(n) != n64 {
+		panic(fmt.Errorf("length %d overflows int", n64))
+	}
+	if err := p.Error(); err != nil {
+		panic(err)
+	}
+	return n
+}
+
 // String returns the pipe's contents as a string, together with any error.
 func (p *Pipe) String() (string, error) {
 	data, err := p.Bytes()
@@ -831,6 +931,18 @@ func (p *Pipe) String() (string, error) {
 		p.SetError(err)
 	}
 	return string(data), p.Error()
+}
+
+// MustString the same as String but panics on an error
+func (p *Pipe) MustString() string {
+	data, err := p.Bytes()
+	if err != nil {
+		p.SetError(err)
+	}
+	if err := p.Error(); err != nil {
+		panic(err)
+	}
+	return string(data)
 }
 
 // Wait reads the pipe to completion and discards the result. This is mostly
@@ -879,6 +991,15 @@ func (p *Pipe) WithStdout(w io.Writer) *Pipe {
 // exists, and returns the number of bytes successfully written, or an error.
 func (p *Pipe) WriteFile(path string) (int64, error) {
 	return p.writeOrAppendFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC)
+}
+
+// MustWriteFile ist the same as WriteFile but panics on error.
+func (p *Pipe) MustWriteFile(path string) int64 {
+	cnt, err := p.writeOrAppendFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC)
+	if err != nil {
+		panic(err)
+	}
+	return cnt
 }
 
 func (p *Pipe) writeOrAppendFile(path string, mode int) (int64, error) {
