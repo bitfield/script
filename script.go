@@ -590,6 +590,7 @@ func (p *Pipe) Get(URL string) *Pipe {
 	if err != nil {
 		return p.WithError(err)
 	}
+	req.Close = true
 	return p.Do(req)
 }
 
@@ -700,6 +701,7 @@ func (p *Pipe) Post(URL string) *Pipe {
 	if err != nil {
 		return p.WithError(err)
 	}
+	req.Close = true
 	return p.Do(req)
 }
 
