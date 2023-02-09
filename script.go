@@ -192,6 +192,12 @@ func Stdin() *Pipe {
 	return NewPipe().WithReader(os.Stdin)
 }
 
+// Apply allows to 
+func (p *Pipe) Apply(fn func(p *Pipe) *Pipe) *.Pipe {
+	return fn(p)
+}
+
+
 // AppendFile appends the contents of the pipe to the file path, creating it if
 // necessary, and returns the number of bytes successfully written, or an
 // error.
