@@ -193,7 +193,7 @@ func Stdin() *Pipe {
 }
 
 // Apply allows to 
-func (p *Pipe) Apply(fn func(p *Pipe) *Pipe) *.Pipe {
+func (p *Pipe) Apply(fn func(p *Pipe) *Pipe) *Pipe {
 	return fn(p)
 }
 
