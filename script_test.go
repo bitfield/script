@@ -2063,7 +2063,7 @@ func ExampleSlice() {
 }
 
 func ExampleTee() {
-	outFile, err := os.Openfile("/path/to/file", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	outFile, err := os.OpenFile("/path/to/file", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	script.Exec(`sqlrun -e "select * from appdata"`).Tee(outFile).Stdout()
 	if err != nil {
 		panic(err)
