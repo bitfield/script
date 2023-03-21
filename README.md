@@ -246,6 +246,38 @@ Let's try it out with some [sample data](testdata/access.log):
  1 190.253.121.1
  1 90.53.111.17
 ```
+## Filter out stderr
+Lets say we don't want to print out stderr. SSH can be configured to print a message of the day and you'll see this if in the /etc/ssh/sshd_config file there is a line:
+```cgo
+banner /etc/corp_motd.txt
+```
+So we want to create a report, we want to see the uptime of 20 servers stored in a slice called 'myhosts', but we don't want that mots that SSH puts on stderr, so we can filter it out using SetStderr.
+```cgo
+pipe := script.NewPipe()
+pipe.SetStderr(io.Discard)
+for _, host := range myhosts {
+	cmd := fmt.Sprintf("ssh %s uptime", host)
+	str, err := pipe.Exec(cmd).String()
+	if err != nil {
+		log.Printf("error %v %v\n", err, pipe.Error())
+	} else {
+		fmt.Println(strings.TrimSpace(str))
+	}
+}    
+```
+
+## Tee Output.
+In some cases you might want the output to go to the screen and to a file. To do this you must pass an io.Writer to tee as folows. Remember os.File implements io.Writer.
+```cgo
+    tn:=time.Now().Format("2006-01-02-15.04")
+	fileName:=fmt.Sprintf("appSales-%s",tn)
+	outFile, err := os.Openfile("/path/to/file/"+fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	script.Get("https://myserver.somewhere.org/application/json/status.json"`).Tee(outFile).JQ(".orders[].purchased.price").Tee(outFile).Stdout()
+	if err != nil {
+		panic(err)
+	}
+```
+In this case each time this is run we get a new file with a date stamp, we can see the output, but in the file we can see the raw json along with the Json Query
 
 # Documentation
 

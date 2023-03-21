@@ -15,9 +15,10 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/bitfield/script"
 	"github.com/google/go-cmp/cmp"
+	"github.com/rmasci/script"
 )
 
 func TestMain(m *testing.M) {
@@ -1629,6 +1630,40 @@ func TestReadReturnsEOFOnUninitialisedPipe(t *testing.T) {
 	}
 }
 
+func TestSetStderrDoesntPrintStderr(t *testing.T) {
+	t.Parallel()
+	want := 3
+	p := script.NewPipe()
+	p.SetStderr(io.Discard)
+	got, err := p.Exec("go run testdata/stdinerr.go").CountLines()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Errorf("want %d, got %d", want, got)
+	}
+}
+
+func TestTeeOutput(t *testing.T) {
+	t.Parallel()
+	tn := fmt.Sprintf("%s\n", time.Now().Format(time.RFC1123))
+	cmd := fmt.Sprintf("echo %s\n", tn)
+	outFile, err := os.OpenFile("testdata/teetest.txt", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want, err := script.Exec(cmd).Tee(outFile).String()
+	if err != nil {
+		fmt.Println("Script Exec")
+		t.Fatal(err)
+	}
+	defer outFile.Close()
+	got, err := os.ReadFile("testdata/teetest.txt")
+	if string(got) != want {
+		t.Error("What's in the file does not equal output of script.Exec")
+	}
+}
+
 func ExampleArgs() {
 	script.Args().Stdout()
 	// prints command-line arguments
@@ -2025,4 +2060,12 @@ func ExampleSlice() {
 	// 1
 	// 2
 	// 3
+}
+
+func ExampleTee() {
+	outFile, err := os.Openfile("/path/to/file", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	script.Exec(`sqlrun -e "select * from appdata"`).Tee(outFile).Stdout()
+	if err != nil {
+		panic(err)
+	}
 }

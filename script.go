@@ -2,6 +2,7 @@ package script
 
 import (
 	"bufio"
+	"bytes"
 	"container/ring"
 	"crypto/sha256"
 	"encoding/hex"
@@ -28,11 +29,18 @@ type Pipe struct {
 	// Reader is the underlying reader.
 	Reader     ReadAutoCloser
 	stdout     io.Writer
+	stderr     io.Writer
 	httpClient *http.Client
 
 	// because pipe stages are concurrent, protect 'err'
 	mu  *sync.Mutex
 	err error
+}
+
+// SetStderr stderr sets the pipe's standard error to the specified reader. If this is not set, stdout / stderr are combined.
+// You can then write the stderr to a log file or just open /dev/null and write the output there.
+func (p *Pipe) SetStderr(w io.Writer) {
+	p.stderr = w
 }
 
 // Args creates a pipe containing the program's command-line arguments from
@@ -389,7 +397,11 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		cmd := exec.Command(args[0], args[1:]...)
 		cmd.Stdin = r
 		cmd.Stdout = w
-		cmd.Stderr = w
+		if p.stderr != nil {
+			cmd.Stderr = p.stderr
+		} else {
+			cmd.Stderr = w
+		}
 		err := cmd.Start()
 		if err != nil {
 			fmt.Fprintln(w, err)
@@ -938,4 +950,25 @@ func (ra ReadAutoCloser) Read(b []byte) (n int, err error) {
 		ra.Close()
 	}
 	return n, err
+}
+
+// Tee works like Unix's tee and you could output to a file, and output to Standard out.
+// ex:
+//
+//	outFile,err := os.Openfile("/path/to/file", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+//	....handle error other code....
+//	p:=script.Exec(`sqlrun -e "select * from appdata"`).Tee(outFile)
+func (p *Pipe) Tee(outFile io.Writer) *Pipe {
+	// create buffer to hold reader contents
+	var buf bytes.Buffer
+	tee := io.TeeReader(p, &buf)
+	// write to file
+	_, err := io.Copy(outFile, tee)
+	if err != nil {
+		p.SetError(err)
+		return p
+	}
+	// reset reader
+	p = p.WithReader(&buf)
+	return p
 }
