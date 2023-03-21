@@ -269,13 +269,13 @@ for _, host := range myhosts {
 ## Tee Output.
 In some cases you might want the output to go to the screen and to a file. To do this you must pass an io.Writer to tee as folows. Remember os.File implements io.Writer.
 ```cgo
-    tn:=time.Now().Format("2006-01-02-15.04")
-	fileName:=fmt.Sprintf("appSales-%s",tn)
-	outFile, err := os.Openfile("/path/to/file/"+fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	script.Get("https://myserver.somewhere.org/application/json/status.json"`).Tee(outFile).JQ(".orders[].purchased.price").Tee(outFile).Stdout()
-	if err != nil {
-		panic(err)
-	}
+tn:=time.Now().Format("2006-01-02-15.04")
+fileName:=fmt.Sprintf("appSales-%s",tn)
+outFile, err := os.Openfile("/path/to/file/"+fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+script.Get("https://myserver.somewhere.org/application/json/status.json"`).Tee(outFile).JQ(".orders[].purchased.price").Tee(outFile).Stdout()
+if err != nil {
+	panic(err)
+}
 ```
 In this case each time this is run we get a new file with a date stamp, we can see the output, but in the file we can see the raw json along with the Json Query
 
