@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"os/exec"
@@ -34,6 +35,11 @@ type Pipe struct {
 	mu  *sync.Mutex
 	err error
 }
+
+const (
+	scannerMaxScanTokenSize = math.MaxInt // Maximum size used to buffer a bufio.Scanner token.
+	scannerStartBufSize     = 4096        // Size of initial allocation for bufio.Scanner buffer.
+)
 
 // Args creates a pipe containing the program's command-line arguments from
 // [os.Args], excluding the program name, one per line.
@@ -339,6 +345,7 @@ func (p *Pipe) Do(req *http.Request) *Pipe {
 func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
 		scanner := bufio.NewScanner(r)
+		scanner.Buffer(make([]byte, scannerStartBufSize), scannerMaxScanTokenSize)
 		output := strings.Builder{}
 		for scanner.Scan() {
 			process(scanner.Text(), &output)
@@ -414,6 +421,7 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 	}
 	return p.Filter(func(r io.Reader, w io.Writer) error {
 		scanner := bufio.NewScanner(r)
+		scanner.Buffer(make([]byte, scannerStartBufSize), scannerMaxScanTokenSize)
 		for scanner.Scan() {
 			cmdLine := strings.Builder{}
 			err := tpl.Execute(&cmdLine, scanner.Text())
@@ -503,6 +511,7 @@ func (p *Pipe) FilterLine(filter func(string) string) *Pipe {
 func (p *Pipe) FilterScan(filter func(string, io.Writer)) *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
 		scanner := bufio.NewScanner(r)
+		scanner.Buffer(make([]byte, scannerStartBufSize), scannerMaxScanTokenSize)
 		for scanner.Scan() {
 			filter(scanner.Text(), w)
 		}
@@ -556,6 +565,7 @@ func (p *Pipe) Freq() *Pipe {
 	}
 	return p.Filter(func(r io.Reader, w io.Writer) error {
 		scanner := bufio.NewScanner(r)
+		scanner.Buffer(make([]byte, scannerStartBufSize), scannerMaxScanTokenSize)
 		for scanner.Scan() {
 			freq[scanner.Text()]++
 		}
@@ -598,6 +608,7 @@ func (p *Pipe) Get(URL string) *Pipe {
 func (p *Pipe) Join() *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
 		scanner := bufio.NewScanner(r)
+		scanner.Buffer(make([]byte, scannerStartBufSize), scannerMaxScanTokenSize)
 		var line string
 		first := true
 		for scanner.Scan() {
@@ -660,6 +671,7 @@ func (p *Pipe) Last(n int) *Pipe {
 	}
 	return p.Filter(func(r io.Reader, w io.Writer) error {
 		scanner := bufio.NewScanner(r)
+		scanner.Buffer(make([]byte, scannerStartBufSize), scannerMaxScanTokenSize)
 		input := ring.New(n)
 		for scanner.Scan() {
 			input.Value = scanner.Text()

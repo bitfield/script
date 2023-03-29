@@ -467,6 +467,22 @@ func TestFilterScan_FiltersInputLineByLine(t *testing.T) {
 	}
 }
 
+func TestFilterScanHandlesLongLines(t *testing.T) {
+	t.Parallel()
+	want := "short line\n"
+	got, err := script.File("testdata/longlines.txt").FilterScan(func(line string, w io.Writer) {
+		if strings.HasPrefix(line, "s") {
+			fmt.Fprintln(w, line)
+		}
+	}).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestFirstDropsAllButFirstNLinesOfInput(t *testing.T) {
 	t.Parallel()
 	input := "a\nb\nc\n"
@@ -756,6 +772,18 @@ func TestLastHasNoEffectGivenLessThanNInputLines(t *testing.T) {
 	input := "a\nb\nc\n"
 	want := "a\nb\nc\n"
 	got, err := script.Echo(input).Last(4).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestLastHandlesLongLines(t *testing.T) {
+	t.Parallel()
+	want := "last line\n"
+	got, err := script.File("testdata/longlines.txt").Last(1).String()
 	if err != nil {
 		t.Fatal(err)
 	}
