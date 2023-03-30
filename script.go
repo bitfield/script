@@ -221,7 +221,7 @@ func (p *Pipe) Bytes() ([]byte, error) {
 	if err != nil {
 		p.SetError(err)
 	}
-	return data, nil
+	return data, p.Error()
 }
 
 // Close closes the pipe's associated reader. This is a no-op if the reader is
