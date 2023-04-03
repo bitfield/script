@@ -221,7 +221,7 @@ func (p *Pipe) Bytes() ([]byte, error) {
 	if err != nil {
 		p.SetError(err)
 	}
-	return data, nil
+	return data, p.Error()
 }
 
 // Close closes the pipe's associated reader. This is a no-op if the reader is
@@ -894,9 +894,8 @@ func (p *Pipe) writeOrAppendFile(path string, mode int) (int64, error) {
 	wrote, err := io.Copy(out, p)
 	if err != nil {
 		p.SetError(err)
-		return 0, err
 	}
-	return wrote, nil
+	return wrote, p.Error()
 }
 
 // ReadAutoCloser wraps an [io.ReadCloser] so that it will be automatically

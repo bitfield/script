@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"testing/iotest"
 
 	"github.com/bitfield/script"
 	"github.com/google/go-cmp/cmp"
@@ -1259,6 +1260,16 @@ func TestStdinReadsFromProgramStandardInput(t *testing.T) {
 	}
 }
 
+func TestStdoutReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
+	t.Parallel()
+	brokenReader := iotest.ErrReader(errors.New("oh no"))
+	_, err := script.NewPipe().WithStdout(io.Discard).
+		WithReader(brokenReader).Stdout()
+	if err == nil {
+		t.Fatal(nil)
+	}
+}
+
 func TestStdoutSendsPipeContentsToConfiguredStandardOutput(t *testing.T) {
 	t.Parallel()
 	buf := &bytes.Buffer{}
@@ -1307,6 +1318,18 @@ func TestAppendFile_AppendsAllItsInputToSpecifiedFile(t *testing.T) {
 	}
 }
 
+func TestAppendFile_ReturnsBytesWrittenAndErrorGivenReadErrorOnPipe(t *testing.T) {
+	t.Parallel()
+	var want int64 = 1
+	got, err := script.NewPipe().WithReader(partialErrReader{}).AppendFile(t.TempDir() + "/tmp")
+	if err == nil {
+		t.Fatal("want error reading pipe with error status, got nil")
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestBytesOutputsInputBytesUnchanged(t *testing.T) {
 	t.Parallel()
 	want := []byte{8, 0, 0, 16}
@@ -1317,6 +1340,15 @@ func TestBytesOutputsInputBytesUnchanged(t *testing.T) {
 	}
 	if !cmp.Equal(want, got) {
 		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestBytesReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
+	t.Parallel()
+	brokenReader := iotest.ErrReader(errors.New("oh no"))
+	_, err := script.NewPipe().WithReader(brokenReader).Bytes()
+	if err == nil {
+		t.Fatal(nil)
 	}
 }
 
@@ -1341,6 +1373,15 @@ func TestCountLines_Counts0LinesInEmptyInput(t *testing.T) {
 	}
 	if got != want {
 		t.Errorf("want %d, got %d", want, got)
+	}
+}
+
+func TestCountLines_ReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
+	t.Parallel()
+	brokenReader := iotest.ErrReader(errors.New("oh no"))
+	_, err := script.NewPipe().WithReader(brokenReader).CountLines()
+	if err == nil {
+		t.Fatal(nil)
 	}
 }
 
@@ -1376,6 +1417,24 @@ func TestSHA256Sum_OutputsCorrectHash(t *testing.T) {
 				t.Errorf("want %q, got %q", tc.want, got)
 			}
 		})
+	}
+}
+
+func TestSHA256Sum_ReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
+	t.Parallel()
+	brokenReader := iotest.ErrReader(errors.New("oh no"))
+	_, err := script.NewPipe().WithReader(brokenReader).SHA256Sum()
+	if err == nil {
+		t.Fatal(nil)
+	}
+}
+
+func TestSliceSink_ReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
+	t.Parallel()
+	brokenReader := iotest.ErrReader(errors.New("oh no"))
+	_, err := script.NewPipe().WithReader(brokenReader).Slice()
+	if err == nil {
+		t.Fatal(nil)
 	}
 }
 
@@ -1441,6 +1500,15 @@ func TestStringOutputsInputStringUnchanged(t *testing.T) {
 	}
 }
 
+func TestStringReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
+	t.Parallel()
+	brokenReader := iotest.ErrReader(errors.New("oh no"))
+	_, err := script.NewPipe().WithReader(brokenReader).String()
+	if err == nil {
+		t.Fatal(nil)
+	}
+}
+
 func TestWaitReadsPipeSourceToCompletion(t *testing.T) {
 	t.Parallel()
 	source := bytes.NewBufferString("hello")
@@ -1467,6 +1535,25 @@ func TestWriteFile_WritesInputToFileCreatingItIfNecessary(t *testing.T) {
 	}
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+// partialErrReader returns 1 and a non-EOF error on reading.
+type partialErrReader struct{}
+
+func (r partialErrReader) Read(p []byte) (int, error) {
+	return 1, errors.New("oh no")
+}
+
+func TestWriteFile_ReturnsBytesWrittenAndErrorGivenReadErrorOnPipe(t *testing.T) {
+	t.Parallel()
+	var want int64 = 1
+	got, err := script.NewPipe().WithReader(partialErrReader{}).WriteFile(t.TempDir() + "/tmp")
+	if err == nil {
+		t.Fatal("want error reading pipe with error status, got nil")
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
 	}
 }
 
@@ -1626,6 +1713,16 @@ func TestReadReturnsEOFOnUninitialisedPipe(t *testing.T) {
 	}
 	if n > 0 {
 		t.Errorf("unexpectedly read %d bytes", n)
+	}
+}
+
+func TestReadReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
+	t.Parallel()
+	brokenReader := iotest.ErrReader(errors.New("oh no"))
+	buf := make([]byte, 0)
+	_, err := script.NewPipe().WithReader(brokenReader).Read(buf)
+	if err == nil {
+		t.Fatal(nil)
 	}
 }
 
