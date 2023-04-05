@@ -972,3 +972,11 @@ func (p *Pipe) Tee(outFile io.Writer) *Pipe {
 	p = p.WithReader(&buf)
 	return p
 }
+
+// TrimSpace removes all spaces from the trailing and leading sides of the string.
+func (p *Pipe) TrimSpace() *Pipe {
+	return p.FilterScan(func(line string, w io.Writer) {
+		strings.TrimSpace(line)
+		fmt.Fprint(w, line)
+	})
+}
