@@ -33,6 +33,26 @@ func TestMain(m *testing.M) {
 	}
 }
 
+func TestOperationOfPipeOnValidWriterInput(t *testing.T) {
+
+}
+
+func TestOperationOfPipeOnEmptyWriterInput(t *testing.T) {
+
+}
+
+func TestOperationOfPipeFileOnValidWriterInput(t *testing.T) {
+
+}
+
+func TestOperationOfPipeFileOnEmptyWriterInput(t *testing.T) {
+
+}
+
+func TestFailureOfPipeFileOpeningNewFile(t *testing.T) {
+
+}
+
 func TestArgsSuppliesCommandLineArgumentsAsInputToPipeOnePerLine(t *testing.T) {
 	t.Parallel()
 	// dummy test to prove coverage
