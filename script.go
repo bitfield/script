@@ -875,6 +875,47 @@ func (p *Pipe) WithStdout(w io.Writer) *Pipe {
 	return p
 }
 
+// TeeFile allows the user to write the pipes output to an IOWriter location without 
+// emptying the contents of the output writer of the pipe.
+// TeeFile writes to the input file path by default.
+func (p *Pipe) TeeFile(path string) *Pipe {
+    // Opening file to write pipe contents to
+    out, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+    if err != nil {
+		p.SetError(err)
+		return p
+    }
+    // create buffer to hold reader contents
+    var buf bytes.Buffer
+    tee := io.TeeReader(p, &buf)
+    // write to file
+    _, err = io.Copy(out, tee)
+    if err != nil {
+		p.SetError(err)
+        return p
+    }
+    // reset reader 
+    p = p.WithReader(&buf)
+    return p
+}
+
+// Tee allows the user to write to an io.Writer input without emptying the
+// contents of the output writer of the pipe. 
+func (p *Pipe) Tee(out io.Writer) *Pipe {
+    // create buffer to hold reader contents
+    var buf bytes.Buffer
+    tee := io.TeeReader(p, &buf)
+    // write to file
+    _, err = io.Copy(out, tee)
+    if err != nil {
+		p.SetError(err)
+        return p
+    }
+    // reset reader 
+    p = p.WithReader(&buf)
+    return p
+}
+
 // WriteFile writes the pipe's contents to the file path, truncating it if it
 // exists, and returns the number of bytes successfully written, or an error.
 func (p *Pipe) WriteFile(path string) (int64, error) {
