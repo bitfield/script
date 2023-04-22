@@ -336,7 +336,7 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 
 | Version | New |
 | ----------- | ------- |
-| v0.22.0 | [`Tee`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Tee) |
+| v0.22.0 | [`Tee`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Tee), [`WithStderr`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithStderr) |
 | v0.21.0 | HTTP support: [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do), [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get), [`Post`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Post) |
 | v0.20.0 | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) |
 

@@ -27,9 +27,9 @@ import (
 // Pipe represents a pipe object with an associated [ReadAutoCloser].
 type Pipe struct {
 	// Reader is the underlying reader.
-	Reader     ReadAutoCloser
-	stdout     io.Writer
-	httpClient *http.Client
+	Reader         ReadAutoCloser
+	stdout, stderr io.Writer
+	httpClient     *http.Client
 
 	// because pipe stages are concurrent, protect 'err'
 	mu  *sync.Mutex
@@ -369,8 +369,9 @@ func (p *Pipe) Error() error {
 }
 
 // Exec runs cmdLine as an external command, sending it the contents of the
-// pipe as input, and produces the command's combined output. The effect of
-// this is to filter the contents of the pipe through the external command.
+// pipe as input, and produces the command's standard output (see below for
+// error output). The effect of this is to filter the contents of the pipe
+// through the external command.
 //
 // # Error handling
 //
@@ -381,6 +382,10 @@ func (p *Pipe) Error() error {
 // because [Pipe.String] is a no-op if the pipe's error status is set, if you
 // want output you will need to reset the error status before calling
 // [Pipe.String].
+//
+// If the command writes to its standard error stream, this will also go to the
+// pipe, along with its standard output. However, the standard error text can
+// instead be redirected to a supplied writer, using [Pipe.WithStderr].
 func (p *Pipe) Exec(cmdLine string) *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
 		args, ok := shell.Split(cmdLine) // strings.Fields doesn't handle quotes
@@ -391,9 +396,12 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		cmd.Stdin = r
 		cmd.Stdout = w
 		cmd.Stderr = w
+		if p.stderr != nil {
+			cmd.Stderr = p.stderr
+		}
 		err := cmd.Start()
 		if err != nil {
-			fmt.Fprintln(w, err)
+			fmt.Fprintln(cmd.Stderr, err)
 			return err
 		}
 		return cmd.Wait()
@@ -429,14 +437,17 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 			cmd := exec.Command(args[0], args[1:]...)
 			cmd.Stdout = w
 			cmd.Stderr = w
+			if p.stderr != nil {
+				cmd.Stderr = p.stderr
+			}
 			err = cmd.Start()
 			if err != nil {
-				fmt.Fprintln(w, err)
+				fmt.Fprintln(cmd.Stderr, err)
 				continue
 			}
 			err = cmd.Wait()
 			if err != nil {
-				fmt.Fprintln(w, err)
+				fmt.Fprintln(cmd.Stderr, err)
 				continue
 			}
 		}
@@ -883,6 +894,14 @@ func (p *Pipe) WithHTTPClient(c *http.Client) *Pipe {
 // read, it will be closed if necessary.
 func (p *Pipe) WithReader(r io.Reader) *Pipe {
 	p.Reader = NewReadAutoCloser(r)
+	return p
+}
+
+// WithStderr redirects the standard error output for commands run via
+// [Pipe.Exec] or [Pipe.ExecForEach] to the writer w, instead of going to the
+// pipe as it normally would.
+func (p *Pipe) WithStderr(w io.Writer) *Pipe {
+	p.stderr = w
 	return p
 }
 

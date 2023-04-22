@@ -343,6 +343,36 @@ func TestExecForEach_ErrorsOnUnbalancedQuotes(t *testing.T) {
 	}
 }
 
+func TestExecForEach_SendsStderrOutputToPipeStderr(t *testing.T) {
+	t.Parallel()
+	buf := new(bytes.Buffer)
+	out, err := script.Echo("go").WithStderr(buf).ExecForEach("{{.}}").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out != "" {
+		t.Fatalf("unexpected output: %q", out)
+	}
+	if !strings.Contains(buf.String(), "Usage") {
+		t.Errorf("want stderr output containing the word 'Usage', got %q", buf.String())
+	}
+}
+
+func TestExecSendsStderrOutputToPipeStderr(t *testing.T) {
+	t.Parallel()
+	buf := new(bytes.Buffer)
+	out, err := script.NewPipe().WithStderr(buf).Exec("go").String()
+	if err == nil {
+		t.Fatal("want error when command returns a non-zero exit status")
+	}
+	if out != "" {
+		t.Fatalf("unexpected output: %q", out)
+	}
+	if !strings.Contains(buf.String(), "Usage") {
+		t.Errorf("want stderr output containing the word 'Usage', got %q", buf.String())
+	}
+}
+
 func TestFilterByCopyPassesInputThroughUnchanged(t *testing.T) {
 	t.Parallel()
 	p := script.Echo("hello").Filter(func(r io.Reader, w io.Writer) error {
@@ -1157,7 +1187,7 @@ func TestExecRunsGoWithNoArgsAndGetsUsageMessagePlusErrorExitStatus2(t *testing.
 		t.Error("want error when command returns a non-zero exit status")
 	}
 	if !strings.Contains(output, "Usage") {
-		t.Errorf("want output containing the word 'usage', got %q", output)
+		t.Errorf("want output containing the word 'Usage', got %q", output)
 	}
 	want := 2
 	got := p.ExitStatus()
@@ -1177,7 +1207,7 @@ func TestExecRunsGoHelpAndGetsUsageMessage(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !strings.Contains(output, "Usage") {
-		t.Fatalf("want output containing the word 'usage', got %q", output)
+		t.Fatalf("want output containing the word 'Usage', got %q", output)
 	}
 }
 
@@ -2243,6 +2273,14 @@ func ExamplePipe_Tee_writers() {
 	// hello
 	// hello
 	// hello
+}
+
+func ExamplePipe_WithStderr() {
+	buf := new(bytes.Buffer)
+	script.NewPipe().WithStderr(buf).Exec("go").Wait()
+	fmt.Println(strings.Contains(buf.String(), "Usage"))
+	// Output:
+	// true
 }
 
 func ExampleSlice() {
