@@ -9,6 +9,17 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func TestExecForEach_HandlesLongLines(t *testing.T) {
+	t.Parallel()
+	got, err := script.Echo(longLine).ExecForEach(`echo "{{.}}"`).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if longLine != got {
+		t.Error(cmp.Diff(longLine, got))
+	}
+}
+
 func TestExecRunsShWithEchoHelloAndGetsOutputHello(t *testing.T) {
 	t.Parallel()
 	p := script.Exec("sh -c 'echo hello'")

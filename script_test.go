@@ -343,17 +343,6 @@ func TestExecForEach_ErrorsOnUnbalancedQuotes(t *testing.T) {
 	}
 }
 
-func TestExecForEach_HandlesLongLines(t *testing.T) {
-	t.Parallel()
-	got, err := script.Echo(longLine).ExecForEach(`echo "{{.}}"`).String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if longLine != got {
-		t.Error(cmp.Diff(longLine, got))
-	}
-}
-
 func TestFilterByCopyPassesInputThroughUnchanged(t *testing.T) {
 	t.Parallel()
 	p := script.Echo("hello").Filter(func(r io.Reader, w io.Writer) error {
