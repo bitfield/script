@@ -270,17 +270,32 @@ func TestDoPerformsSuppliedHTTPRequest(t *testing.T) {
 
 func TestEachLine_FiltersInputThroughSuppliedFunction(t *testing.T) {
 	t.Parallel()
-	p := script.Echo("Hello\nGoodbye")
-	q := p.EachLine(func(line string, out *strings.Builder) {
-		out.WriteString(line + " world\n")
-	})
 	want := "Hello world\nGoodbye world\n"
-	got, err := q.String()
+	got, err := script.Echo("Hello\nGoodbye").
+		EachLine(func(line string, out *strings.Builder) {
+			out.WriteString(line + " world\n")
+		}).String()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestEachLine_HandlesLongLines(t *testing.T) {
+	t.Parallel()
+	var got int
+	_, err := script.Echo(longLine).
+		EachLine(func(line string, out *strings.Builder) {
+			got++
+		}).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := 2
+	if want != got {
+		t.Errorf("want %d lines counted, got %d", want, got)
 	}
 }
 
@@ -325,6 +340,17 @@ func TestExecForEach_ErrorsOnUnbalancedQuotes(t *testing.T) {
 	p.Wait()
 	if p.Error() == nil {
 		t.Error("want error with unbalanced quotes in command line")
+	}
+}
+
+func TestExecForEach_HandlesLongLines(t *testing.T) {
+	t.Parallel()
+	got, err := script.Echo(longLine).ExecForEach(`echo "{{.}}"`).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if longLine != got {
+		t.Error(cmp.Diff(longLine, got))
 	}
 }
 
@@ -455,11 +481,29 @@ func TestFilterScan_FiltersInputLineByLine(t *testing.T) {
 	t.Parallel()
 	input := "hello\nworld\ngoodbye"
 	want := "world\n"
-	got, err := script.Echo(input).FilterScan(func(line string, w io.Writer) {
-		if strings.HasPrefix(line, "w") {
-			fmt.Fprintln(w, line)
-		}
-	}).String()
+	got, err := script.Echo(input).
+		FilterScan(func(line string, w io.Writer) {
+			if strings.HasPrefix(line, "w") {
+				fmt.Fprintln(w, line)
+			}
+		}).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestFilterScan_HandlesLongLines(t *testing.T) {
+	t.Parallel()
+	want := "last line\n"
+	got, err := script.Echo(longLine).
+		FilterScan(func(line string, w io.Writer) {
+			if strings.HasPrefix(line, "last") {
+				fmt.Fprintln(w, line)
+			}
+		}).String()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -517,6 +561,20 @@ func TestFirstHasNoEffectGivenLessThanNInputLines(t *testing.T) {
 	}
 	if want != got {
 		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestFreqHandlesLongLines(t *testing.T) {
+	t.Parallel()
+	got, err := script.Echo(longLine).Freq().Slice()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("want 2 results, got %d: %q", len(got), got)
+	}
+	if got[0] != "1 last line" {
+		t.Fatalf("wrong result: %q", got)
 	}
 }
 
@@ -620,6 +678,18 @@ func TestGetUsesPipeContentsAsRequestBody(t *testing.T) {
 	}
 }
 
+func TestJoinHandlesLongLines(t *testing.T) {
+	t.Parallel()
+	result, err := script.Echo(longLine).Join().String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := len(longLine)
+	if want != len(result) {
+		t.Errorf("want result length %d, got %d", want, len(result))
+	}
+}
+
 func TestJoinJoinsInputLinesIntoSpaceSeparatedString(t *testing.T) {
 	t.Parallel()
 	input := "hello\nfrom\nthe\njoin\ntest"
@@ -718,6 +788,18 @@ func TestLastDropsAllButLastNLinesOfInput(t *testing.T) {
 	input := "a\nb\nc\n"
 	want := "b\nc\n"
 	got, err := script.Echo(input).Last(2).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestLastHandlesLongLines(t *testing.T) {
+	t.Parallel()
+	want := "last line\n"
+	got, err := script.Echo(longLine).Last(1).String()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2123,3 +2205,8 @@ func ExampleSlice() {
 	// 2
 	// 3
 }
+
+// A string containing a line longer than bufio.MaxScanTokenSize, for testing
+// methods that buffer input. We want to make sure they don't throw
+// "bufio.Scanner: token too long" errors.
+var longLine = strings.Repeat("super long line ", 4096) + "\nlast line\n"

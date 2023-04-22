@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"os/exec"
@@ -338,7 +339,7 @@ func (p *Pipe) Do(req *http.Request) *Pipe {
 // concurrently and don't do unnecessary reads on the input.
 func (p *Pipe) EachLine(process func(string, *strings.Builder)) *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
-		scanner := bufio.NewScanner(r)
+		scanner := newScanner(r)
 		output := strings.Builder{}
 		for scanner.Scan() {
 			process(scanner.Text(), &output)
@@ -413,7 +414,7 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 		return p.WithError(err)
 	}
 	return p.Filter(func(r io.Reader, w io.Writer) error {
-		scanner := bufio.NewScanner(r)
+		scanner := newScanner(r)
 		for scanner.Scan() {
 			cmdLine := strings.Builder{}
 			err := tpl.Execute(&cmdLine, scanner.Text())
@@ -502,7 +503,7 @@ func (p *Pipe) FilterLine(filter func(string) string) *Pipe {
 // handling.
 func (p *Pipe) FilterScan(filter func(string, io.Writer)) *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
-		scanner := bufio.NewScanner(r)
+		scanner := newScanner(r)
 		for scanner.Scan() {
 			filter(scanner.Text(), w)
 		}
@@ -555,7 +556,7 @@ func (p *Pipe) Freq() *Pipe {
 		count int
 	}
 	return p.Filter(func(r io.Reader, w io.Writer) error {
-		scanner := bufio.NewScanner(r)
+		scanner := newScanner(r)
 		for scanner.Scan() {
 			freq[scanner.Text()]++
 		}
@@ -597,7 +598,7 @@ func (p *Pipe) Get(URL string) *Pipe {
 // space-separated string, which will always end with a newline.
 func (p *Pipe) Join() *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
-		scanner := bufio.NewScanner(r)
+		scanner := newScanner(r)
 		var line string
 		first := true
 		for scanner.Scan() {
@@ -659,7 +660,7 @@ func (p *Pipe) Last(n int) *Pipe {
 		return NewPipe()
 	}
 	return p.Filter(func(r io.Reader, w io.Writer) error {
-		scanner := bufio.NewScanner(r)
+		scanner := newScanner(r)
 		input := ring.New(n)
 		for scanner.Scan() {
 			input.Value = scanner.Text()
@@ -937,4 +938,10 @@ func (ra ReadAutoCloser) Read(b []byte) (n int, err error) {
 		ra.Close()
 	}
 	return n, err
+}
+
+func newScanner(r io.Reader) *bufio.Scanner {
+	scanner := bufio.NewScanner(r)
+	scanner.Buffer(make([]byte, 4096), math.MaxInt)
+	return scanner
 }
