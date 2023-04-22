@@ -1,0 +1,6 @@
+stdin input.txt
+exec echostdin
+stdout 'hello\n'
+
+-- input.txt --
+hello

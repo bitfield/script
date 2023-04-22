@@ -1,0 +1,2 @@
+exec args 1 2 3
+stdout '1\n2\n3\n'

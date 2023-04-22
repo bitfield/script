@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -19,36 +18,27 @@ import (
 
 	"github.com/bitfield/script"
 	"github.com/google/go-cmp/cmp"
+	"github.com/rogpeppe/go-internal/testscript"
 )
 
 func TestMain(m *testing.M) {
-	switch os.Getenv("SCRIPT_TEST") {
-	case "args":
-		// Print out command-line arguments
-		script.Args().Stdout()
-	case "stdin":
-		// Echo input to output
-		script.Stdin().Stdout()
-	default:
-		os.Exit(m.Run())
-	}
+	os.Exit(testscript.RunMain(m, map[string]func() int{
+		"args": func() int {
+			script.Args().Stdout()
+			return 0
+		},
+		"echostdin": func() int {
+			script.Stdin().Stdout()
+			return 0
+		},
+	}))
 }
 
-func TestArgsSuppliesCommandLineArgumentsAsInputToPipeOnePerLine(t *testing.T) {
+func TestScript(t *testing.T) {
 	t.Parallel()
-	// dummy test to prove coverage
-	script.Args()
-	// now the real test
-	cmd := exec.Command(os.Args[0], "hello", "world")
-	cmd.Env = append(os.Environ(), "SCRIPT_TEST=args")
-	got, err := cmd.Output()
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := "hello\nworld\n"
-	if string(got) != want {
-		t.Errorf("want %q, got %q", want, string(got))
-	}
+	testscript.Run(t, testscript.Params{
+		Dir: "testdata/script",
+	})
 }
 
 func TestBasenameRemovesLeadingPathComponentsFromInputLines(t *testing.T) {
@@ -444,7 +434,7 @@ func TestFilterReadsNoMoreThanRequested(t *testing.T) {
 		t.Fatal(err)
 	}
 	if want != got {
-		t.Error(cmp.Diff(want, got))
+		t.Fatal(cmp.Diff(want, got))
 	}
 	wantRemaining := "secondline"
 	if wantRemaining != source.String() {
@@ -634,7 +624,7 @@ func TestGetMakesHTTPGetRequestToGivenURL(t *testing.T) {
 	t.Parallel()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			t.Errorf("want HTTP method GET, got %q", r.Method)
+			t.Fatalf("want HTTP method GET, got %q", r.Method)
 		}
 		fmt.Fprintln(w, "some data")
 	}))
@@ -687,13 +677,13 @@ func TestGetUsesPipeContentsAsRequestBody(t *testing.T) {
 			t.Fatal("reading request body", err)
 		}
 		if !cmp.Equal(want, got) {
-			t.Error(cmp.Diff(want, string(got)))
+			t.Fatalf(cmp.Diff(want, string(got)))
 		}
 	}))
 	defer ts.Close()
 	_, err := script.Echo("request data").Get(ts.URL).String()
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Errorf("unexpected error: %v", err)
 	}
 }
 
@@ -1063,7 +1053,7 @@ func TestPostPostsToGivenURLUsingPipeAsRequestBody(t *testing.T) {
 			t.Fatal("reading request body", err)
 		}
 		if !cmp.Equal(want, got) {
-			t.Error(cmp.Diff(want, string(got)))
+			t.Fatal(cmp.Diff(want, string(got)))
 		}
 		fmt.Fprintln(w, "response data")
 	}))
@@ -1184,10 +1174,10 @@ func TestExecRunsGoWithNoArgsAndGetsUsageMessagePlusErrorExitStatus2(t *testing.
 	p := script.Exec("go")
 	output, err := p.String()
 	if err == nil {
-		t.Error("want error when command returns a non-zero exit status")
+		t.Fatal("want error when command returns a non-zero exit status")
 	}
 	if !strings.Contains(output, "Usage") {
-		t.Errorf("want output containing the word 'Usage', got %q", output)
+		t.Fatalf("want output containing the word 'Usage', got %q", output)
 	}
 	want := 2
 	got := p.ExitStatus()
@@ -1356,7 +1346,7 @@ func TestReadAutoCloser_ReadsAllDataFromSourceAndClosesItAutomatically(t *testin
 		t.Fatal(err)
 	}
 	if !cmp.Equal(want, got) {
-		t.Error(cmp.Diff(want, got))
+		t.Fatal(cmp.Diff(want, got))
 	}
 	_, err = io.ReadAll(acr)
 	if err == nil {
@@ -1376,24 +1366,6 @@ func TestSliceProducesElementsOfSpecifiedSliceOnePerLine(t *testing.T) {
 	}
 }
 
-func TestStdinReadsFromProgramStandardInput(t *testing.T) {
-	t.Parallel()
-	// dummy test to prove coverage
-	script.Stdin()
-	// now the real test
-	want := "hello world"
-	cmd := exec.Command(os.Args[0])
-	cmd.Env = append(os.Environ(), "SCRIPT_TEST=stdin")
-	cmd.Stdin = script.Echo(want)
-	got, err := cmd.Output()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(got) != want {
-		t.Errorf("want %q, got %q", want, string(got))
-	}
-}
-
 func TestStdoutReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	t.Parallel()
 	brokenReader := iotest.ErrReader(errors.New("oh no"))
@@ -1406,7 +1378,7 @@ func TestStdoutReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 
 func TestStdoutSendsPipeContentsToConfiguredStandardOutput(t *testing.T) {
 	t.Parallel()
-	buf := &bytes.Buffer{}
+	buf := new(bytes.Buffer)
 	want := "hello world"
 	p := script.File("testdata/hello.txt").WithStdout(buf)
 	wrote, err := p.Stdout()
@@ -1414,11 +1386,11 @@ func TestStdoutSendsPipeContentsToConfiguredStandardOutput(t *testing.T) {
 		t.Fatal(err)
 	}
 	if wrote != len(want) {
-		t.Errorf("want %d bytes written, got %d", len(want), wrote)
+		t.Fatalf("want %d bytes written, got %d", len(want), wrote)
 	}
 	got := buf.String()
 	if want != got {
-		t.Errorf("want %q, got %q", want, string(got))
+		t.Fatalf("want %q, got %q", want, string(got))
 	}
 	_, err = p.String()
 	if err == nil {
@@ -1440,7 +1412,7 @@ func TestAppendFile_AppendsAllItsInputToSpecifiedFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	if int(wrote) != len(extra) {
-		t.Errorf("want %d bytes written, got %d", len(extra), int(wrote))
+		t.Fatalf("want %d bytes written, got %d", len(extra), int(wrote))
 	}
 	// check file contains both contents
 	got, err := script.File(path).String()
@@ -1661,7 +1633,7 @@ func TestWriteFile_WritesInputToFileCreatingItIfNecessary(t *testing.T) {
 		t.Fatal(err)
 	}
 	if int(wrote) != len(want) {
-		t.Errorf("want %d bytes written, got %d", len(want), int(wrote))
+		t.Fatalf("want %d bytes written, got %d", len(want), int(wrote))
 	}
 	got, err := script.File(path).String()
 	if err != nil {
@@ -1706,14 +1678,14 @@ func TestWriteFile_TruncatesExistingFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	if int(wrote) != len(want) {
-		t.Errorf("want %d bytes written, got %d", len(want), int(wrote))
+		t.Fatalf("want %d bytes written, got %d", len(want), int(wrote))
 	}
 	got, err := script.File(path).String()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got == want+"\x00\x00\x00" {
-		t.Errorf("file not truncated on write")
+		t.Fatalf("file not truncated on write")
 	}
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
@@ -1766,7 +1738,7 @@ func TestWithError_SetsSpecifiedErrorOnPipe(t *testing.T) {
 
 func TestWithStdout_SetsSpecifiedWriterAsStdout(t *testing.T) {
 	t.Parallel()
-	buf := &bytes.Buffer{}
+	buf := new(bytes.Buffer)
 	want := "Hello, world."
 	_, err := script.Echo(want).WithStdout(buf).Stdout()
 	if err != nil {
@@ -1812,7 +1784,7 @@ func TestExitStatus_CorrectlyParsesExitStatusValueFromErrorMessage(t *testing.T)
 	}
 	for _, tc := range tcs {
 		p := script.NewPipe()
-		p.SetError(fmt.Errorf(tc.input))
+		p.SetError(errors.New(tc.input))
 		got := p.ExitStatus()
 		if got != tc.want {
 			t.Errorf("input %q: want %d, got %d", tc.input, tc.want, got)
@@ -1843,7 +1815,7 @@ func TestReadReturnsEOFOnUninitialisedPipe(t *testing.T) {
 	buf := []byte{0} // try to read at least 1 byte
 	n, err := p.Read(buf)
 	if !errors.Is(err, io.EOF) {
-		t.Errorf("want EOF, got %v", err)
+		t.Fatalf("want io.EOF, got %v", err)
 	}
 	if n > 0 {
 		t.Errorf("unexpectedly read %d bytes", n)
