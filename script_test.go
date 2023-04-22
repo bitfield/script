@@ -1104,6 +1104,39 @@ func TestSHA256Sums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
 	}
 }
 
+func TestTeeUsesConfiguredStdoutAsDefault(t *testing.T) {
+	t.Parallel()
+	buf := new(bytes.Buffer)
+	_, err := script.Echo("hello").WithStdout(buf).Tee().String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "hello"
+	got := buf.String()
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestTeeWritesDataToSuppliedWritersAsWellAsToPipe(t *testing.T) {
+	t.Parallel()
+	buf1, buf2 := new(bytes.Buffer), new(bytes.Buffer)
+	got, err := script.Echo("hello world").Tee(buf1, buf2).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "hello world"
+	if want != got {
+		t.Errorf("want %q on pipe, got %q", want, got)
+	}
+	if want != buf1.String() {
+		t.Errorf("want %q on writer 1, got %q", want, buf1.String())
+	}
+	if want != buf2.String() {
+		t.Errorf("want %q on writer 2, got %q", want, buf2.String())
+	}
+}
+
 func TestExecErrorsWhenTheSpecifiedCommandDoesNotExist(t *testing.T) {
 	t.Parallel()
 	p := script.Exec("doesntexist")
@@ -2184,6 +2217,32 @@ func ExamplePipe_String() {
 	// Output:
 	// hello
 	// world
+}
+
+func ExamplePipe_Tee_stdout() {
+	s, err := script.Echo("hello\n").Tee().String()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(s)
+	// Output:
+	// hello
+	// hello
+}
+
+func ExamplePipe_Tee_writers() {
+	buf1, buf2 := new(bytes.Buffer), new(bytes.Buffer)
+	s, err := script.Echo("hello\n").Tee(buf1, buf2).String()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Print(s)
+	fmt.Print(buf1.String())
+	fmt.Print(buf2.String())
+	// Output:
+	// hello
+	// hello
+	// hello
 }
 
 func ExampleSlice() {

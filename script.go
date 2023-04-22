@@ -834,6 +834,23 @@ func (p *Pipe) String() (string, error) {
 	return string(data), p.Error()
 }
 
+// Tee copies the pipe's contents to each of the supplied writers, like Unix
+// tee(1). If no writers are supplied, the default is the pipe's standard
+// output.
+func (p *Pipe) Tee(writers ...io.Writer) *Pipe {
+	if p.Error() != nil {
+		return p
+	}
+	if len(writers) == 0 {
+		writers = []io.Writer{p.stdout}
+	}
+	teeWriter := io.MultiWriter(writers...)
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		_, err := io.Copy(w, io.TeeReader(r, teeWriter))
+		return err
+	})
+}
+
 // Wait reads the pipe to completion and discards the result. This is mostly
 // useful for waiting until concurrent filters have completed (see
 // [Pipe.Filter]).
