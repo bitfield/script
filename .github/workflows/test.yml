@@ -1,6 +1,6 @@
 # Based on https://github.com/mvdan/github-actions-golang
 on: [push, pull_request]
-name: Test
+name: Tests
 jobs:
   test:
     strategy:
