@@ -182,7 +182,9 @@ In the `ping` example, we knew the exact arguments we wanted to send the command
 We might like to be able to run the external command repeatedly, each time passing it the next line of data from the pipe as an argument. No worries:
 
 ```go
-script.Args().ExecForEach("ping -c 1 {{.}}").Stdout()
+// {{.Raw}} is original input
+// {{index .Cols N}} N indicates which column; 
+script.Args().ExecForEach("ping -c 1 {{.Raw}}").Stdout()
 ```
 
 That `{{.}}` is standard Go template syntax; it'll substitute each line of data from the pipe into the command line before it's executed. You can write as fancy a Go template expression as you want here (but this simple example probably covers most use cases).
