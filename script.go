@@ -942,7 +942,7 @@ func (ra ReadAutoCloser) Close() error {
 	if ra.r == nil {
 		return nil
 	}
-	return ra.r.(io.Closer).Close()
+	return ra.r.Close()
 }
 
 // Read reads up to len(b) bytes from ra's reader into b. It returns the number
