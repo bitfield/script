@@ -244,7 +244,7 @@ func TestDoPerformsSuppliedHTTPRequest(t *testing.T) {
 		fmt.Fprintln(w, "some data")
 	}))
 	defer ts.Close()
-	req, err := http.NewRequest(http.MethodGet, ts.URL, nil)
+	req, err := http.NewRequest(http.MethodGet, ts.URL, http.NoBody)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1669,7 +1669,7 @@ func TestWriteFile_TruncatesExistingFile(t *testing.T) {
 	path := t.TempDir() + "/" + t.Name()
 	// write some data first so we can check for truncation
 	data := make([]byte, 15)
-	err := os.WriteFile(path, data, 0600)
+	err := os.WriteFile(path, data, 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1698,7 +1698,7 @@ func TestWithHTTPClient_SetsSuppliedClientOnPipe(t *testing.T) {
 		fmt.Fprintln(w, "some data")
 	}))
 	defer ts.Close()
-	req, err := http.NewRequest(http.MethodGet, ts.URL, nil)
+	req, err := http.NewRequest(http.MethodGet, ts.URL, http.NoBody)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1842,9 +1842,10 @@ func ExampleDo() {
 		fmt.Fprintln(w, "some data")
 	}))
 	defer ts.Close()
-	req, err := http.NewRequest(http.MethodGet, ts.URL, nil)
+	req, err := http.NewRequest(http.MethodGet, ts.URL, http.NoBody)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	script.Do(req).Stdout()
 	// Output:
@@ -1961,7 +1962,8 @@ func ExamplePipe_Do() {
 	defer ts.Close()
 	req, err := http.NewRequest(http.MethodGet, ts.URL, strings.NewReader("hello"))
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	script.NewPipe().Do(req).Stdout()
 	// Output:

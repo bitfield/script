@@ -104,10 +104,10 @@ func FindFiles(dir string) *Pipe {
 	return Slice(paths)
 }
 
-// Get creates a pipe that makes an HTTP GET request to URL, and produces the
+// Get creates a pipe that makes an HTTP GET request to url, and produces the
 // response. See [Pipe.Do] for how the HTTP response status is interpreted.
-func Get(URL string) *Pipe {
-	return NewPipe().Get(URL)
+func Get(url string) *Pipe {
+	return NewPipe().Get(url)
 }
 
 // IfExists tests whether path exists, and creates a pipe whose error status
@@ -169,11 +169,11 @@ func NewPipe() *Pipe {
 	}
 }
 
-// Post creates a pipe that makes an HTTP POST request to URL, with an empty
+// Post creates a pipe that makes an HTTP POST request to url, with an empty
 // body, and produces the response. See [Pipe.Do] for how the HTTP response
 // status is interpreted.
-func Post(URL string) *Pipe {
-	return NewPipe().Post(URL)
+func Post(url string) *Pipe {
+	return NewPipe().Post(url)
 }
 
 // Slice creates a pipe containing each element of s, one per line.
@@ -584,11 +584,11 @@ func (p *Pipe) Freq() *Pipe {
 	})
 }
 
-// Get makes an HTTP GET request to URL, sending the contents of the pipe as
+// Get makes an HTTP GET request to url, sending the contents of the pipe as
 // the request body, and produces the server's response. See [Pipe.Do] for how
 // the HTTP response status is interpreted.
-func (p *Pipe) Get(URL string) *Pipe {
-	req, err := http.NewRequest(http.MethodGet, URL, p.Reader)
+func (p *Pipe) Get(url string) *Pipe {
+	req, err := http.NewRequest(http.MethodGet, url, p.Reader)
 	if err != nil {
 		return p.WithError(err)
 	}
@@ -693,11 +693,11 @@ func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
 	})
 }
 
-// Post makes an HTTP POST request to URL, using the contents of the pipe as
+// Post makes an HTTP POST request to url, using the contents of the pipe as
 // the request body, and produces the server's response. See [Pipe.Do] for how
 // the HTTP response status is interpreted.
-func (p *Pipe) Post(URL string) *Pipe {
-	req, err := http.NewRequest(http.MethodPost, URL, p.Reader)
+func (p *Pipe) Post(url string) *Pipe {
+	req, err := http.NewRequest(http.MethodPost, url, p.Reader)
 	if err != nil {
 		return p.WithError(err)
 	}
@@ -905,7 +905,7 @@ func (p *Pipe) writeOrAppendFile(path string, mode int) (int64, error) {
 	if p.Error() != nil {
 		return 0, p.Error()
 	}
-	out, err := os.OpenFile(path, mode, 0666)
+	out, err := os.OpenFile(path, mode, 0o666)
 	if err != nil {
 		p.SetError(err)
 		return 0, err
