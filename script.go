@@ -132,31 +132,33 @@ func IfExists(path string) *Pipe {
 //
 // ListFiles does not recurse into subdirectories; use [FindFiles] instead.
 func ListFiles(path string) *Pipe {
-	if strings.ContainsAny(path, "[]^*?\\{}!") {
-		fileNames, err := filepath.Glob(path)
-		if err != nil {
-			return NewPipe().WithError(err)
-		}
-		return Slice(fileNames)
-	}
-	entries, err := os.ReadDir(path)
+	fileInfo, err := os.Stat(path)
 	if err != nil {
-		// Check for the case where the path matches exactly one file
-		s, err := os.Stat(path)
-		if err != nil {
-			return NewPipe().WithError(err)
-		}
-		if !s.IsDir() {
-			return Echo(path)
-		}
 		return NewPipe().WithError(err)
 	}
-	matches := make([]string, len(entries))
-	for i, e := range entries {
-		matches[i] = filepath.Join(path, e.Name())
+
+	if !fileInfo.IsDir() {
+		// If the path refers to a single file, return it as the output
+		return Echo(path)
 	}
+
+	var matches []string
+	err = filepath.Walk(path, func(file string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			matches = append(matches, file)
+		}
+		return nil
+	})
+	if err != nil {
+		return NewPipe().WithError(err)
+	}
+
 	return Slice(matches)
 }
+
 
 // NewPipe creates a new pipe with an empty reader (use [Pipe.WithReader] to
 // attach another reader to it).
