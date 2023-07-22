@@ -12,11 +12,9 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go-version }}
-          cache: false
       - uses: actions/checkout@v3
       - run: go test ./...
-      - id: govulncheck
-        uses: golang/govulncheck-action@v1
+      - uses: golang/govulncheck-action@v1
         with:
           go-version-input: ${{ matrix.go-version }}
           go-package: ./...
