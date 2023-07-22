@@ -14,7 +14,7 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - uses: actions/checkout@v3
       - run: go test ./...
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
       - uses: golang/govulncheck-action@v1
-        with:
-          go-version-input: ${{ matrix.go-version }}
-          go-package: ./...
