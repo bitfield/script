@@ -761,12 +761,12 @@ func (p *Pipe) SetError(err error) {
 	p.err = err
 }
 
-func (p *Pipe) Base64Encode() (string, error) {
+func (p *Pipe) Base64Encode(enc *base64.Encoding) (string, error) {
 	if p.Error() != nil {
 		return "", p.Error()
 	}
 	var encodedData bytes.Buffer
-	encoder := base64.NewEncoder(base64.StdEncoding, &encodedData)
+	encoder := base64.NewEncoder(enc, &encodedData)
 
 	_, err := io.Copy(encoder, p)
 	if err != nil {
@@ -780,11 +780,11 @@ func (p *Pipe) Base64Encode() (string, error) {
 	return encodedData.String(), nil
 }
 
-func (p *Pipe) Base64Decode() (string, error) {
+func (p *Pipe) Base64Decode(enc *base64.Encoding) (string, error) {
 	if p.Error() != nil {
 		return "", p.Error()
 	}
-	decoder := base64.NewDecoder(base64.StdEncoding, p)
+	decoder := base64.NewDecoder(enc, p)
 
 	var decodedData bytes.Buffer
 	_, err := io.Copy(&decodedData, decoder)

@@ -3,6 +3,7 @@ package script_test
 import (
 	"bufio"
 	"bytes"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -1498,14 +1499,14 @@ func TestBase64Encode_OutputsCorrectHash(t *testing.T) {
 	}{
 		{
 			name:  "for short string",
-			input: "hello, world",
-			want:  "aGVsbG8sIHdvcmxkCg==",
+			input: "Hello, world!",
+			want:  "SGVsbG8sIHdvcmxkIQ==",
 		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := script.Echo(tc.input).Base64Encode()
+			got, err := script.Echo(tc.input).Base64Encode(base64.StdEncoding)
 			if err != nil {
 				t.Fatal(err)
 			}
