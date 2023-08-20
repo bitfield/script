@@ -1492,7 +1492,7 @@ func TestCountLines_ReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	}
 }
 
-func TestBase64Encode_OutputsCorrectHash(t *testing.T) {
+func TestBase64Encode(t *testing.T) {
 	t.Parallel()
 	tcs := []struct {
 		name, input, want string
@@ -1517,7 +1517,7 @@ func TestBase64Encode_OutputsCorrectHash(t *testing.T) {
 	}
 }
 
-func TestBase64Decode_OutputsCorrectHash(t *testing.T) {
+func TestBase64Decode(t *testing.T) {
 	t.Parallel()
 	tcs := []struct {
 		name, input, want string
