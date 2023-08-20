@@ -771,12 +771,10 @@ func (p *Pipe) Base64Encode(enc *base64.Encoding) (string, error) {
 	_, err := io.Copy(encoder, p)
 	if err != nil {
 		p.SetError(err)
-		encoder.Close()
 		return "", err
 	}
 	encoder.Close()
 
-	// TODO: return base64 and an error
 	return encodedData.String(), nil
 }
 
@@ -793,7 +791,6 @@ func (p *Pipe) Base64Decode(enc *base64.Encoding) (string, error) {
 		return "", err
 	}
 
-	// TODO: return base64 and an error
 	return decodedData.String(), nil
 }
 
