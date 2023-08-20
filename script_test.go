@@ -1499,7 +1499,7 @@ func TestBase64Encode_OutputsCorrectHash(t *testing.T) {
 		{
 			name:  "for short string",
 			input: "hello, world",
-			want:  "aGkK",
+			want:  "aGVsbG8sIHdvcmxkCg==",
 		},
 	}
 
