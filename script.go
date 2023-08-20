@@ -2,8 +2,10 @@ package script
 
 import (
 	"bufio"
+	"bytes"
 	"container/ring"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -757,6 +759,42 @@ func (p *Pipe) SetError(err error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.err = err
+}
+
+func (p *Pipe) Base64Encode() (string, error) {
+	if p.Error() != nil {
+		return "", p.Error()
+	}
+	var encodedData bytes.Buffer
+	encoder := base64.NewEncoder(base64.StdEncoding, &encodedData)
+
+	_, err := io.Copy(encoder, p)
+	if err != nil {
+		p.SetError(err)
+		encoder.Close()
+		return "", err
+	}
+	encoder.Close()
+
+	// TODO: return base64 and an error
+	return encodedData.String(), nil
+}
+
+func (p *Pipe) Base64Decode() (string, error) {
+	if p.Error() != nil {
+		return "", p.Error()
+	}
+	decoder := base64.NewDecoder(base64.StdEncoding, p)
+
+	var decodedData bytes.Buffer
+	_, err := io.Copy(&decodedData, decoder)
+	if err != nil {
+		p.SetError(err)
+		return "", err
+	}
+
+	// TODO: return base64 and an error
+	return decodedData.String(), nil
 }
 
 // SHA256Sum returns the hex-encoded SHA-256 hash of the entire contents of the

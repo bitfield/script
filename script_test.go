@@ -1491,6 +1491,31 @@ func TestCountLines_ReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	}
 }
 
+func TestBase64Encode_OutputsCorrectHash(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		name, input, want string
+	}{
+		{
+			name:  "for short string",
+			input: "hello, world",
+			want:  "aGkK",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := script.Echo(tc.input).Base64Encode()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tc.want {
+				t.Errorf("want %q, got %q", tc.want, got)
+			}
+		})
+	}
+}
+
 func TestSHA256Sum_OutputsCorrectHash(t *testing.T) {
 	t.Parallel()
 	tcs := []struct {
