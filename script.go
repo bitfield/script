@@ -849,7 +849,7 @@ func (p *Pipe) Tee(writers ...io.Writer) *Pipe {
 // useful for waiting until concurrent filters have completed (see
 // [Pipe.Filter]).
 func (p *Pipe) Wait() {
-	_, err := io.ReadAll(p)
+	_, err := io.Copy(io.Discard, p)
 	if err != nil {
 		p.SetError(err)
 	}
