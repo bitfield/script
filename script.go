@@ -761,6 +761,8 @@ func (p *Pipe) SetError(err error) {
 	p.err = err
 }
 
+// Base64Encode returns the returns the base64 encoding of the
+// pipe, or an error.
 func (p *Pipe) Base64Encode(enc *base64.Encoding) (string, error) {
 	if p.Error() != nil {
 		return "", p.Error()
@@ -778,6 +780,8 @@ func (p *Pipe) Base64Encode(enc *base64.Encoding) (string, error) {
 	return encodedData.String(), nil
 }
 
+// Base64Decode returns the string represented by the base64
+// pipe, or an error.
 func (p *Pipe) Base64Decode(enc *base64.Encoding) (string, error) {
 	if p.Error() != nil {
 		return "", p.Error()
