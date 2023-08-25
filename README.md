@@ -29,6 +29,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | Unix / shell       | `script` equivalent |
 | ------------------ | ------------------- |
 | (any program name) | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) |
+|                    | [`Execv`](https://pkg.go.dev/github.com/bitfield/script#Execv) |
 | `[ -f FILE ]`      | [`IfExists`](https://pkg.go.dev/github.com/bitfield/script#IfExists) |
 | `>`                | [`WriteFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) |
 | `>>`               | [`AppendFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) |
@@ -177,6 +178,15 @@ PING 127.0.0.1 (127.0.0.1): 56 data bytes
 ...
 ```
 
+If we are construcing Exec arguments dynamically it can be easier to use Execv where we can pass cmd and []args separately without having to escape args.
+
+```go
+args := []string{};
+args = append(args,"127.0.0.1")
+script.Exec("ping",args).Stdout()
+```
+
+
 In the `ping` example, we knew the exact arguments we wanted to send the command, and we just needed to run it once. But what if we don't know the arguments yet? We might get them from the user, for example.
 
 We might like to be able to run the external command repeatedly, each time passing it the next line of data from the pipe as an argument. No worries:
@@ -271,6 +281,7 @@ These are functions that create a pipe with a given contents:
 | [`Do`](https://pkg.go.dev/github.com/bitfield/script#Do) | HTTP response
 | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) | a string
 | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) | command output
+| [`Execv`](https://pkg.go.dev/github.com/bitfield/script#Execv) | command output (args passed as [])
 | [`File`](https://pkg.go.dev/github.com/bitfield/script#File) | file contents
 | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) | recursive file listing
 | [`Get`](https://pkg.go.dev/github.com/bitfield/script#Get) | HTTP response
@@ -293,6 +304,7 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do) | response to supplied HTTP request |
 | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Echo) | all input replaced by given string |
 | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Exec) | filtered through external command |
+| [`Execv`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Execv) | filtered through external command (args passed as []) |
 | [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) | execute given command template for each line of input |
 | [`Filter`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Filter) | user-supplied function filtering a reader to a writer |
 | [`FilterLine`](https://pkg.go.dev/github.com/bitfield/script#Pipe.FilterLine) | user-supplied function filtering each line to a string|
