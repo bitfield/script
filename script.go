@@ -731,8 +731,8 @@ func (p *Pipe) Replace(search, replace string) *Pipe {
 }
 
 // ReplaceRegexp replaces all matches of the compiled regexp re with the string
-// re. $x variables in the replace string are interpreted as by
-// [regexp.Expand]; for example, $1 represents the text of the first submatch.
+// replace. $x variables in the replace string are interpreted as by
+// [regexp#Regexp.Expand]; for example, $1 represents the text of the first submatch.
 func (p *Pipe) ReplaceRegexp(re *regexp.Regexp, replace string) *Pipe {
 	return p.FilterLine(func(line string) string {
 		return re.ReplaceAllString(line, replace)
