@@ -1201,6 +1201,50 @@ func TestExecRunsGoHelpAndGetsUsageMessage(t *testing.T) {
 	}
 }
 
+func TestExecvErrorsWhenTheSpecifiedCommandDoesNotExist(t *testing.T) {
+	t.Parallel()
+	p := script.Execv("doesntexist", []string{"A", "B"})
+	p.Wait()
+	if p.Error() == nil {
+		t.Error("want error running non-existent command")
+	}
+}
+
+func TestExecvRunsGoWithNoArgsAndGetsUsageMessagePlusErrorExitStatus2(t *testing.T) {
+	t.Parallel()
+	// We can't make many cross-platform assumptions about what external
+	// commands will be available, but it seems logical that 'go' would be
+	// (though it may not be in the user's path)
+	p := script.Execv("go", []string{})
+	output, err := p.String()
+	if err == nil {
+		t.Fatal("want error when command returns a non-zero exit status")
+	}
+	if !strings.Contains(output, "Usage") {
+		t.Fatalf("want output containing the word 'Usage', got %q", output)
+	}
+	want := 2
+	got := p.ExitStatus()
+	if want != got {
+		t.Errorf("want exit status %d, got %d", want, got)
+	}
+}
+
+func TestExecvRunsGoHelpAndGetsUsageMessage(t *testing.T) {
+	t.Parallel()
+	p := script.Execv("go", []string{"help"})
+	if p.Error() != nil {
+		t.Fatal(p.Error())
+	}
+	output, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, "Usage") {
+		t.Fatalf("want output containing the word 'Usage', got %q", output)
+	}
+}
+
 func TestFileOutputsContentsOfSpecifiedFile(t *testing.T) {
 	t.Parallel()
 	want := "This is the first line in the file.\nHello, world.\nThis is another line in the file.\n"

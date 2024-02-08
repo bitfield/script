@@ -63,6 +63,13 @@ func Exec(cmdLine string) *Pipe {
 	return NewPipe().Exec(cmdLine)
 }
 
+// Execv creates a pipe that runs cmd as an external command with args []args
+// and produces its combined output (interleaving standard output and standard
+// error). See [Pipe.Execv] for error handling details.
+func Execv(cmd string, args []string) *Pipe {
+	return NewPipe().Execv(cmd, args)
+}
+
 // File creates a pipe that reads from the file path.
 func File(path string) *Pipe {
 	f, err := os.Open(path)
@@ -389,6 +396,33 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 			cmd.Stderr = p.stderr
 		}
 		err = cmd.Start()
+		if err != nil {
+			fmt.Fprintln(cmd.Stderr, err)
+			return err
+		}
+		return cmd.Wait()
+	})
+}
+
+// Execv behaves identically to Exec (runs external command as part of the
+// pipe) however instead of accepting a single cmdLine string takes the cmd and
+// []args separately. This avoids the need to quote args and reparse args
+// if they are generated dynamically and any potential assciated string
+// interpolation bugs
+//
+// # Error handling
+//
+// The error handling is the same as Exec
+func (p *Pipe) Execv(cmd string, args []string) *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		cmd := exec.Command(cmd, args...)
+		cmd.Stdin = r
+		cmd.Stdout = w
+		cmd.Stderr = w
+		if p.stderr != nil {
+			cmd.Stderr = p.stderr
+		}
+		err := cmd.Start()
 		if err != nil {
 			fmt.Fprintln(cmd.Stderr, err)
 			return err
