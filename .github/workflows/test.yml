@@ -1,5 +1,5 @@
 # Based on https://github.com/mvdan/github-actions-golang
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 name: Tests
 jobs:
   test:
