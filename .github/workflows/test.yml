@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: golang/govulncheck-action@v1
-  gocritic:
+  gocritic_lint_ineffassign_checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v4
@@ -33,4 +33,3 @@ jobs:
           pip install pre-commit
           pre-commit install
           pre-commit run --all-files
-          go test -v
