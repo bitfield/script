@@ -24,5 +24,13 @@ jobs:
       - uses: actions/setup-go@v4
       - uses: actions/checkout@v3
       - run: |
+          set -e
+          sudo apt-get -qq update && sudo apt-get install -y shellcheck
           go install github.com/go-critic/go-critic/cmd/gocritic@latest
-          gocritic check .
+          go install golang.org/x/tools/cmd/goimports@latest
+          go install golang.org/x/lint/golint@latest
+          go install github.com/gordonklaus/ineffassign@latest
+          pip install pre-commit
+          pre-commit install
+          pre-commit run --all-files
+          go test -v
