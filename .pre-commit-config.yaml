@@ -1,0 +1,11 @@
+repos:
+  - repo: https://github.com/jessp01/pre-commit-golang.git
+    rev: v0.5.7
+    hooks:
+      - id: go-fmt
+      - id: go-imports
+      - id: go-vet
+      - id: go-lint
+      - id: go-critic
+      - id: go-ineffassign
+      - id: shellcheck
