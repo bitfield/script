@@ -522,13 +522,20 @@ func (p *Pipe) First(n int) *Pipe {
 	if n <= 0 {
 		return NewPipe()
 	}
-	i := 0
-	return p.FilterScan(func(line string, w io.Writer) {
-		if i >= n {
-			return
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		scanner := newScanner(r)
+		i := 0
+		for scanner.Scan() {
+			_, err := fmt.Fprintln(w, scanner.Text())
+			if err != nil {
+				return err
+			}
+			i++
+			if i >= n {
+				break
+			}
 		}
-		fmt.Fprintln(w, line)
-		i++
+		return scanner.Err()
 	})
 }
 
@@ -963,4 +970,11 @@ func newScanner(r io.Reader) *bufio.Scanner {
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 4096), math.MaxInt)
 	return scanner
+}
+
+// Prompt creates a pipe that reads user input from stdin after displaying the
+// specified prompt.
+func Prompt(prompt string) *Pipe {
+	fmt.Print(prompt)
+	return Stdin().First(1)
 }
