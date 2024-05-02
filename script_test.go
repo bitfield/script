@@ -1201,6 +1201,21 @@ func TestExecRunsGoHelpAndGetsUsageMessage(t *testing.T) {
 	}
 }
 
+func TestExecRunsGoHelpVariantAndGetsUsageMessage(t *testing.T) {
+	t.Parallel()
+	p := script.Exec("go", "help")
+	if p.Error() != nil {
+		t.Fatal(p.Error())
+	}
+	output, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output, "Usage") {
+		t.Fatalf("want output containing the word 'Usage', got %q", output)
+	}
+}
+
 func TestFileOutputsContentsOfSpecifiedFile(t *testing.T) {
 	t.Parallel()
 	want := "This is the first line in the file.\nHello, world.\nThis is another line in the file.\n"
