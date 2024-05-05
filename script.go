@@ -967,10 +967,3 @@ func newScanner(r io.Reader) *bufio.Scanner {
 	scanner.Buffer(make([]byte, 4096), math.MaxInt)
 	return scanner
 }
-
-// Prompt creates a pipe that reads user input from stdin after displaying the
-// specified prompt.
-func Prompt(prompt string) *Pipe {
-	fmt.Print(prompt)
-	return Stdin().First(1)
-}
