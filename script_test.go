@@ -573,6 +573,24 @@ func TestFirstHasNoEffectGivenLessThanNInputLines(t *testing.T) {
 	}
 }
 
+func TestFirstDoesNotConsumeUnnecessaryData(t *testing.T) {
+	t.Parallel()
+	// First uses a 4096-byte buffer, so will always read at least
+	// that much, but no more (once N lines have been read).
+	r := strings.NewReader(strings.Repeat("line\n", 1000))
+	got, err := script.NewPipe().WithReader(r).First(1).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "line\n"
+	if want != got {
+		t.Errorf("want output %q, got %q", want, got)
+	}
+	if r.Len() == 0 {
+		t.Errorf("no data left in reader")
+	}
+}
+
 func TestFreqHandlesLongLines(t *testing.T) {
 	t.Parallel()
 	got, err := script.Echo(longLine).Freq().Slice()

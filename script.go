@@ -514,7 +514,8 @@ func (p *Pipe) FilterScan(filter func(string, io.Writer)) *Pipe {
 
 // First produces only the first n lines of the pipe's contents, or all the
 // lines if there are less than n. If n is zero or negative, there is no output
-// at all.
+// at all. When n lines have been produced, First stops reading its input and
+// sends EOF to its output.
 func (p *Pipe) First(n int) *Pipe {
 	if p.Error() != nil {
 		return p
@@ -522,13 +523,15 @@ func (p *Pipe) First(n int) *Pipe {
 	if n <= 0 {
 		return NewPipe()
 	}
-	i := 0
-	return p.FilterScan(func(line string, w io.Writer) {
-		if i >= n {
-			return
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		scanner := newScanner(r)
+		for i := 0; i < n && scanner.Scan(); i++ {
+			_, err := fmt.Fprintln(w, scanner.Text())
+			if err != nil {
+				return err
+			}
 		}
-		fmt.Fprintln(w, line)
-		i++
+		return scanner.Err()
 	})
 }
 
