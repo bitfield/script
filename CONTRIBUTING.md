@@ -95,6 +95,42 @@ This is easy in Go. Just use `gofmt`. End of.
 
 Your code should also pass `golint` and `go vet` without errors (and if you want to run other linters too, that would be excellent). Very, very occasionally there are situations where `golint` incorrectly detects a problem, and the workaround is awkward or annoying. In that situation, comment on the PR and we'll work out how best to handle it.
 
+### pre-commit hooks
+
+Install the needed GO packages:
+```sh
+go install github.com/go-critic/go-critic/cmd/gocritic@latest
+go install golang.org/x/tools/cmd/goimports@latest
+go install golang.org/x/lint/golint@latest
+go install github.com/gordonklaus/ineffassign@latest
+```
+
+Install the `pre-commit` util:
+```sh
+pip install pre-commit
+```
+
+Generate `.git/hooks/pre-commit`:
+```sh
+pre-commit install
+```
+
+Following that, these tests will run every time you invoke `git commit`:
+```sh
+go fmt...................................................................Passed
+go imports...............................................................Passed
+go vet...................................................................Passed
+go lint..................................................................Passed
+go-critic................................................................Passed
+shellcheck...............................................................Passed
+```
+
+To manually run all tests on all repo files, invoke:
+
+```sh
+pre-commit run --all-files
+```
+
 # Documentation
 
 It doesn't matter if you write the greatest piece of code in the history of the world, if no one knows it exists, or how to use it.
