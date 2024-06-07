@@ -1,7 +1,8 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/bitfield/script.svg)](https://pkg.go.dev/github.com/bitfield/script)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bitfield/script)](https://goreportcard.com/report/github.com/bitfield/script)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge-flat.svg)](https://github.com/avelino/awesome-go)
-![Tests](https://github.com/bitfield/script/actions/workflows/test.yml/badge.svg)
+![CI](https://github.com/bitfield/script/actions/workflows/ci.yml/badge.svg)
+![Audit](https://github.com/bitfield/script/actions/workflows/audit.yml/badge.svg)
 
 ```go
 import "github.com/bitfield/script"
