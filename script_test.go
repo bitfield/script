@@ -3,6 +3,7 @@ package script_test
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -1217,6 +1218,22 @@ func TestExecRunsGoHelpAndGetsUsageMessage(t *testing.T) {
 	if !strings.Contains(output, "Usage") {
 		t.Fatalf("want output containing the word 'Usage', got %q", output)
 	}
+}
+
+func TestExecContextCencel(t *testing.T) {
+	t.Parallel()
+	// We can't make many cross-platform assumptions about what external
+	// commands will be available, but it seems logical that 'go' would be
+	// (though it may not be in the user's path)
+	ctx, cancel := context.WithTimeout(context.Background(), 1)
+	defer cancel()
+	p := script.ExecContext(ctx, "sleep 100")
+	p.Wait()
+  err := p.Error()
+	if err == nil {
+		t.Fatal("when command is canceled there should be an error")
+	}
+	t.Log(p.ExitStatus())
 }
 
 func TestFileOutputsContentsOfSpecifiedFile(t *testing.T) {
