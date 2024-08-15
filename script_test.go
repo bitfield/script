@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"testing/iotest"
@@ -1765,6 +1766,41 @@ func TestWithStdout_SetsSpecifiedWriterAsStdout(t *testing.T) {
 	got := buf.String()
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestWithEnvironment_SetsSuppliedEnvironmentOnPipe(t *testing.T) {
+	t.Parallel()
+	buf := new(bytes.Buffer)
+	env := []string{"ENV1=test1", "ENV2=test2"}
+
+	_, err := script.NewPipe().WithStdout(buf).WithEnv(env).Exec("printenv").Stdout()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+
+	if !slices.Equal(got, env) {
+		t.Errorf("expected %v, got %v", env, got)
+	}
+}
+
+func TestWithoutEnvironment_FallsBackToDefaultEnvironment(t *testing.T) {
+	t.Parallel()
+	buf := new(bytes.Buffer)
+
+	_, err := script.NewPipe().WithStdout(buf).Exec("printenv").Stdout()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// not setting the environment should simply use the task's default environment
+	expected := os.Environ()
+	got := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+
+	if !slices.Equal(got, expected) {
+		t.Errorf("expected %v, got %v", expected, got)
 	}
 }
 
