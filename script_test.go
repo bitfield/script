@@ -1786,6 +1786,22 @@ func TestWithEnvironment_SetsSuppliedEnvironmentOnPipe(t *testing.T) {
 	}
 }
 
+func TestWithEnvironment_SetEmptyEnvironment(t *testing.T) {
+	t.Parallel()
+	buf := new(bytes.Buffer)
+	env := []string{}
+
+	_, err := script.NewPipe().WithStdout(buf).WithEnv(env).Exec("printenv").Stdout()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(buf.String()) != 0 {
+		got := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+		t.Errorf("expected 0 environment variables, got %d %v", len(got), got)
+	}
+}
+
 func TestWithoutEnvironment_FallsBackToDefaultEnvironment(t *testing.T) {
 	t.Parallel()
 	buf := new(bytes.Buffer)
