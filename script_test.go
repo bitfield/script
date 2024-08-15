@@ -1769,7 +1769,7 @@ func TestWithStdout_SetsSpecifiedWriterAsStdout(t *testing.T) {
 	}
 }
 
-func TestWithEnvironment_SetsSuppliedEnvironmentOnPipe(t *testing.T) {
+func TestWithEnv_SetsSuppliedEnvironmentOnPipe(t *testing.T) {
 	t.Parallel()
 	buf := new(bytes.Buffer)
 	env := []string{"ENV1=test1", "ENV2=test2"}
@@ -1786,7 +1786,7 @@ func TestWithEnvironment_SetsSuppliedEnvironmentOnPipe(t *testing.T) {
 	}
 }
 
-func TestWithEnvironment_SetEmptyEnvironment(t *testing.T) {
+func TestWithEnv_SetEmptyEnvironment(t *testing.T) {
 	t.Parallel()
 	buf := new(bytes.Buffer)
 	env := []string{}
@@ -1802,7 +1802,7 @@ func TestWithEnvironment_SetEmptyEnvironment(t *testing.T) {
 	}
 }
 
-func TestWithoutEnvironment_FallsBackToDefaultEnvironment(t *testing.T) {
+func TestWithoutEnv_FallsBackToDefaultEnvironment(t *testing.T) {
 	t.Parallel()
 	buf := new(bytes.Buffer)
 
