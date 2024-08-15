@@ -1769,23 +1769,6 @@ func TestWithStdout_SetsSpecifiedWriterAsStdout(t *testing.T) {
 	}
 }
 
-func TestWithEnv_SetsSuppliedEnvironmentOnPipe(t *testing.T) {
-	t.Parallel()
-	buf := new(bytes.Buffer)
-	env := []string{"ENV1=test1", "ENV2=test2"}
-
-	_, err := script.NewPipe().WithStdout(buf).WithEnv(env).Exec("printenv").Stdout()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	got := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
-
-	if !slices.Equal(got, env) {
-		t.Errorf("expected %v, got %v", env, got)
-	}
-}
-
 func TestWithEnv_SetEmptyEnvironment(t *testing.T) {
 	t.Parallel()
 	buf := new(bytes.Buffer)
@@ -1799,6 +1782,23 @@ func TestWithEnv_SetEmptyEnvironment(t *testing.T) {
 	if len(buf.String()) != 0 {
 		got := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
 		t.Errorf("expected 0 environment variables, got %d %v", len(got), got)
+	}
+}
+
+func TestWithEnv_SetMultipleEnvVars(t *testing.T) {
+	t.Parallel()
+	buf := new(bytes.Buffer)
+	env := []string{"ENV1=test1", "ENV2=test2"}
+
+	_, err := script.NewPipe().WithStdout(buf).WithEnv(env).Exec("printenv").Stdout()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+
+	if !slices.Equal(got, env) {
+		t.Errorf("expected %v, got %v", env, got)
 	}
 }
 
