@@ -35,7 +35,7 @@ type Pipe struct {
 	mu  *sync.Mutex
 	err error
 
-	// env contains the environment to run the exec command with.
+	// env contains the environment to run any exec commands with.
 	// Each entry in the array should be of the form key=value.
 	// If env is not nil, it will replace the default environment variables
 	// when executing commands.
