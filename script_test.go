@@ -1802,7 +1802,7 @@ func TestWithEnv_SetEmptyEnvironment(t *testing.T) {
 	}
 }
 
-func TestWithoutEnv_FallsBackToDefaultEnvironment(t *testing.T) {
+func TestNotSettingEnvFallsBackToDefaultEnvironment(t *testing.T) {
 	t.Parallel()
 	buf := new(bytes.Buffer)
 
