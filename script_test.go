@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"slices"
 	"strings"
 	"testing"
 	"testing/iotest"
@@ -1769,54 +1768,49 @@ func TestWithStdout_SetsSpecifiedWriterAsStdout(t *testing.T) {
 	}
 }
 
-func TestWithEnv_SetEmptyEnvironment(t *testing.T) {
+func TestWithEnv_UnsetsAllEnvVarsGivenEmptySlice(t *testing.T) {
 	t.Parallel()
-	buf := new(bytes.Buffer)
-	env := []string{}
+	want := []string{}
 
-	_, err := script.NewPipe().WithStdout(buf).WithEnv(env).Exec("printenv").Stdout()
+	output, err := script.NewPipe().WithEnv(want).Exec("printenv").String()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(buf.String()) != 0 {
-		got := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
-		t.Errorf("expected 0 environment variables, got %d %v", len(got), got)
+	if output != "" {
+		t.Errorf("want empty environment, got %q", output)
 	}
 }
 
 func TestWithEnv_SetMultipleEnvVars(t *testing.T) {
 	t.Parallel()
-	buf := new(bytes.Buffer)
 	env := []string{"ENV1=test1", "ENV2=test2"}
 
-	_, err := script.NewPipe().WithStdout(buf).WithEnv(env).Exec("printenv").Stdout()
+	got, err := script.NewPipe().WithEnv(env).Exec("printenv").String()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	got := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+	want := "ENV1=test1\nENV2=test2\n"
 
-	if !slices.Equal(got, env) {
-		t.Errorf("expected %v, got %v", env, got)
+	if got != want {
+		t.Errorf("want %v, got %v", want, got)
 	}
 }
 
 func TestNotSettingEnvFallsBackToDefaultEnvironment(t *testing.T) {
 	t.Parallel()
-	buf := new(bytes.Buffer)
 
-	_, err := script.NewPipe().WithStdout(buf).Exec("printenv").Stdout()
+	got, err := script.NewPipe().Exec("printenv").String()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// not setting the environment should simply use the task's default environment
-	expected := os.Environ()
-	got := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+	want := strings.Join(os.Environ(), "\n") + "\n"
 
-	if !slices.Equal(got, expected) {
-		t.Errorf("expected %v, got %v", expected, got)
+	if got != want {
+		t.Errorf("want %v, got %v", want, got)
 	}
 }
 
