@@ -34,6 +34,12 @@ type Pipe struct {
 	// because pipe stages are concurrent, protect 'err'
 	mu  *sync.Mutex
 	err error
+
+	// env contains the environment to run the exec command with.
+	// Each entry in the array should be of the form key=value.
+	// If env is not nil, it will replace the default environment variables
+	// when executing commands.
+	env []string
 }
 
 // Args creates a pipe containing the program's command-line arguments from
@@ -166,6 +172,7 @@ func NewPipe() *Pipe {
 		mu:         new(sync.Mutex),
 		stdout:     os.Stdout,
 		httpClient: http.DefaultClient,
+		env:        nil,
 	}
 }
 
@@ -388,6 +395,9 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		if p.stderr != nil {
 			cmd.Stderr = p.stderr
 		}
+		if p.env != nil {
+			cmd.Env = p.env
+		}
 		err = cmd.Start()
 		if err != nil {
 			fmt.Fprintln(cmd.Stderr, err)
@@ -427,6 +437,9 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 			cmd.Stderr = w
 			if p.stderr != nil {
 				cmd.Stderr = p.stderr
+			}
+			if p.env != nil {
+				cmd.Env = p.env
 			}
 			err = cmd.Start()
 			if err != nil {
@@ -895,6 +908,14 @@ func (p *Pipe) WithStderr(w io.Writer) *Pipe {
 // default [os.Stdout].
 func (p *Pipe) WithStdout(w io.Writer) *Pipe {
 	p.stdout = w
+	return p
+}
+
+// WithEnv sets the pipe's environment to the string array env. This will override
+// the default process environment variables when executing commands run via [Pipe.Exec]
+// or [Pipe.ExecForEach].
+func (p *Pipe) WithEnv(env []string) *Pipe {
+	p.env = env
 	return p
 }
 
