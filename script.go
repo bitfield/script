@@ -31,7 +31,7 @@ type Pipe struct {
 	stdout, stderr io.Writer
 	httpClient     *http.Client
 
-	// because pipe stages are concurrent, protect 'err'
+	// because pipe stages are concurrent, protect 'err' and 'stderr'
 	mu  *sync.Mutex
 	err error
 }
@@ -385,9 +385,12 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		cmd.Stdin = r
 		cmd.Stdout = w
 		cmd.Stderr = w
-		if p.stderr != nil {
+
+		pipeStderr := p.getStderr()
+		if pipeStderr != nil {
 			cmd.Stderr = p.stderr
 		}
+
 		err = cmd.Start()
 		if err != nil {
 			fmt.Fprintln(cmd.Stderr, err)
@@ -425,7 +428,8 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 			cmd := exec.Command(args[0], args[1:]...)
 			cmd.Stdout = w
 			cmd.Stderr = w
-			if p.stderr != nil {
+			pipeStderr := p.getStderr()
+			if pipeStderr != nil {
 				cmd.Stderr = p.stderr
 			}
 			err = cmd.Start()
@@ -762,6 +766,30 @@ func (p *Pipe) SetError(err error) {
 	p.err = err
 }
 
+// setStderr sets the stderr writer on the pipe. This field
+// is protected by a mutex since stderr is accessed inside a
+// goroutine from [Pipe.Exec].
+func (p *Pipe) setStderr(stderr io.Writer) {
+	if p.mu == nil { // uninitialised pipe
+		return
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.stderr = stderr
+}
+
+// getStderr obtains the stderr writer on the pipe. This field
+// is protected by a mutex since stderr is accessed inside a
+// goroutine from [Pipe.Exec].
+func (p *Pipe) getStderr() io.Writer {
+	if p.mu == nil { // uninitialised pipe
+		return nil
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.stderr
+}
+
 // SHA256Sum returns the hex-encoded SHA-256 hash of the entire contents of the
 // pipe, or an error.
 func (p *Pipe) SHA256Sum() (string, error) {
@@ -887,7 +915,7 @@ func (p *Pipe) WithReader(r io.Reader) *Pipe {
 // [Pipe.Exec] or [Pipe.ExecForEach] to the writer w, instead of going to the
 // pipe as it normally would.
 func (p *Pipe) WithStderr(w io.Writer) *Pipe {
-	p.stderr = w
+	p.setStderr(w)
 	return p
 }
 
