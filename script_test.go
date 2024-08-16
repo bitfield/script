@@ -1850,6 +1850,44 @@ func TestReadReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	}
 }
 
+func TestEncodeBase64(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		name string
+		s    string
+		want string
+	}{
+		{
+			name: "empty string",
+			s:    "",
+			want: "\n",
+		},
+		{
+			name: "single line string",
+			s:    "hello world",
+			want: "aGVsbG8gd29ybGQ=\n",
+		},
+		{
+			name: "multi line string",
+			s:    "hello\nthere\nworld\n",
+			want: "aGVsbG8KdGhlcmUKd29ybGQK\n",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			s, err := script.Echo(tc.s).EncodeBase64().String()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if s != tc.want {
+				t.Errorf("want %s, got %s", tc.want, s)
+			}
+		})
+	}
+}
+
 func ExampleArgs() {
 	script.Args().Stdout()
 	// prints command-line arguments
@@ -2282,6 +2320,12 @@ func ExampleSlice() {
 	// 1
 	// 2
 	// 3
+}
+
+func ExamplePipe_EncodeBase64() {
+	script.Echo("hello\nthere\nworld\n").EncodeBase64().Stdout()
+	// Output:
+	// aGVsbG8KdGhlcmUKd29ybGQK
 }
 
 // A string containing a line longer than bufio.MaxScanTokenSize, for testing
