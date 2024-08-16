@@ -290,7 +290,7 @@ func (p *Pipe) DecodeBase64() *Pipe {
 		if err != nil {
 			return err
 		}
-		fmt.Fprintln(w, string(sEnc))
+		fmt.Fprint(w, string(sEnc))
 		return nil
 	})
 }
@@ -377,7 +377,7 @@ func (p *Pipe) EncodeBase64() *Pipe {
 		}
 
 		sEnc := base64.StdEncoding.EncodeToString(buf.Bytes())
-		fmt.Fprintln(w, sEnc)
+		fmt.Fprint(w, sEnc)
 		return nil
 	})
 }

@@ -1860,29 +1860,29 @@ func TestEncodeBase64(t *testing.T) {
 		{
 			name: "empty string",
 			s:    "",
-			want: "\n",
+			want: "",
 		},
 		{
 			name: "single line string",
 			s:    "hello world",
-			want: "aGVsbG8gd29ybGQ=\n",
+			want: "aGVsbG8gd29ybGQ=",
 		},
 		{
 			name: "multi line string",
 			s:    "hello\nthere\nworld\n",
-			want: "aGVsbG8KdGhlcmUKd29ybGQK\n",
+			want: "aGVsbG8KdGhlcmUKd29ybGQK",
 		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			s, err := script.Echo(tc.s).EncodeBase64().String()
+			got, err := script.Echo(tc.s).EncodeBase64().String()
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if s != tc.want {
-				t.Errorf("want %s, got %s", tc.want, s)
+			if got != tc.want {
+				t.Errorf("want %s, got %s", tc.want, got)
 			}
 		})
 	}
@@ -1898,31 +1898,60 @@ func TestDecodeBase64(t *testing.T) {
 		{
 			name: "empty string",
 			s:    "",
-			want: "\n",
+			want: "",
 		},
 		{
 			name: "single line output",
 			s:    "aGVsbG8gd29ybGQ=",
-			want: "hello world\n",
+			want: "hello world",
 		},
 		{
 			name: "multi line output",
 			s:    "aGVsbG8KdGhlcmUKd29ybGQK",
-			want: "hello\nthere\nworld\n\n",
+			want: "hello\nthere\nworld\n",
 		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			s, err := script.Echo(tc.s).DecodeBase64().String()
+			got, err := script.Echo(tc.s).DecodeBase64().String()
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if s != tc.want {
-				t.Errorf("want %s, got %s", tc.want, s)
+			if got != tc.want {
+				t.Errorf("want %s, got %s", tc.want, got)
 			}
 		})
+	}
+}
+
+func TestEncodeAndDecodeBase64(t *testing.T) {
+	t.Parallel()
+	want := "hello world"
+
+	got, err := script.Echo(want).EncodeBase64().DecodeBase64().String()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got != want {
+		t.Errorf("want %s, got %s", want, got)
+	}
+
+}
+
+func TestDecodeAndEncodeBase64(t *testing.T) {
+	t.Parallel()
+	want := "aGVsbG8gd29ybGQ="
+
+	got, err := script.Echo(want).DecodeBase64().EncodeBase64().String()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got != want {
+		t.Errorf("want %s, got %s", want, got)
 	}
 }
 
