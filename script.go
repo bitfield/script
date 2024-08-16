@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"container/ring"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -966,4 +967,19 @@ func newScanner(r io.Reader) *bufio.Scanner {
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 4096), math.MaxInt)
 	return scanner
+}
+
+// EncodeBase64 encodes the input with standard base64 encoding.
+func (p *Pipe) EncodeBase64() *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		output := new(strings.Builder)
+		_, err := io.Copy(output, r)
+		if err != nil {
+			return err
+		}
+
+		sEnc := base64.StdEncoding.EncodeToString([]byte(output.String()))
+		fmt.Fprintln(w, sEnc)
+		return nil
+	})
 }
