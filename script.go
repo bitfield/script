@@ -2,6 +2,7 @@ package script
 
 import (
 	"bufio"
+	"bytes"
 	"container/ring"
 	"crypto/sha256"
 	"encoding/base64"
@@ -276,6 +277,24 @@ func (p *Pipe) CountLines() (lines int, err error) {
 	return lines, p.Error()
 }
 
+// DecodeBase64 produces the string represented by the base64 encoded input.
+func (p *Pipe) DecodeBase64() *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		buf := new(bytes.Buffer)
+		_, err := buf.ReadFrom(r)
+		if err != nil {
+			return err
+		}
+
+		sEnc, err := base64.StdEncoding.DecodeString(buf.String())
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(w, string(sEnc))
+		return nil
+	})
+}
+
 // Dirname reads paths from the pipe, one per line, and produces only the
 // parent directories of each path. For example, /usr/local/bin/foo would
 // become just /usr/local/bin. This is the complementary operation to
@@ -346,6 +365,21 @@ func (p *Pipe) Echo(s string) *Pipe {
 		return p
 	}
 	return p.WithReader(strings.NewReader(s))
+}
+
+// EncodeBase64 produces the base64 encoding of the input.
+func (p *Pipe) EncodeBase64() *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		buf := new(bytes.Buffer)
+		_, err := buf.ReadFrom(r)
+		if err != nil {
+			return err
+		}
+
+		sEnc := base64.StdEncoding.EncodeToString(buf.Bytes())
+		fmt.Fprintln(w, sEnc)
+		return nil
+	})
 }
 
 // Error returns any error present on the pipe, or nil otherwise.
@@ -967,37 +1001,4 @@ func newScanner(r io.Reader) *bufio.Scanner {
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 4096), math.MaxInt)
 	return scanner
-}
-
-// EncodeBase64 produces the base64 encoding of the input.
-func (p *Pipe) EncodeBase64() *Pipe {
-	return p.Filter(func(r io.Reader, w io.Writer) error {
-		output := new(strings.Builder)
-		_, err := io.Copy(output, r)
-		if err != nil {
-			return err
-		}
-
-		sEnc := base64.StdEncoding.EncodeToString([]byte(output.String()))
-		fmt.Fprintln(w, sEnc)
-		return nil
-	})
-}
-
-// DecodeBase64 produces the string represented by the base64 encoded input.
-func (p *Pipe) DecodeBase64() *Pipe {
-	return p.Filter(func(r io.Reader, w io.Writer) error {
-		output := new(strings.Builder)
-		_, err := io.Copy(output, r)
-		if err != nil {
-			return err
-		}
-
-		sEnc, err := base64.StdEncoding.DecodeString(output.String())
-		if err != nil {
-			return err
-		}
-		fmt.Fprintln(w, string(sEnc))
-		return nil
-	})
 }
