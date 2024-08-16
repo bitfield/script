@@ -385,12 +385,10 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		cmd.Stdin = r
 		cmd.Stdout = w
 		cmd.Stderr = w
-
 		pipeStderr := p.getStderr()
 		if pipeStderr != nil {
 			cmd.Stderr = p.stderr
 		}
-
 		err = cmd.Start()
 		if err != nil {
 			fmt.Fprintln(cmd.Stderr, err)
