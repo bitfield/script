@@ -1850,6 +1850,19 @@ func TestReadReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	}
 }
 
+// TestWithStdErrAfterExec is a regression test that was added to test against
+// a race condition for Pipe.stderr.
+func TestWithStdErrAfterExec(t *testing.T) {
+	t.Parallel()
+	stdOut := new(bytes.Buffer)
+	stdErr := new(bytes.Buffer)
+
+	_, err := script.Exec("echo").WithStdout(stdOut).WithStderr(stdErr).Stdout()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func ExampleArgs() {
 	script.Args().Stdout()
 	// prints command-line arguments
