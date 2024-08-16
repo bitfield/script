@@ -1888,6 +1888,44 @@ func TestEncodeBase64(t *testing.T) {
 	}
 }
 
+func TestDecodeBase64(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		name string
+		s    string
+		want string
+	}{
+		{
+			name: "empty string",
+			s:    "",
+			want: "\n",
+		},
+		{
+			name: "single line output",
+			s:    "aGVsbG8gd29ybGQ=",
+			want: "hello world\n",
+		},
+		{
+			name: "multi line output",
+			s:    "aGVsbG8KdGhlcmUKd29ybGQK",
+			want: "hello\nthere\nworld\n\n",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			s, err := script.Echo(tc.s).DecodeBase64().String()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if s != tc.want {
+				t.Errorf("want %s, got %s", tc.want, s)
+			}
+		})
+	}
+}
+
 func ExampleArgs() {
 	script.Args().Stdout()
 	// prints command-line arguments
@@ -2326,6 +2364,14 @@ func ExamplePipe_EncodeBase64() {
 	script.Echo("hello\nthere\nworld\n").EncodeBase64().Stdout()
 	// Output:
 	// aGVsbG8KdGhlcmUKd29ybGQK
+}
+
+func ExamplePipe_DecodeBase64() {
+	script.Echo("aGVsbG8KdGhlcmUKd29ybGQK").DecodeBase64().Stdout()
+	// Output:
+	// hello
+	// there
+	// world
 }
 
 // A string containing a line longer than bufio.MaxScanTokenSize, for testing
