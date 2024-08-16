@@ -969,7 +969,7 @@ func newScanner(r io.Reader) *bufio.Scanner {
 	return scanner
 }
 
-// EncodeBase64 encodes the input with standard base64 encoding.
+// EncodeBase64 produces the base64 encoding of the input.
 func (p *Pipe) EncodeBase64() *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
 		output := new(strings.Builder)
@@ -980,6 +980,24 @@ func (p *Pipe) EncodeBase64() *Pipe {
 
 		sEnc := base64.StdEncoding.EncodeToString([]byte(output.String()))
 		fmt.Fprintln(w, sEnc)
+		return nil
+	})
+}
+
+// DecodeBase64 produces the string represented by the base64 encoded input.
+func (p *Pipe) DecodeBase64() *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		output := new(strings.Builder)
+		_, err := io.Copy(output, r)
+		if err != nil {
+			return err
+		}
+
+		sEnc, err := base64.StdEncoding.DecodeString(output.String())
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(w, string(sEnc))
 		return nil
 	})
 }
