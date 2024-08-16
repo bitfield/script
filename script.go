@@ -387,7 +387,7 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		cmd.Stderr = w
 		pipeStderr := p.getStderr()
 		if pipeStderr != nil {
-			cmd.Stderr = p.stderr
+			cmd.Stderr = pipeStderr
 		}
 		err = cmd.Start()
 		if err != nil {
@@ -428,7 +428,7 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 			cmd.Stderr = w
 			pipeStderr := p.getStderr()
 			if pipeStderr != nil {
-				cmd.Stderr = p.stderr
+				cmd.Stderr = pipeStderr
 			}
 			err = cmd.Start()
 			if err != nil {
