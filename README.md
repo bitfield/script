@@ -313,6 +313,8 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) | matching text replaced with given string |
 | [`SHA256Sums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sums) | SHA-256 hashes of each listed file |
 | [`Tee`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Tee) | input copied to supplied writers |
+| [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) | input encoded to base64 |
+| [`DecodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.DecodeBase64) | decode base64 encoded string |
 
 Note that filters run concurrently, rather than producing nothing until each stage has fully read its input. This is convenient for executing long-running commands, for example. If you do need to wait for the pipeline to complete, call [`Wait`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Wait).
 
