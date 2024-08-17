@@ -1906,6 +1906,22 @@ func TestDecodeBase64(t *testing.T) {
 	}
 }
 
+func TestDecodeBase64WithPadding(t *testing.T) {
+	t.Parallel()
+
+	input := "=aGVsbG8gd29ybGQ="
+	want := "hello world"
+
+	got, err := script.Echo(input).DecodeBase64().String()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got != want {
+		t.Errorf("want %s, got %s", want, got)
+	}
+}
+
 func TestEncodeAndDecodeBase64(t *testing.T) {
 	t.Parallel()
 	for _, tc := range base64Cases {
@@ -1933,17 +1949,18 @@ func TestEncodeAndDecodeBase64(t *testing.T) {
 	}
 }
 
-func TestEncodeAndDecodeBase64Bytes(t *testing.T) {
+func TestEncodeBase64Bytes(t *testing.T) {
 	t.Parallel()
-	want := []byte{8, 0, 0, 16}
-	input := bytes.NewReader(want)
+	input := []byte{8, 0, 0, 16}
+	reader := bytes.NewReader(input)
+	want := "CAAAEA=="
 
-	got, err := script.NewPipe().WithReader(input).EncodeBase64().DecodeBase64().Bytes()
+	got, err := script.NewPipe().WithReader(reader).EncodeBase64().String()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !bytes.Equal(want, got) {
+	if got != want {
 		t.Errorf("want %s, got %s", want, got)
 	}
 }
