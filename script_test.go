@@ -1850,39 +1850,40 @@ func TestReadReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	}
 }
 
+var base64Cases = []struct {
+	name    string
+	decoded string
+	encoded string
+}{
+	{
+		name:    "empty string",
+		decoded: "",
+		encoded: "",
+	},
+	{
+		name:    "single line string",
+		decoded: "hello world",
+		encoded: "aGVsbG8gd29ybGQ=",
+	},
+	{
+		name:    "multi line string",
+		decoded: "hello\nthere\nworld\n",
+		encoded: "aGVsbG8KdGhlcmUKd29ybGQK",
+	},
+}
+
 func TestEncodeBase64(t *testing.T) {
 	t.Parallel()
-	tcs := []struct {
-		name string
-		s    string
-		want string
-	}{
-		{
-			name: "empty string",
-			s:    "",
-			want: "",
-		},
-		{
-			name: "single line string",
-			s:    "hello world",
-			want: "aGVsbG8gd29ybGQ=",
-		},
-		{
-			name: "multi line string",
-			s:    "hello\nthere\nworld\n",
-			want: "aGVsbG8KdGhlcmUKd29ybGQK",
-		},
-	}
 
-	for _, tc := range tcs {
+	for _, tc := range base64Cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := script.Echo(tc.s).EncodeBase64().String()
+			got, err := script.Echo(tc.decoded).EncodeBase64().String()
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if got != tc.want {
-				t.Errorf("want %s, got %s", tc.want, got)
+			if got != tc.encoded {
+				t.Errorf("want %s, got %s", tc.encoded, got)
 			}
 		})
 	}
@@ -1890,37 +1891,16 @@ func TestEncodeBase64(t *testing.T) {
 
 func TestDecodeBase64(t *testing.T) {
 	t.Parallel()
-	tcs := []struct {
-		name string
-		s    string
-		want string
-	}{
-		{
-			name: "empty string",
-			s:    "",
-			want: "",
-		},
-		{
-			name: "single line output",
-			s:    "aGVsbG8gd29ybGQ=",
-			want: "hello world",
-		},
-		{
-			name: "multi line output",
-			s:    "aGVsbG8KdGhlcmUKd29ybGQK",
-			want: "hello\nthere\nworld\n",
-		},
-	}
 
-	for _, tc := range tcs {
+	for _, tc := range base64Cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := script.Echo(tc.s).DecodeBase64().String()
+			got, err := script.Echo(tc.encoded).DecodeBase64().String()
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if got != tc.want {
-				t.Errorf("want %s, got %s", tc.want, got)
+			if got != tc.decoded {
+				t.Errorf("want %s, got %s", tc.decoded, got)
 			}
 		})
 	}
@@ -1928,30 +1908,28 @@ func TestDecodeBase64(t *testing.T) {
 
 func TestEncodeAndDecodeBase64(t *testing.T) {
 	t.Parallel()
-	want := "hello world"
+	for _, tc := range base64Cases {
+		t.Run(tc.name, func(t *testing.T) {
+			// encode then decode
+			got, err := script.Echo(tc.decoded).EncodeBase64().DecodeBase64().String()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	got, err := script.Echo(want).EncodeBase64().DecodeBase64().String()
-	if err != nil {
-		t.Fatal(err)
-	}
+			if got != tc.decoded {
+				t.Errorf("want %s, got %s", tc.decoded, got)
+			}
 
-	if got != want {
-		t.Errorf("want %s, got %s", want, got)
-	}
+			// decode then encode
+			got, err = script.Echo(tc.encoded).DecodeBase64().EncodeBase64().String()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-}
-
-func TestDecodeAndEncodeBase64(t *testing.T) {
-	t.Parallel()
-	want := "aGVsbG8gd29ybGQ="
-
-	got, err := script.Echo(want).DecodeBase64().EncodeBase64().String()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if got != want {
-		t.Errorf("want %s, got %s", want, got)
+			if got != tc.encoded {
+				t.Errorf("want %s, got %s", tc.encoded, got)
+			}
+		})
 	}
 }
 
