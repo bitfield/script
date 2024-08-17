@@ -290,16 +290,16 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`Basename`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Basename) | removes leading path components from each line, leaving only the filename |
 | [`Column`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) | Nth column of input |
 | [`Concat`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) | contents of multiple files |
+| [`DecodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.DecodeBase64) | decode base64 encoded input |
 | [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) | removes filename from each line, leaving only leading path components |
 | [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do) | response to supplied HTTP request |
+| [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) | input encoded to base64 |
 | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Echo) | all input replaced by given string |
 | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Exec) | filtered through external command |
 | [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) | execute given command template for each line of input |
 | [`Filter`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Filter) | user-supplied function filtering a reader to a writer |
 | [`FilterLine`](https://pkg.go.dev/github.com/bitfield/script#Pipe.FilterLine) | user-supplied function filtering each line to a string|
 | [`FilterScan`](https://pkg.go.dev/github.com/bitfield/script#Pipe.FilterScan) | user-supplied function filtering each line to a writer |
-| [`DecodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.DecodeBase64) | decode base64 encoded input |
-| [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) | input encoded to base64 |
 | [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) | first N lines of input |
 | [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) | frequency count of unique input lines, most frequent first |
 | [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get) | response to HTTP GET on supplied URL |
