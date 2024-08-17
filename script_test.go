@@ -1933,6 +1933,21 @@ func TestEncodeAndDecodeBase64(t *testing.T) {
 	}
 }
 
+func TestEncodeAndDecodeBase64Bytes(t *testing.T) {
+	t.Parallel()
+	want := []byte{8, 0, 0, 16}
+	input := bytes.NewReader(want)
+
+	got, err := script.NewPipe().WithReader(input).EncodeBase64().DecodeBase64().Bytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(want, got) {
+		t.Errorf("want %s, got %s", want, got)
+	}
+}
+
 func ExampleArgs() {
 	script.Args().Stdout()
 	// prints command-line arguments
