@@ -911,10 +911,10 @@ func (p *Pipe) WithStdout(w io.Writer) *Pipe {
 	return p
 }
 
-// WithEnv sets the environment for the exec commands to the string array env.
-// This will override the default process environment variables when executing
-// commands run via [Pipe.Exec] or [Pipe.ExecForEach]. This will not affect the
-// environment outside of [Pipe.Exec] or [Pipe.ExecForEach].
+// WithEnv sets the environment for subsequent [Pipe.Exec] and [Pipe.ExecForEach] commands
+// to the string slice env. This will override the default process environment variables
+// when executing commands run via [Pipe.Exec] or [Pipe.ExecForEach]. This will not affect
+// the environment outside of [Pipe.Exec] or [Pipe.ExecForEach].
 func (p *Pipe) WithEnv(env []string) *Pipe {
 	p.env = env
 	return p

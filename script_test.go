@@ -1782,7 +1782,7 @@ func TestWithEnv_UnsetsAllEnvVarsGivenEmptySlice(t *testing.T) {
 	}
 }
 
-func TestWithEnv_SetMultipleEnvVars(t *testing.T) {
+func TestWithEnvChangesExecutionEnvironment(t *testing.T) {
 	t.Parallel()
 	env := []string{"ENV1=test1", "ENV2=test2"}
 
