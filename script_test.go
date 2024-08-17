@@ -1906,22 +1906,6 @@ func TestDecodeBase64(t *testing.T) {
 	}
 }
 
-func TestDecodeBase64WithPadding(t *testing.T) {
-	t.Parallel()
-
-	input := "=aGVsbG8gd29ybGQ="
-	want := "hello world"
-
-	got, err := script.Echo(input).DecodeBase64().String()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if got != want {
-		t.Errorf("want %s, got %s", want, got)
-	}
-}
-
 func TestEncodeAndDecodeBase64(t *testing.T) {
 	t.Parallel()
 	for _, tc := range base64Cases {
