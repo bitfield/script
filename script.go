@@ -27,13 +27,14 @@ import (
 // Pipe represents a pipe object with an associated [ReadAutoCloser].
 type Pipe struct {
 	// Reader is the underlying reader.
-	Reader         ReadAutoCloser
-	stdout, stderr io.Writer
-	httpClient     *http.Client
+	Reader     ReadAutoCloser
+	stdout     io.Writer
+	httpClient *http.Client
 
 	// because pipe stages are concurrent, protect 'err' and 'stderr'
-	mu  *sync.Mutex
-	err error
+	mu     *sync.Mutex
+	err    error
+	stderr io.Writer
 }
 
 // Args creates a pipe containing the program's command-line arguments from
