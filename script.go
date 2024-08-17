@@ -2,7 +2,6 @@ package script
 
 import (
 	"bufio"
-	"bytes"
 	"container/ring"
 	"crypto/sha256"
 	"encoding/base64"
@@ -280,17 +279,13 @@ func (p *Pipe) CountLines() (lines int, err error) {
 // DecodeBase64 produces the string represented by the base64 encoded input.
 func (p *Pipe) DecodeBase64() *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
-		buf := new(bytes.Buffer)
-		_, err := buf.ReadFrom(r)
+		decoder := base64.NewDecoder(base64.StdEncoding, r)
+
+		_, err := io.Copy(w, decoder)
 		if err != nil {
 			return err
 		}
 
-		sEnc, err := base64.StdEncoding.DecodeString(buf.String())
-		if err != nil {
-			return err
-		}
-		fmt.Fprint(w, string(sEnc))
 		return nil
 	})
 }
@@ -370,14 +365,14 @@ func (p *Pipe) Echo(s string) *Pipe {
 // EncodeBase64 produces the base64 encoding of the input.
 func (p *Pipe) EncodeBase64() *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
-		buf := new(bytes.Buffer)
-		_, err := buf.ReadFrom(r)
+		encoder := base64.NewEncoder(base64.StdEncoding, w)
+		defer encoder.Close()
+
+		_, err := io.Copy(encoder, r)
 		if err != nil {
 			return err
 		}
 
-		sEnc := base64.StdEncoding.EncodeToString(buf.Bytes())
-		fmt.Fprint(w, sEnc)
 		return nil
 	})
 }
