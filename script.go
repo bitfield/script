@@ -858,6 +858,14 @@ func (p *Pipe) Wait() {
 	}
 }
 
+// WaitError reads the pipe to completion and returns any error present on
+// the pipe, or nil otherwise. This is mostly useful for waiting until
+// concurrent filters have completed (see [Pipe.Filter]).
+func (p *Pipe) WaitError() error {
+	p.Wait()
+	return p.Error()
+}
+
 // WithError sets the error err on the pipe.
 func (p *Pipe) WithError(err error) *Pipe {
 	p.SetError(err)
