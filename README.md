@@ -330,8 +330,7 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 | [`Slice`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Slice) | | data as `[]string`, error  |
 | [`Stdout`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Stdout) | standard output | bytes written, error  |
 | [`String`](https://pkg.go.dev/github.com/bitfield/script#Pipe.String) | | data as `string`, error  |
-| [`Wait`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Wait) | | none  |
-| [`WaitError`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WaitError) | | error  |
+| [`Wait`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Wait) | | error  |
 | [`WriteFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) | specified file, truncating if it exists | bytes written, error  |
 
 # What's new

@@ -1850,18 +1850,18 @@ func TestReadReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	}
 }
 
-func TestWaitErrorForErrorOnPipe(t *testing.T) {
+func TestWaitForErrorOnPipe(t *testing.T) {
 	t.Parallel()
 	p := script.Echo("a\nb\nc\n").ExecForEach("{{invalid template syntax}}")
-	if p.WaitError() == nil {
+	if p.Wait() == nil {
 		t.Error("want error, got nil")
 	}
 }
 
-func TestWaitErrorForNoErrorOnPipe(t *testing.T) {
+func TestWaitForNoErrorOnPipe(t *testing.T) {
 	t.Parallel()
 	p := script.Echo("a\nb\nc\n").ExecForEach("echo \"{{.}}\"")
-	if err := p.WaitError(); err != nil {
+	if err := p.Wait(); err != nil {
 		t.Fatal(err)
 	}
 }

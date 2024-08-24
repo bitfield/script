@@ -350,7 +350,7 @@ func (p *Pipe) Echo(s string) *Pipe {
 // Error returns any error present on the pipe, or nil otherwise.
 // Error is not a sink and does not wait until the pipe reaches
 // completion. To wait for completion before returning the error,
-// see [Pipe.WaitError].
+// see [Pipe.Wait].
 func (p *Pipe) Error() error {
 	if p.mu == nil { // uninitialised pipe
 		return nil
@@ -851,21 +851,15 @@ func (p *Pipe) Tee(writers ...io.Writer) *Pipe {
 	return p.WithReader(io.TeeReader(p.Reader, teeWriter))
 }
 
-// Wait reads the pipe to completion and discards the result. This is mostly
-// useful for waiting until concurrent filters have completed (see
-// [Pipe.Filter]).
-func (p *Pipe) Wait() {
+// Wait reads the pipe to completion and returns any error present on
+// the pipe, or nil otherwise. This is mostly useful for waiting until
+// concurrent filters have completed (see [Pipe.Filter]).
+func (p *Pipe) Wait() error {
 	_, err := io.Copy(io.Discard, p)
 	if err != nil {
 		p.SetError(err)
 	}
-}
 
-// WaitError reads the pipe to completion and returns any error present on
-// the pipe, or nil otherwise. This is mostly useful for waiting until
-// concurrent filters have completed (see [Pipe.Filter]).
-func (p *Pipe) WaitError() error {
-	p.Wait()
 	return p.Error()
 }
 
