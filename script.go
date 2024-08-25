@@ -280,12 +280,10 @@ func (p *Pipe) CountLines() (lines int, err error) {
 func (p *Pipe) DecodeBase64() *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
 		decoder := base64.NewDecoder(base64.StdEncoding, r)
-
 		_, err := io.Copy(w, decoder)
 		if err != nil {
 			return err
 		}
-
 		return nil
 	})
 }
@@ -367,12 +365,10 @@ func (p *Pipe) EncodeBase64() *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
 		encoder := base64.NewEncoder(base64.StdEncoding, w)
 		defer encoder.Close()
-
 		_, err := io.Copy(encoder, r)
 		if err != nil {
 			return err
 		}
-
 		return nil
 	})
 }

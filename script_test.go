@@ -1874,16 +1874,15 @@ var base64Cases = []struct {
 
 func TestEncodeBase64(t *testing.T) {
 	t.Parallel()
-
 	for _, tc := range base64Cases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := script.Echo(tc.decoded).EncodeBase64().String()
 			if err != nil {
 				t.Fatal(err)
 			}
-
 			if got != tc.encoded {
-				t.Errorf("want %s, got %s", tc.encoded, got)
+				t.Logf("input %q incorrectly encoded:", tc.decoded)
+				t.Error(cmp.Diff(tc.encoded, got))
 			}
 		})
 	}
@@ -1891,16 +1890,15 @@ func TestEncodeBase64(t *testing.T) {
 
 func TestDecodeBase64(t *testing.T) {
 	t.Parallel()
-
 	for _, tc := range base64Cases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := script.Echo(tc.encoded).DecodeBase64().String()
 			if err != nil {
 				t.Fatal(err)
 			}
-
 			if got != tc.decoded {
-				t.Errorf("want %s, got %s", tc.decoded, got)
+				t.Logf("input %q incorrectly decoded:", tc.encoded)
+				t.Error(cmp.Diff(tc.decoded, got))
 			}
 		})
 	}
