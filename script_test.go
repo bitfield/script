@@ -1872,7 +1872,7 @@ var base64Cases = []struct {
 	},
 }
 
-func TestEncodeBase64(t *testing.T) {
+func TestEncodeBase64_CorrectlyEncodes(t *testing.T) {
 	t.Parallel()
 	for _, tc := range base64Cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1888,7 +1888,7 @@ func TestEncodeBase64(t *testing.T) {
 	}
 }
 
-func TestDecodeBase64(t *testing.T) {
+func TestDecodeBase64_CorrectlyDecodes(t *testing.T) {
 	t.Parallel()
 	for _, tc := range base64Cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1904,46 +1904,54 @@ func TestDecodeBase64(t *testing.T) {
 	}
 }
 
-func TestEncodeAndDecodeBase64(t *testing.T) {
+func TestEncodeBase64_FollowedByDecodeRecoversOriginal(t *testing.T) {
 	t.Parallel()
 	for _, tc := range base64Cases {
 		t.Run(tc.name, func(t *testing.T) {
-			// encode then decode
-			got, err := script.Echo(tc.decoded).EncodeBase64().DecodeBase64().String()
+			decoded, err := script.Echo(tc.decoded).EncodeBase64().DecodeBase64().String()
 			if err != nil {
 				t.Fatal(err)
 			}
-
-			if got != tc.decoded {
-				t.Errorf("want %s, got %s", tc.decoded, got)
+			if decoded != tc.decoded {
+				t.Error("encode-decode round trip failed:", cmp.Diff(tc.decoded, decoded))
 			}
-
-			// decode then encode
-			got, err = script.Echo(tc.encoded).DecodeBase64().EncodeBase64().String()
+			encoded, err := script.Echo(tc.encoded).DecodeBase64().EncodeBase64().String()
 			if err != nil {
 				t.Fatal(err)
 			}
-
-			if got != tc.encoded {
-				t.Errorf("want %s, got %s", tc.encoded, got)
+			if encoded != tc.encoded {
+				t.Error("decode-encode round trip failed:", cmp.Diff(tc.encoded, encoded))
 			}
 		})
 	}
 }
 
-func TestEncodeBase64Bytes(t *testing.T) {
+func TestDecodeBase64_CorrectlyDecodesInputToBytes(t *testing.T) {
+	t.Parallel()
+	input := "CAAAEA=="
+	got, err := script.Echo(input).DecodeBase64().Bytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []byte{8, 0, 0, 16}
+	if !bytes.Equal(want, got) {
+		t.Logf("input %#v incorrectly decoded:", input)
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestEncodeBase64_CorrectlyEncodesInputBytes(t *testing.T) {
 	t.Parallel()
 	input := []byte{8, 0, 0, 16}
 	reader := bytes.NewReader(input)
 	want := "CAAAEA=="
-
 	got, err := script.NewPipe().WithReader(reader).EncodeBase64().String()
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if got != want {
-		t.Errorf("want %s, got %s", want, got)
+		t.Logf("input %#v incorrectly encoded:", input)
+		t.Error(cmp.Diff(want, got))
 	}
 }
 
@@ -2066,6 +2074,12 @@ func ExamplePipe_CountLines() {
 	// 3
 }
 
+func ExamplePipe_DecodeBase64() {
+	script.Echo("SGVsbG8sIHdvcmxkIQ==").DecodeBase64().Stdout()
+	// Output:
+	// Hello, world!
+}
+
 func ExamplePipe_Do() {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		data, err := io.ReadAll(r.Body)
@@ -2099,6 +2113,12 @@ func ExamplePipe_Echo() {
 	script.NewPipe().Echo("Hello, world!").Stdout()
 	// Output:
 	// Hello, world!
+}
+
+func ExamplePipe_EncodeBase64() {
+	script.Echo("Hello, world!").EncodeBase64().Stdout()
+	// Output:
+	// SGVsbG8sIHdvcmxkIQ==
 }
 
 func ExamplePipe_ExitStatus() {
@@ -2379,20 +2399,6 @@ func ExampleSlice() {
 	// 1
 	// 2
 	// 3
-}
-
-func ExamplePipe_EncodeBase64() {
-	script.Echo("hello\nthere\nworld\n").EncodeBase64().Stdout()
-	// Output:
-	// aGVsbG8KdGhlcmUKd29ybGQK
-}
-
-func ExamplePipe_DecodeBase64() {
-	script.Echo("aGVsbG8KdGhlcmUKd29ybGQK").DecodeBase64().Stdout()
-	// Output:
-	// hello
-	// there
-	// world
 }
 
 // A string containing a line longer than bufio.MaxScanTokenSize, for testing
