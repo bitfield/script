@@ -294,8 +294,8 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`DecodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.DecodeBase64) | input decoded from base64 |
 | [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) | removes filename from each line, leaving only leading path components |
 | [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do) | response to supplied HTTP request |
-| [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) | input encoded to base64 |
 | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Echo) | all input replaced by given string |
+| [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) | input encoded to base64 |
 | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Exec) | filtered through external command |
 | [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) | execute given command template for each line of input |
 | [`Filter`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Filter) | user-supplied function filtering a reader to a writer |
@@ -351,7 +351,7 @@ See the [contributor's guide](CONTRIBUTING.md) for some helpful tips if you'd li
 
 # Links
 
-- [Scripting with Go](https://bitfieldconsulting.com/golang/scripting)
+- [Scripting with Go](https://bitfieldconsulting.com/posts/scripting)
 - [Code Club: Script](https://www.youtube.com/watch?v=6S5EqzVwpEg)
 - [Bitfield Consulting](https://bitfieldconsulting.com/)
 - [Go books by John Arundel](https://bitfieldconsulting.com/books)
