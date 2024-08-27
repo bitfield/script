@@ -1864,6 +1864,7 @@ func TestWaitForNoErrorOnPipe(t *testing.T) {
 	if err := p.Wait(); err != nil {
 		t.Fatal(err)
 	}
+}
 
 var base64Cases = []struct {
 	name    string
