@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"container/ring"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -275,6 +276,18 @@ func (p *Pipe) CountLines() (lines int, err error) {
 	return lines, p.Error()
 }
 
+// DecodeBase64 produces the string represented by the base64 encoded input.
+func (p *Pipe) DecodeBase64() *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		decoder := base64.NewDecoder(base64.StdEncoding, r)
+		_, err := io.Copy(w, decoder)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 // Dirname reads paths from the pipe, one per line, and produces only the
 // parent directories of each path. For example, /usr/local/bin/foo would
 // become just /usr/local/bin. This is the complementary operation to
@@ -345,6 +358,19 @@ func (p *Pipe) Echo(s string) *Pipe {
 		return p
 	}
 	return p.WithReader(strings.NewReader(s))
+}
+
+// EncodeBase64 produces the base64 encoding of the input.
+func (p *Pipe) EncodeBase64() *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		encoder := base64.NewEncoder(base64.StdEncoding, w)
+		defer encoder.Close()
+		_, err := io.Copy(encoder, r)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 // Error returns any error present on the pipe, or nil otherwise.
