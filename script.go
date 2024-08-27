@@ -859,7 +859,6 @@ func (p *Pipe) Wait() error {
 	if err != nil {
 		p.SetError(err)
 	}
-
 	return p.Error()
 }
 
