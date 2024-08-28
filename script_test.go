@@ -1850,6 +1850,22 @@ func TestReadReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	}
 }
 
+func TestWait_ReturnsErrorPresentOnPipe(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("a\nb\nc\n").ExecForEach("{{invalid template syntax}}")
+	if p.Wait() == nil {
+		t.Error("want error, got nil")
+	}
+}
+
+func TestWait_DoesNotReturnErrorForValidExecution(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("a\nb\nc\n").ExecForEach("echo \"{{.}}\"")
+	if err := p.Wait(); err != nil {
+		t.Fatal(err)
+	}
+}
+
 var base64Cases = []struct {
 	name    string
 	decoded string
