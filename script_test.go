@@ -1221,7 +1221,7 @@ func TestExecRunsGoHelpAndGetsUsageMessage(t *testing.T) {
 	}
 }
 
-func TestExecContextCencel(t *testing.T) {
+func TestWithContextTimeout(t *testing.T) {
 	t.Parallel()
 	// We can't make many cross-platform assumptions about what external
 	// commands will be available, but it seems logical that 'go' would be
