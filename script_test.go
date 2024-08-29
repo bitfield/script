@@ -1223,9 +1223,6 @@ func TestExecRunsGoHelpAndGetsUsageMessage(t *testing.T) {
 
 func TestWithContextTimeout(t *testing.T) {
 	t.Parallel()
-	// We can't make many cross-platform assumptions about what external
-	// commands will be available, but it seems logical that 'go' would be
-	// (though it may not be in the user's path)
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
 	defer cancel()
 	p := script.NewPipe().WithContext(ctx).Exec("sleep 1")
