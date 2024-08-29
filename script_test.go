@@ -16,6 +16,7 @@ import (
 	"strings"
 	"testing"
 	"testing/iotest"
+	"time"
 
 	"github.com/bitfield/script"
 	"github.com/google/go-cmp/cmp"
@@ -1225,13 +1226,13 @@ func TestExecContextCencel(t *testing.T) {
 	// We can't make many cross-platform assumptions about what external
 	// commands will be available, but it seems logical that 'go' would be
 	// (though it may not be in the user's path)
-	ctx, cancel := context.WithTimeout(context.Background(), 1)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
 	defer cancel()
-	p := script.ExecContext(ctx, "sleep 100")
+	p := script.NewPipe().WithContext(ctx).Exec("sleep 1")
 	p.Wait()
-  err := p.Error()
-	if err == nil {
-		t.Fatal("when command is canceled there should be an error")
+	err := p.Error()
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatal("context should timeout")
 	}
 	t.Log(p.ExitStatus())
 }

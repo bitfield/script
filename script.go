@@ -31,7 +31,7 @@ type Pipe struct {
 	Reader         ReadAutoCloser
 	stdout, stderr io.Writer
 	httpClient     *http.Client
-
+	ctx            context.Context
 	// because pipe stages are concurrent, protect 'err'
 	mu  *sync.Mutex
 	err error
@@ -62,16 +62,6 @@ func Echo(s string) *Pipe {
 // standard input.
 func Exec(cmdLine string) *Pipe {
 	return NewPipe().Exec(cmdLine)
-}
-
-// Exec creates a pipe that runs cmdLine as an external command and produces
-// its combined output (interleaving standard output and standard error). See
-// [Pipe.Exec] for error handling details.
-//
-// Use [Pipe.Exec] to send the contents of an existing pipe to the command's
-// standard input.
-func ExecContext(ctx context.Context, cmdLine string) *Pipe {
-	return NewPipe().ExecContext(ctx, cmdLine)
 }
 
 // File creates a pipe that reads from the file path.
@@ -175,6 +165,7 @@ func NewPipe() *Pipe {
 	return &Pipe{
 		Reader:     ReadAutoCloser{},
 		mu:         new(sync.Mutex),
+		ctx:        context.Background(),
 		stdout:     os.Stdout,
 		httpClient: http.DefaultClient,
 	}
@@ -392,48 +383,7 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		if err != nil {
 			return err
 		}
-		cmd := exec.Command(args[0], args[1:]...)
-		cmd.Stdin = r
-		cmd.Stdout = w
-		cmd.Stderr = w
-		if p.stderr != nil {
-			cmd.Stderr = p.stderr
-		}
-		err = cmd.Start()
-		if err != nil {
-			fmt.Fprintln(cmd.Stderr, err)
-			return err
-		}
-		return cmd.Wait()
-	})
-}
-
-// Exec runs cmdLine as an external command, sending it the contents of the
-// pipe as input, and produces the command's standard output (see below for
-// error output). The effect of this is to filter the contents of the pipe
-// through the external command. It also allows passing context.Context making
-// it cancellable
-//
-// # Error handling
-//
-// If the command had a non-zero exit status, the pipe's error status will also
-// be set to the string “exit status X”, where X is the integer exit status.
-// Even in the event of a non-zero exit status, the command's output will still
-// be available in the pipe. This is often helpful for debugging. However,
-// because [Pipe.String] is a no-op if the pipe's error status is set, if you
-// want output you will need to reset the error status before calling
-// [Pipe.String].
-//
-// If the command writes to its standard error stream, this will also go to the
-// pipe, along with its standard output. However, the standard error text can
-// instead be redirected to a supplied writer, using [Pipe.WithStderr].
-func (p *Pipe) ExecContext(ctx context.Context, cmdLine string) *Pipe {
-	return p.Filter(func(r io.Reader, w io.Writer) error {
-		args, err := shell.Fields(cmdLine, nil)
-		if err != nil {
-			return err
-		}
-		cmd := exec.CommandContext(ctx, args[0], args[1:]...)
+		cmd := exec.CommandContext(p.ctx, args[0], args[1:]...)
 		cmd.Stdin = r
 		cmd.Stdout = w
 		cmd.Stderr = w
@@ -474,7 +424,7 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 			if err != nil {
 				return err
 			}
-			cmd := exec.Command(args[0], args[1:]...)
+			cmd := exec.CommandContext(p.ctx, args[0], args[1:]...)
 			cmd.Stdout = w
 			cmd.Stderr = w
 			if p.stderr != nil {
@@ -494,54 +444,6 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 		return scanner.Err()
 	})
 }
-
-// ExecContextForEach renders cmdLine as a Go template for each line of input, running
-// the resulting command, and produces the combined output of all these
-// commands in sequence. See [Pipe.ExecContext] for error handling details. 
-// It also allows to pass context.Context allowing to cancel the execution
-//
-// This is mostly useful for substituting data into commands using Go template
-// syntax. For example:
-//
-//	ListFiles("*").ExecForEach("touch {{.}}").Wait()
-func (p *Pipe) ExecContextForEach(ctx context.Context, cmdLine string) *Pipe {
-	tpl, err := template.New("").Parse(cmdLine)
-	if err != nil {
-		return p.WithError(err)
-	}
-	return p.Filter(func(r io.Reader, w io.Writer) error {
-		scanner := newScanner(r)
-		for scanner.Scan() {
-			cmdLine := new(strings.Builder)
-			err := tpl.Execute(cmdLine, scanner.Text())
-			if err != nil {
-				return err
-			}
-			args, err := shell.Fields(cmdLine.String(), nil)
-			if err != nil {
-				return err
-			}
-			cmd := exec.CommandContext(ctx, args[0], args[1:]...)
-			cmd.Stdout = w
-			cmd.Stderr = w
-			if p.stderr != nil {
-				cmd.Stderr = p.stderr
-			}
-			err = cmd.Start()
-			if err != nil {
-				fmt.Fprintln(cmd.Stderr, err)
-				continue
-			}
-			err = cmd.Wait()
-			if err != nil {
-				fmt.Fprintln(cmd.Stderr, err)
-				continue
-			}
-		}
-		return scanner.Err()
-	})
-}
-
 
 var exitStatusPattern = regexp.MustCompile(`exit status (\d+)$`)
 
@@ -995,6 +897,13 @@ func (p *Pipe) WithStderr(w io.Writer) *Pipe {
 // default [os.Stdout].
 func (p *Pipe) WithStdout(w io.Writer) *Pipe {
 	p.stdout = w
+	return p
+}
+
+// WithContext sets context.Context for the pipe. Adds support for graceful pipe
+// shutdown. Currently works with [Pipe.Exec] and [Pipe.ExecForEach]
+func (p *Pipe) WithContext(ctx context.Context) *Pipe {
+	p.ctx = ctx
 	return p
 }
 
