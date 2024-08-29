@@ -34,6 +34,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `>`                | [`WriteFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) |
 | `>>`               | [`AppendFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) |
 | `$*`               | [`Args`](https://pkg.go.dev/github.com/bitfield/script#Args) |
+| `base64`           | [`DecodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.DecodeBase64) / [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) |
 | `basename`         | [`Basename`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Basename) |
 | `cat`              | [`File`](https://pkg.go.dev/github.com/bitfield/script#File) / [`Concat`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) |
 | `curl`             | [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do) / [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get) / [`Post`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Post) |
@@ -268,18 +269,31 @@ These are functions that create a pipe with a given contents:
 
 | Source | Contents |
 | -------- | ------------- |
-| [`Args`](https://pkg.go.dev/github.com/bitfield/script#Args) | command-line arguments
-| [`Do`](https://pkg.go.dev/github.com/bitfield/script#Do) | HTTP response
-| [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) | a string
-| [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) | command output
-| [`File`](https://pkg.go.dev/github.com/bitfield/script#File) | file contents
-| [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) | recursive file listing
-| [`Get`](https://pkg.go.dev/github.com/bitfield/script#Get) | HTTP response
-| [`IfExists`](https://pkg.go.dev/github.com/bitfield/script#IfExists) | do something only if some file exists
-| [`ListFiles`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) | file listing (including wildcards)
-| [`Post`](https://pkg.go.dev/github.com/bitfield/script#Post) | HTTP response
-| [`Slice`](https://pkg.go.dev/github.com/bitfield/script#Slice) | slice elements, one per line
-| [`Stdin`](https://pkg.go.dev/github.com/bitfield/script#Stdin) | standard input
+| [`Args`](https://pkg.go.dev/github.com/bitfield/script#Args) | command-line arguments |
+| [`Do`](https://pkg.go.dev/github.com/bitfield/script#Do) | HTTP response |
+| [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) | a string |
+| [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) | command output |
+| [`File`](https://pkg.go.dev/github.com/bitfield/script#File) | file contents |
+| [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) | recursive file listing |
+| [`Get`](https://pkg.go.dev/github.com/bitfield/script#Get) | HTTP response |
+| [`IfExists`](https://pkg.go.dev/github.com/bitfield/script#IfExists) | do something only if some file exists |
+| [`ListFiles`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) | file listing (including wildcards) |
+| [`Post`](https://pkg.go.dev/github.com/bitfield/script#Post) | HTTP response |
+| [`Slice`](https://pkg.go.dev/github.com/bitfield/script#Slice) | slice elements, one per line |
+| [`Stdin`](https://pkg.go.dev/github.com/bitfield/script#Stdin) | standard input |
+
+## Modifiers
+
+These are methods on a pipe that change its configuration:
+
+| Source | Modifies |
+| -------- | ------------- |
+| [`WithEnv`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithEnv) | environment for commands |
+| [`WithError`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithError) | pipe error status |
+| [`WithHTTPClient`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithHTTPClient) | client for HTTP requests |
+| [`WithReader`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithReader) | pipe source |
+| [`WithStderr`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithStderr) | standard error output stream for command |
+| [`WithStdout`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithStdout) | standard output stream for pipe |
 
 ## Filters
 
@@ -290,9 +304,11 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`Basename`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Basename) | removes leading path components from each line, leaving only the filename |
 | [`Column`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) | Nth column of input |
 | [`Concat`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) | contents of multiple files |
+| [`DecodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.DecodeBase64) | input decoded from base64 |
 | [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) | removes filename from each line, leaving only leading path components |
 | [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do) | response to supplied HTTP request |
 | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Echo) | all input replaced by given string |
+| [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) | input encoded to base64 |
 | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Exec) | filtered through external command |
 | [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) | execute given command template for each line of input |
 | [`Filter`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Filter) | user-supplied function filtering a reader to a writer |
@@ -330,13 +346,16 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 | [`Slice`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Slice) | | data as `[]string`, error  |
 | [`Stdout`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Stdout) | standard output | bytes written, error  |
 | [`String`](https://pkg.go.dev/github.com/bitfield/script#Pipe.String) | | data as `string`, error  |
-| [`Wait`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Wait) | | none  |
+| [`Wait`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Wait) | | error  |
 | [`WriteFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) | specified file, truncating if it exists | bytes written, error  |
 
 # What's new
 
 | Version | New |
 | ----------- | ------- |
+| 0.23.0  | [`WithEnv`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithEnv) |
+|         | [`DecodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.DecodeBase64) / [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) |
+|         | [`Wait`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Wait) returns error |
 | v0.22.0 | [`Tee`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Tee), [`WithStderr`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithStderr) |
 | v0.21.0 | HTTP support: [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do), [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get), [`Post`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Post) |
 | v0.20.0 | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) |
@@ -347,7 +366,7 @@ See the [contributor's guide](CONTRIBUTING.md) for some helpful tips if you'd li
 
 # Links
 
-- [Scripting with Go](https://bitfieldconsulting.com/golang/scripting)
+- [Scripting with Go](https://bitfieldconsulting.com/posts/scripting)
 - [Code Club: Script](https://www.youtube.com/watch?v=6S5EqzVwpEg)
 - [Bitfield Consulting](https://bitfieldconsulting.com/)
 - [Go books by John Arundel](https://bitfieldconsulting.com/books)

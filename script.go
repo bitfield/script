@@ -5,6 +5,7 @@ import (
 	"container/ring"
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -28,13 +29,15 @@ import (
 // Pipe represents a pipe object with an associated [ReadAutoCloser].
 type Pipe struct {
 	// Reader is the underlying reader.
-	Reader         ReadAutoCloser
-	stdout, stderr io.Writer
-	httpClient     *http.Client
-	ctx            context.Context
-	// because pipe stages are concurrent, protect 'err'
-	mu  *sync.Mutex
-	err error
+	Reader     ReadAutoCloser
+	stdout     io.Writer
+	httpClient *http.Client
+
+	ctx    context.Context
+	mu     *sync.Mutex
+	err    error
+	stderr io.Writer
+	env    []string
 }
 
 // Args creates a pipe containing the program's command-line arguments from
@@ -168,6 +171,7 @@ func NewPipe() *Pipe {
 		ctx:        context.Background(),
 		stdout:     os.Stdout,
 		httpClient: http.DefaultClient,
+		env:        nil,
 	}
 }
 
@@ -277,6 +281,18 @@ func (p *Pipe) CountLines() (lines int, err error) {
 	return lines, p.Error()
 }
 
+// DecodeBase64 produces the string represented by the base64 encoded input.
+func (p *Pipe) DecodeBase64() *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		decoder := base64.NewDecoder(base64.StdEncoding, r)
+		_, err := io.Copy(w, decoder)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 // Dirname reads paths from the pipe, one per line, and produces only the
 // parent directories of each path. For example, /usr/local/bin/foo would
 // become just /usr/local/bin. This is the complementary operation to
@@ -349,7 +365,29 @@ func (p *Pipe) Echo(s string) *Pipe {
 	return p.WithReader(strings.NewReader(s))
 }
 
+// EncodeBase64 produces the base64 encoding of the input.
+func (p *Pipe) EncodeBase64() *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		encoder := base64.NewEncoder(base64.StdEncoding, w)
+		defer encoder.Close()
+		_, err := io.Copy(encoder, r)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (p *Pipe) environment() []string {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.env
+}
+
 // Error returns any error present on the pipe, or nil otherwise.
+// Error is not a sink and does not wait until the pipe reaches
+// completion. To wait for completion before returning the error,
+// see [Pipe.Wait].
 func (p *Pipe) Error() error {
 	if p.mu == nil { // uninitialised pipe
 		return nil
@@ -363,6 +401,11 @@ func (p *Pipe) Error() error {
 // pipe as input, and produces the command's standard output (see below for
 // error output). The effect of this is to filter the contents of the pipe
 // through the external command.
+//
+// # Environment
+//
+// The command inherits the current process's environment, optionally modified
+// by [Pipe.WithEnv].
 //
 // # Error handling
 //
@@ -387,8 +430,13 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		cmd.Stdin = r
 		cmd.Stdout = w
 		cmd.Stderr = w
-		if p.stderr != nil {
-			cmd.Stderr = p.stderr
+		pipeStderr := p.stdErr()
+		if pipeStderr != nil {
+			cmd.Stderr = pipeStderr
+		}
+		pipeEnv := p.environment()
+		if pipeEnv != nil {
+			cmd.Env = pipeEnv
 		}
 		err = cmd.Start()
 		if err != nil {
@@ -401,7 +449,8 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 
 // ExecForEach renders cmdLine as a Go template for each line of input, running
 // the resulting command, and produces the combined output of all these
-// commands in sequence. See [Pipe.Exec] for error handling details.
+// commands in sequence. See [Pipe.Exec] for details on error handling and
+// environment variables.
 //
 // This is mostly useful for substituting data into commands using Go template
 // syntax. For example:
@@ -427,8 +476,12 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 			cmd := exec.CommandContext(p.ctx, args[0], args[1:]...)
 			cmd.Stdout = w
 			cmd.Stderr = w
-			if p.stderr != nil {
-				cmd.Stderr = p.stderr
+			pipeStderr := p.stdErr()
+			if pipeStderr != nil {
+				cmd.Stderr = pipeStderr
+			}
+			if p.env != nil {
+				cmd.Env = p.env
 			}
 			err = cmd.Start()
 			if err != nil {
@@ -812,6 +865,18 @@ func (p *Pipe) Slice() ([]string, error) {
 	return result, p.Error()
 }
 
+// stdErr returns the pipe's configured standard error writer for commands run
+// via [Pipe.Exec] and [Pipe.ExecForEach]. The default is nil, which means that
+// error output will go to the pipe.
+func (p *Pipe) stdErr() io.Writer {
+	if p.mu == nil { // uninitialised pipe
+		return nil
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.stderr
+}
+
 // Stdout copies the pipe's contents to its configured standard output (using
 // [Pipe.WithStdout]), or to [os.Stdout] otherwise, and returns the number of
 // bytes successfully written, together with any error.
@@ -850,14 +915,25 @@ func (p *Pipe) Tee(writers ...io.Writer) *Pipe {
 	return p.WithReader(io.TeeReader(p.Reader, teeWriter))
 }
 
-// Wait reads the pipe to completion and discards the result. This is mostly
-// useful for waiting until concurrent filters have completed (see
-// [Pipe.Filter]).
-func (p *Pipe) Wait() {
+// Wait reads the pipe to completion and returns any error present on
+// the pipe, or nil otherwise. This is mostly useful for waiting until
+// concurrent filters have completed (see [Pipe.Filter]).
+func (p *Pipe) Wait() error {
 	_, err := io.Copy(io.Discard, p)
 	if err != nil {
 		p.SetError(err)
 	}
+	return p.Error()
+}
+
+// WithEnv sets the environment for subsequent [Pipe.Exec] and [Pipe.ExecForEach]
+// commands to the string slice env, using the same format as [os/exec.Cmd.Env].
+// An empty slice unsets all existing environment variables.
+func (p *Pipe) WithEnv(env []string) *Pipe {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.env = env
+	return p
 }
 
 // WithError sets the error err on the pipe.
@@ -885,10 +961,11 @@ func (p *Pipe) WithReader(r io.Reader) *Pipe {
 	return p
 }
 
-// WithStderr redirects the standard error output for commands run via
-// [Pipe.Exec] or [Pipe.ExecForEach] to the writer w, instead of going to the
-// pipe as it normally would.
+// WithStderr sets the standard error output for [Pipe.Exec] or
+// [Pipe.ExecForEach] commands to w, instead of the pipe.
 func (p *Pipe) WithStderr(w io.Writer) *Pipe {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	p.stderr = w
 	return p
 }

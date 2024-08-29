@@ -1786,6 +1786,40 @@ func TestWithStdout_SetsSpecifiedWriterAsStdout(t *testing.T) {
 	}
 }
 
+func TestWithEnv_UnsetsAllEnvVarsGivenEmptySlice(t *testing.T) {
+	t.Parallel()
+	p := script.NewPipe().WithEnv([]string{"ENV1=test1"}).Exec("sh -c 'echo ENV1=$ENV1'")
+	want := "ENV1=test1\n"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+	got, err = p.Echo("").WithEnv([]string{}).Exec("sh -c 'echo ENV1=$ENV1'").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want = "ENV1=\n"
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestWithEnv_SetsGivenVariablesForSubsequentExec(t *testing.T) {
+	t.Parallel()
+	env := []string{"ENV1=test1", "ENV2=test2"}
+	got, err := script.NewPipe().WithEnv(env).Exec("sh -c 'echo ENV1=$ENV1 ENV2=$ENV2'").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "ENV1=test1 ENV2=test2\n"
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
 func TestErrorReturnsErrorSetByPreviousPipeStage(t *testing.T) {
 	t.Parallel()
 	p := script.File("testdata/nonexistent.txt")
@@ -1865,6 +1899,135 @@ func TestReadReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	_, err := script.NewPipe().WithReader(brokenReader).Read(buf)
 	if err == nil {
 		t.Fatal(nil)
+	}
+}
+
+func TestWait_ReturnsErrorPresentOnPipe(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("a\nb\nc\n").ExecForEach("{{invalid template syntax}}")
+	if p.Wait() == nil {
+		t.Error("want error, got nil")
+	}
+}
+
+func TestWait_DoesNotReturnErrorForValidExecution(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("a\nb\nc\n").ExecForEach("echo \"{{.}}\"")
+	if err := p.Wait(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+var base64Cases = []struct {
+	name    string
+	decoded string
+	encoded string
+}{
+	{
+		name:    "empty string",
+		decoded: "",
+		encoded: "",
+	},
+	{
+		name:    "single line string",
+		decoded: "hello world",
+		encoded: "aGVsbG8gd29ybGQ=",
+	},
+	{
+		name:    "multi line string",
+		decoded: "hello\nthere\nworld\n",
+		encoded: "aGVsbG8KdGhlcmUKd29ybGQK",
+	},
+}
+
+func TestEncodeBase64_CorrectlyEncodes(t *testing.T) {
+	t.Parallel()
+	for _, tc := range base64Cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := script.Echo(tc.decoded).EncodeBase64().String()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tc.encoded {
+				t.Logf("input %q incorrectly encoded:", tc.decoded)
+				t.Error(cmp.Diff(tc.encoded, got))
+			}
+		})
+	}
+}
+
+func TestDecodeBase64_CorrectlyDecodes(t *testing.T) {
+	t.Parallel()
+	for _, tc := range base64Cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := script.Echo(tc.encoded).DecodeBase64().String()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tc.decoded {
+				t.Logf("input %q incorrectly decoded:", tc.encoded)
+				t.Error(cmp.Diff(tc.decoded, got))
+			}
+		})
+	}
+}
+
+func TestEncodeBase64_FollowedByDecodeRecoversOriginal(t *testing.T) {
+	t.Parallel()
+	for _, tc := range base64Cases {
+		t.Run(tc.name, func(t *testing.T) {
+			decoded, err := script.Echo(tc.decoded).EncodeBase64().DecodeBase64().String()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if decoded != tc.decoded {
+				t.Error("encode-decode round trip failed:", cmp.Diff(tc.decoded, decoded))
+			}
+			encoded, err := script.Echo(tc.encoded).DecodeBase64().EncodeBase64().String()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if encoded != tc.encoded {
+				t.Error("decode-encode round trip failed:", cmp.Diff(tc.encoded, encoded))
+			}
+		})
+	}
+}
+
+func TestDecodeBase64_CorrectlyDecodesInputToBytes(t *testing.T) {
+	t.Parallel()
+	input := "CAAAEA=="
+	got, err := script.Echo(input).DecodeBase64().Bytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []byte{8, 0, 0, 16}
+	if !bytes.Equal(want, got) {
+		t.Logf("input %#v incorrectly decoded:", input)
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestEncodeBase64_CorrectlyEncodesInputBytes(t *testing.T) {
+	t.Parallel()
+	input := []byte{8, 0, 0, 16}
+	reader := bytes.NewReader(input)
+	want := "CAAAEA=="
+	got, err := script.NewPipe().WithReader(reader).EncodeBase64().String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Logf("input %#v incorrectly encoded:", input)
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestWithStdErr_IsConcurrencySafeAfterExec(t *testing.T) {
+	t.Parallel()
+	err := script.Exec("echo").WithStderr(nil).Wait()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -1987,6 +2150,12 @@ func ExamplePipe_CountLines() {
 	// 3
 }
 
+func ExamplePipe_DecodeBase64() {
+	script.Echo("SGVsbG8sIHdvcmxkIQ==").DecodeBase64().Stdout()
+	// Output:
+	// Hello, world!
+}
+
 func ExamplePipe_Do() {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		data, err := io.ReadAll(r.Body)
@@ -2020,6 +2189,12 @@ func ExamplePipe_Echo() {
 	script.NewPipe().Echo("Hello, world!").Stdout()
 	// Output:
 	// Hello, world!
+}
+
+func ExamplePipe_EncodeBase64() {
+	script.Echo("Hello, world!").EncodeBase64().Stdout()
+	// Output:
+	// SGVsbG8sIHdvcmxkIQ==
 }
 
 func ExamplePipe_ExitStatus() {
