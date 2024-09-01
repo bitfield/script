@@ -114,7 +114,7 @@ func Get(url string) *Pipe {
 
 // getStderr obtains the stderr writer on the pipe. This field
 // is protected by a mutex since stderr is accessed inside a
-// goroutine from [Pipe.Exec].
+// goroutine from [Pipe.Exec] and [Pipe.ExecForEach].
 func (p *Pipe) getStderr() io.Writer {
 	if p.mu == nil { // uninitialised pipe
 		return nil
@@ -808,7 +808,7 @@ func (p *Pipe) SetError(err error) {
 
 // setStderr sets the stderr writer on the pipe. This field
 // is protected by a mutex since stderr is accessed inside a
-// goroutine from [Pipe.Exec].
+// goroutine from [Pipe.Exec] and [Pipe.ExecForEach].
 func (p *Pipe) setStderr(stderr io.Writer) {
 	if p.mu == nil { // uninitialised pipe
 		return
