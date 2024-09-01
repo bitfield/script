@@ -1861,6 +1861,7 @@ func TestWithStdErrAfterExec(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
 
 func TestWait_ReturnsErrorPresentOnPipe(t *testing.T) {
 	t.Parallel()
