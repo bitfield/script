@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"container/ring"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -276,6 +277,18 @@ func (p *Pipe) CountLines() (lines int, err error) {
 	return lines, p.Error()
 }
 
+// DecodeBase64 produces the string represented by the base64 encoded input.
+func (p *Pipe) DecodeBase64() *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		decoder := base64.NewDecoder(base64.StdEncoding, r)
+		_, err := io.Copy(w, decoder)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 // Dirname reads paths from the pipe, one per line, and produces only the
 // parent directories of each path. For example, /usr/local/bin/foo would
 // become just /usr/local/bin. This is the complementary operation to
@@ -348,7 +361,23 @@ func (p *Pipe) Echo(s string) *Pipe {
 	return p.WithReader(strings.NewReader(s))
 }
 
+// EncodeBase64 produces the base64 encoding of the input.
+func (p *Pipe) EncodeBase64() *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		encoder := base64.NewEncoder(base64.StdEncoding, w)
+		defer encoder.Close()
+		_, err := io.Copy(encoder, r)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 // Error returns any error present on the pipe, or nil otherwise.
+// Error is not a sink and does not wait until the pipe reaches
+// completion. To wait for completion before returning the error,
+// see [Pipe.Wait].
 func (p *Pipe) Error() error {
 	if p.mu == nil { // uninitialised pipe
 		return nil
@@ -875,14 +904,15 @@ func (p *Pipe) Tee(writers ...io.Writer) *Pipe {
 	return p.WithReader(io.TeeReader(p.Reader, teeWriter))
 }
 
-// Wait reads the pipe to completion and discards the result. This is mostly
-// useful for waiting until concurrent filters have completed (see
-// [Pipe.Filter]).
-func (p *Pipe) Wait() {
+// Wait reads the pipe to completion and returns any error present on
+// the pipe, or nil otherwise. This is mostly useful for waiting until
+// concurrent filters have completed (see [Pipe.Filter]).
+func (p *Pipe) Wait() error {
 	_, err := io.Copy(io.Discard, p)
 	if err != nil {
 		p.SetError(err)
 	}
+	return p.Error()
 }
 
 // WithError sets the error err on the pipe.
