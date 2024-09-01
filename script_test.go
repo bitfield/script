@@ -1850,19 +1850,6 @@ func TestReadReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	}
 }
 
-// TestWithStdErrAfterExec is a regression test that was added to test against
-// a race condition for Pipe.stderr.
-func TestWithStdErrAfterExec(t *testing.T) {
-	t.Parallel()
-	stdOut := new(bytes.Buffer)
-	stdErr := new(bytes.Buffer)
-
-	_, err := script.Exec("echo").WithStdout(stdOut).WithStderr(stdErr).Stdout()
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestWait_ReturnsErrorPresentOnPipe(t *testing.T) {
 	t.Parallel()
 	p := script.Echo("a\nb\nc\n").ExecForEach("{{invalid template syntax}}")
@@ -1981,6 +1968,19 @@ func TestEncodeBase64_CorrectlyEncodesInputBytes(t *testing.T) {
 	if got != want {
 		t.Logf("input %#v incorrectly encoded:", input)
 		t.Error(cmp.Diff(want, got))
+	}
+}
+
+// TestWithStdErrAfterExec_DoesNotResultInRaceCondition is a regression test
+// that was added to test against a race condition for [Pipe.stderr].
+func TestWithStdErrAfterExec_DoesNotResultInRaceCondition(t *testing.T) {
+	t.Parallel()
+	stdOut := new(bytes.Buffer)
+	stdErr := new(bytes.Buffer)
+
+	_, err := script.Exec("echo").WithStdout(stdOut).WithStderr(stdErr).Stdout()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 

@@ -112,6 +112,18 @@ func Get(url string) *Pipe {
 	return NewPipe().Get(url)
 }
 
+// getStderr obtains the stderr writer on the pipe. This field
+// is protected by a mutex since stderr is accessed inside a
+// goroutine from [Pipe.Exec].
+func (p *Pipe) getStderr() io.Writer {
+	if p.mu == nil { // uninitialised pipe
+		return nil
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.stderr
+}
+
 // IfExists tests whether path exists, and creates a pipe whose error status
 // reflects the result. If the file doesn't exist, the pipe's error status will
 // be set, and if the file does exist, the pipe will have no error status. This
@@ -804,18 +816,6 @@ func (p *Pipe) setStderr(stderr io.Writer) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.stderr = stderr
-}
-
-// getStderr obtains the stderr writer on the pipe. This field
-// is protected by a mutex since stderr is accessed inside a
-// goroutine from [Pipe.Exec].
-func (p *Pipe) getStderr() io.Writer {
-	if p.mu == nil { // uninitialised pipe
-		return nil
-	}
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	return p.stderr
 }
 
 // SHA256Sum returns the hex-encoded SHA-256 hash of the entire contents of the
