@@ -13,7 +13,7 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - uses: actions/checkout@v3
-      - run: go test ./...
+      - run: go test -race ./...
       
   gocritic:
     runs-on: ubuntu-latest
