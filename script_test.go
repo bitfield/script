@@ -1971,6 +1971,14 @@ func TestEncodeBase64_CorrectlyEncodesInputBytes(t *testing.T) {
 	}
 }
 
+func TestWithStdErr_IsConcurrencySafeAfterExec(t *testing.T) {
+	t.Parallel()
+	err := script.Exec("echo").WithStderr(nil).Wait()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func ExampleArgs() {
 	script.Args().Stdout()
 	// prints command-line arguments
