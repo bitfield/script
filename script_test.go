@@ -1971,14 +1971,9 @@ func TestEncodeBase64_CorrectlyEncodesInputBytes(t *testing.T) {
 	}
 }
 
-// TestWithStdErrAfterExec_DoesNotResultInRaceCondition is a regression test
-// that was added to test against a race condition for [Pipe.stderr].
-func TestWithStdErrAfterExec_DoesNotResultInRaceCondition(t *testing.T) {
+func TestWithStdErr_IsConcurrencySafeAfterExec(t *testing.T) {
 	t.Parallel()
-	stdOut := new(bytes.Buffer)
-	stdErr := new(bytes.Buffer)
-
-	_, err := script.Exec("echo").WithStdout(stdOut).WithStderr(stdErr).Stdout()
+	err := script.Exec("echo").WithStderr(nil).Wait()
 	if err != nil {
 		t.Fatal(err)
 	}
