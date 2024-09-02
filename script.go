@@ -32,16 +32,20 @@ type Pipe struct {
 	stdout     io.Writer
 	httpClient *http.Client
 
+	// mu protects the following fields because pipe stages are concurrent
+	// 	- err
+	// 	- stderr
+	// 	- env
+	mu     *sync.Mutex
+	err    error
+	stderr io.Writer
 	// env contains the environment to run any exec commands with.
 	// Each entry in the array should be of the form key=value.
 	// If env is not nil, it will replace the default environment variables
 	// when executing commands.
+	// If env is an empty array, any exec commands will be run with an
+	// empty environment.
 	env []string
-
-	// because pipe stages are concurrent, protect 'err' and 'stderr'
-	mu     *sync.Mutex
-	err    error
-	stderr io.Writer
 }
 
 // Args creates a pipe containing the program's command-line arguments from
@@ -381,6 +385,12 @@ func (p *Pipe) EncodeBase64() *Pipe {
 	})
 }
 
+func (p *Pipe) environment() []string {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.env
+}
+
 // Error returns any error present on the pipe, or nil otherwise.
 // Error is not a sink and does not wait until the pipe reaches
 // completion. To wait for completion before returning the error,
@@ -426,8 +436,9 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		if pipeStderr != nil {
 			cmd.Stderr = pipeStderr
 		}
-		if p.env != nil {
-			cmd.Env = p.env
+		pipeEnv := p.environment()
+		if pipeEnv != nil {
+			cmd.Env = pipeEnv
 		}
 		err = cmd.Start()
 		if err != nil {
@@ -919,8 +930,10 @@ func (p *Pipe) Wait() error {
 // WithEnv sets the environment for subsequent [Pipe.Exec] and [Pipe.ExecForEach] commands
 // to the string slice env. This will override the default process environment variables
 // when executing commands run via [Pipe.Exec] or [Pipe.ExecForEach]. This will not affect
-// the environment outside of [Pipe.Exec] or [Pipe.ExecForEach].
+// the current process's environment.
 func (p *Pipe) WithEnv(env []string) *Pipe {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	p.env = env
 	return p
 }

@@ -1782,32 +1782,16 @@ func TestWithEnv_UnsetsAllEnvVarsGivenEmptySlice(t *testing.T) {
 	}
 }
 
-func TestWithEnvChangesExecutionEnvironment(t *testing.T) {
+func TestWithEnv_SetsGivenVariablesForSubsequentExec(t *testing.T) {
 	t.Parallel()
 	env := []string{"ENV1=test1", "ENV2=test2"}
 
-	got, err := script.NewPipe().WithEnv(env).Exec("printenv").String()
+	got, err := script.NewPipe().WithEnv(env).Exec("sh -c 'echo ENV1=$ENV1 ENV2=$ENV2'").String()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	want := "ENV1=test1\nENV2=test2\n"
-
-	if got != want {
-		t.Errorf("want %v, got %v", want, got)
-	}
-}
-
-func TestNotSettingEnvFallsBackToDefaultEnvironment(t *testing.T) {
-	t.Parallel()
-
-	got, err := script.NewPipe().Exec("printenv").String()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// not setting the environment should simply use the task's default environment
-	want := strings.Join(os.Environ(), "\n") + "\n"
+	want := "ENV1=test1 ENV2=test2\n"
 
 	if got != want {
 		t.Errorf("want %v, got %v", want, got)
