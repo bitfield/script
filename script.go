@@ -32,10 +32,6 @@ type Pipe struct {
 	stdout     io.Writer
 	httpClient *http.Client
 
-	// because pipe stages are concurrent, protect 'err'
-	mu  *sync.Mutex
-	err error
-
 	// env contains the environment to run any exec commands with.
 	// Each entry in the array should be of the form key=value.
 	// If env is not nil, it will replace the default environment variables
