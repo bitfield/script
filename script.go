@@ -39,13 +39,7 @@ type Pipe struct {
 	mu     *sync.Mutex
 	err    error
 	stderr io.Writer
-	// env contains the environment to run any exec commands with.
-	// Each entry in the array should be of the form key=value.
-	// If env is not nil, it will replace the default environment variables
-	// when executing commands.
-	// If env is an empty array, any exec commands will be run with an
-	// empty environment.
-	env []string
+	env    []string
 }
 
 // Args creates a pipe containing the program's command-line arguments from
@@ -929,8 +923,9 @@ func (p *Pipe) Wait() error {
 
 // WithEnv sets the environment for subsequent [Pipe.Exec] and [Pipe.ExecForEach] commands
 // to the string slice env. This will override the default process environment variables
-// when executing commands run via [Pipe.Exec] or [Pipe.ExecForEach]. This will not affect
-// the current process's environment.
+// when executing commands run via [Pipe.Exec] or [Pipe.ExecForEach].
+// Each entry in the array should be of the form key=value.
+// If env is an empty array, any exec commands will be run with an empty environment.
 func (p *Pipe) WithEnv(env []string) *Pipe {
 	p.mu.Lock()
 	defer p.mu.Unlock()
