@@ -1770,15 +1770,26 @@ func TestWithStdout_SetsSpecifiedWriterAsStdout(t *testing.T) {
 
 func TestWithEnv_UnsetsAllEnvVarsGivenEmptySlice(t *testing.T) {
 	t.Parallel()
-	want := []string{}
-
-	output, err := script.NewPipe().WithEnv(want).Exec("printenv").String()
+	os.Setenv("ENV1", "test1")
+	t.Cleanup(func() { os.Unsetenv("ENV1") })
+	// test that ENV1 exists without setting the environment
+	got, err := script.NewPipe().Exec("sh -c 'echo ENV1=$ENV1'").String()
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if output != "" {
-		t.Errorf("want empty environment, got %q", output)
+	want := "ENV1=test1\n"
+	if got != want {
+		t.Errorf("want %v, got %v", want, got)
+	}
+	// test that ENV1 does not exist when WithEnv takes in an empty slice
+	env := []string{}
+	got, err = script.NewPipe().WithEnv(env).Exec("sh -c 'echo ENV1=$ENV1'").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want = "ENV1=\n"
+	if got != want {
+		t.Errorf("want %v, got %v", want, got)
 	}
 }
 
