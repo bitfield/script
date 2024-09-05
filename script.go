@@ -32,10 +32,6 @@ type Pipe struct {
 	stdout     io.Writer
 	httpClient *http.Client
 
-	// mu protects the following fields because pipe stages are concurrent
-	// 	- err
-	// 	- stderr
-	// 	- env
 	mu     *sync.Mutex
 	err    error
 	stderr io.Writer
@@ -403,6 +399,11 @@ func (p *Pipe) Error() error {
 // error output). The effect of this is to filter the contents of the pipe
 // through the external command.
 //
+// # Environment
+//
+// The command inherits the current process's environment, optionally modified
+// by [Pipe.WithEnv].
+//
 // # Error handling
 //
 // If the command had a non-zero exit status, the pipe's error status will also
@@ -445,7 +446,8 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 
 // ExecForEach renders cmdLine as a Go template for each line of input, running
 // the resulting command, and produces the combined output of all these
-// commands in sequence. See [Pipe.Exec] for error handling details.
+// commands in sequence. See [Pipe.Exec] for details on error handling and
+// environment variables.
 //
 // This is mostly useful for substituting data into commands using Go template
 // syntax. For example:
@@ -921,11 +923,9 @@ func (p *Pipe) Wait() error {
 	return p.Error()
 }
 
-// WithEnv sets the environment for subsequent [Pipe.Exec] and [Pipe.ExecForEach] commands
-// to the string slice env. This will override the default process environment variables
-// when executing commands run via [Pipe.Exec] or [Pipe.ExecForEach].
-// Each entry in the array should be of the form key=value.
-// If env is an empty array, any exec commands will be run with an empty environment.
+// WithEnv sets the environment for subsequent [Pipe.Exec] and [Pipe.ExecForEach]
+// commands to the string slice env, using the same format as [os/exec.Cmd.Env].
+// An empty slice unsets all existing environment variables.
 func (p *Pipe) WithEnv(env []string) *Pipe {
 	p.mu.Lock()
 	defer p.mu.Unlock()

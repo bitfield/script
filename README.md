@@ -269,18 +269,31 @@ These are functions that create a pipe with a given contents:
 
 | Source | Contents |
 | -------- | ------------- |
-| [`Args`](https://pkg.go.dev/github.com/bitfield/script#Args) | command-line arguments
-| [`Do`](https://pkg.go.dev/github.com/bitfield/script#Do) | HTTP response
-| [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) | a string
-| [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) | command output
-| [`File`](https://pkg.go.dev/github.com/bitfield/script#File) | file contents
-| [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) | recursive file listing
-| [`Get`](https://pkg.go.dev/github.com/bitfield/script#Get) | HTTP response
-| [`IfExists`](https://pkg.go.dev/github.com/bitfield/script#IfExists) | do something only if some file exists
-| [`ListFiles`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) | file listing (including wildcards)
-| [`Post`](https://pkg.go.dev/github.com/bitfield/script#Post) | HTTP response
-| [`Slice`](https://pkg.go.dev/github.com/bitfield/script#Slice) | slice elements, one per line
-| [`Stdin`](https://pkg.go.dev/github.com/bitfield/script#Stdin) | standard input
+| [`Args`](https://pkg.go.dev/github.com/bitfield/script#Args) | command-line arguments |
+| [`Do`](https://pkg.go.dev/github.com/bitfield/script#Do) | HTTP response |
+| [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) | a string |
+| [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) | command output |
+| [`File`](https://pkg.go.dev/github.com/bitfield/script#File) | file contents |
+| [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) | recursive file listing |
+| [`Get`](https://pkg.go.dev/github.com/bitfield/script#Get) | HTTP response |
+| [`IfExists`](https://pkg.go.dev/github.com/bitfield/script#IfExists) | do something only if some file exists |
+| [`ListFiles`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) | file listing (including wildcards) |
+| [`Post`](https://pkg.go.dev/github.com/bitfield/script#Post) | HTTP response |
+| [`Slice`](https://pkg.go.dev/github.com/bitfield/script#Slice) | slice elements, one per line |
+| [`Stdin`](https://pkg.go.dev/github.com/bitfield/script#Stdin) | standard input |
+
+## Modifiers
+
+These are methods on a pipe that change its configuration:
+
+| Source | Modifies |
+| -------- | ------------- |
+| [`WithEnv`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithEnv) | environment for commands |
+| [`WithError`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithError) | pipe error status |
+| [`WithHTTPClient`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithHTTPClient) | client for HTTP requests |
+| [`WithReader`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithReader) | pipe source |
+| [`WithStderr`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithStderr) | standard error output stream for command |
+| [`WithStdout`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithStdout) | standard output stream for pipe |
 
 ## Filters
 
@@ -340,7 +353,8 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 
 | Version | New |
 | ----------- | ------- |
-| _next_  | [`DecodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.DecodeBase64) / [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) |
+| _next_  | [`WithEnv`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithEnv) |
+|         | [`DecodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.DecodeBase64) / [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) |
 | v0.22.0 | [`Tee`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Tee), [`WithStderr`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithStderr) |
 | v0.21.0 | HTTP support: [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do), [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get), [`Post`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Post) |
 | v0.20.0 | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) |

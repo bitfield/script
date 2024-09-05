@@ -1798,7 +1798,7 @@ func TestWithEnv_SetsGivenVariablesForSubsequentExec(t *testing.T) {
 	}
 	want := "ENV1=test1 ENV2=test2\n"
 	if got != want {
-		t.Errorf("want %v, got %v", want, got)
+		t.Errorf("want %q, got %q", want, got)
 	}
 }
 
