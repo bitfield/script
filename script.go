@@ -32,10 +32,10 @@ type Pipe struct {
 	stdout     io.Writer
 	httpClient *http.Client
 
-	// because pipe stages are concurrent, protect 'err' and 'stderr'
 	mu     *sync.Mutex
 	err    error
 	stderr io.Writer
+	env    []string
 }
 
 // Args creates a pipe containing the program's command-line arguments from
@@ -168,6 +168,7 @@ func NewPipe() *Pipe {
 		mu:         new(sync.Mutex),
 		stdout:     os.Stdout,
 		httpClient: http.DefaultClient,
+		env:        nil,
 	}
 }
 
@@ -374,6 +375,12 @@ func (p *Pipe) EncodeBase64() *Pipe {
 	})
 }
 
+func (p *Pipe) environment() []string {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.env
+}
+
 // Error returns any error present on the pipe, or nil otherwise.
 // Error is not a sink and does not wait until the pipe reaches
 // completion. To wait for completion before returning the error,
@@ -391,6 +398,11 @@ func (p *Pipe) Error() error {
 // pipe as input, and produces the command's standard output (see below for
 // error output). The effect of this is to filter the contents of the pipe
 // through the external command.
+//
+// # Environment
+//
+// The command inherits the current process's environment, optionally modified
+// by [Pipe.WithEnv].
 //
 // # Error handling
 //
@@ -419,6 +431,10 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		if pipeStderr != nil {
 			cmd.Stderr = pipeStderr
 		}
+		pipeEnv := p.environment()
+		if pipeEnv != nil {
+			cmd.Env = pipeEnv
+		}
 		err = cmd.Start()
 		if err != nil {
 			fmt.Fprintln(cmd.Stderr, err)
@@ -430,7 +446,8 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 
 // ExecForEach renders cmdLine as a Go template for each line of input, running
 // the resulting command, and produces the combined output of all these
-// commands in sequence. See [Pipe.Exec] for error handling details.
+// commands in sequence. See [Pipe.Exec] for details on error handling and
+// environment variables.
 //
 // This is mostly useful for substituting data into commands using Go template
 // syntax. For example:
@@ -459,6 +476,9 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 			pipeStderr := p.stdErr()
 			if pipeStderr != nil {
 				cmd.Stderr = pipeStderr
+			}
+			if p.env != nil {
+				cmd.Env = p.env
 			}
 			err = cmd.Start()
 			if err != nil {
@@ -901,6 +921,16 @@ func (p *Pipe) Wait() error {
 		p.SetError(err)
 	}
 	return p.Error()
+}
+
+// WithEnv sets the environment for subsequent [Pipe.Exec] and [Pipe.ExecForEach]
+// commands to the string slice env, using the same format as [os/exec.Cmd.Env].
+// An empty slice unsets all existing environment variables.
+func (p *Pipe) WithEnv(env []string) *Pipe {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.env = env
+	return p
 }
 
 // WithError sets the error err on the pipe.

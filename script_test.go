@@ -1768,6 +1768,40 @@ func TestWithStdout_SetsSpecifiedWriterAsStdout(t *testing.T) {
 	}
 }
 
+func TestWithEnv_UnsetsAllEnvVarsGivenEmptySlice(t *testing.T) {
+	t.Parallel()
+	p := script.NewPipe().WithEnv([]string{"ENV1=test1"}).Exec("sh -c 'echo ENV1=$ENV1'")
+	want := "ENV1=test1\n"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+	got, err = p.Echo("").WithEnv([]string{}).Exec("sh -c 'echo ENV1=$ENV1'").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want = "ENV1=\n"
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestWithEnv_SetsGivenVariablesForSubsequentExec(t *testing.T) {
+	t.Parallel()
+	env := []string{"ENV1=test1", "ENV2=test2"}
+	got, err := script.NewPipe().WithEnv(env).Exec("sh -c 'echo ENV1=$ENV1 ENV2=$ENV2'").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "ENV1=test1 ENV2=test2\n"
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
 func TestErrorReturnsErrorSetByPreviousPipeStage(t *testing.T) {
 	t.Parallel()
 	p := script.File("testdata/nonexistent.txt")
