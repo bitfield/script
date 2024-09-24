@@ -3,6 +3,7 @@ package script_test
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"strings"
 	"testing"
 	"testing/iotest"
+	"time"
 
 	"github.com/bitfield/script"
 	"github.com/google/go-cmp/cmp"
@@ -1217,6 +1219,48 @@ func TestExecRunsGoHelpAndGetsUsageMessage(t *testing.T) {
 	if !strings.Contains(output, "Usage") {
 		t.Fatalf("want output containing the word 'Usage', got %q", output)
 	}
+}
+
+func TestWithContextTimeout(t *testing.T) {
+	t.Parallel()
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	p := script.NewPipe().WithContext(ctx).Exec("go run ./testdata/test_cli.go sleep 10")
+	p.Wait()
+	err := p.Error()
+	if err != nil && err.Error() != "signal: killed" {
+		t.Fatalf("context should timeout, %v", err)
+	}
+	t.Log(p.ExitStatus())
+}
+
+func TestWithContextTimeoutBeforeRun(t *testing.T) {
+	t.Parallel()
+	ctx, cancel := context.WithTimeout(context.Background(), 0*time.Second)
+	defer cancel()
+	p := script.NewPipe().WithContext(ctx).Exec("go run ./testdata/test_cli.go sleep 10")
+	p.Wait()
+	err := p.Error()
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatal("context should timeout")
+	}
+	t.Log(p.ExitStatus())
+}
+
+func TestWithContextCancel(t *testing.T) {
+	t.Parallel()
+	ctx, cancel := context.WithCancel(context.Background())
+	p := script.NewPipe().WithContext(ctx).Exec("go run ./testdata/test_cli.go sleep 2")
+	go func() {
+		<-time.After(1 * time.Second)
+		cancel()
+	}()
+	p.Wait()
+	err := p.Error()
+	if errors.Is(err, context.Canceled) {
+		t.Fatalf("context should cancel")
+	}
+	t.Log(p.ExitStatus())
 }
 
 func TestFileOutputsContentsOfSpecifiedFile(t *testing.T) {

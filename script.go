@@ -3,6 +3,7 @@ package script
 import (
 	"bufio"
 	"container/ring"
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
@@ -32,6 +33,7 @@ type Pipe struct {
 	stdout     io.Writer
 	httpClient *http.Client
 
+	ctx    context.Context
 	mu     *sync.Mutex
 	err    error
 	stderr io.Writer
@@ -166,6 +168,7 @@ func NewPipe() *Pipe {
 	return &Pipe{
 		Reader:     ReadAutoCloser{},
 		mu:         new(sync.Mutex),
+		ctx:        context.Background(),
 		stdout:     os.Stdout,
 		httpClient: http.DefaultClient,
 		env:        nil,
@@ -423,7 +426,7 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		if err != nil {
 			return err
 		}
-		cmd := exec.Command(args[0], args[1:]...)
+		cmd := exec.CommandContext(p.ctx, args[0], args[1:]...)
 		cmd.Stdin = r
 		cmd.Stdout = w
 		cmd.Stderr = w
@@ -470,7 +473,7 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 			if err != nil {
 				return err
 			}
-			cmd := exec.Command(args[0], args[1:]...)
+			cmd := exec.CommandContext(p.ctx, args[0], args[1:]...)
 			cmd.Stdout = w
 			cmd.Stderr = w
 			pipeStderr := p.stdErr()
@@ -971,6 +974,13 @@ func (p *Pipe) WithStderr(w io.Writer) *Pipe {
 // default [os.Stdout].
 func (p *Pipe) WithStdout(w io.Writer) *Pipe {
 	p.stdout = w
+	return p
+}
+
+// WithContext sets context.Context for the pipe. Adds support for graceful pipe
+// shutdown. Currently works with [Pipe.Exec] and [Pipe.ExecForEach]
+func (p *Pipe) WithContext(ctx context.Context) *Pipe {
+	p.ctx = ctx
 	return p
 }
 
