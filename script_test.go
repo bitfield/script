@@ -1223,13 +1223,42 @@ func TestExecRunsGoHelpAndGetsUsageMessage(t *testing.T) {
 
 func TestWithContextTimeout(t *testing.T) {
 	t.Parallel()
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
-	p := script.NewPipe().WithContext(ctx).Exec("sleep 1")
+	p := script.NewPipe().WithContext(ctx).Exec("go run ./testdata/test_cli.go sleep 10")
+	p.Wait()
+	err := p.Error()
+	if err != nil && err.Error() != "signal: killed" {
+		t.Fatalf("context should timeout, %v", err)
+	}
+	t.Log(p.ExitStatus())
+}
+
+func TestWithContextTimeoutBeforeRun(t *testing.T) {
+	t.Parallel()
+	ctx, cancel := context.WithTimeout(context.Background(), 0*time.Second)
+	defer cancel()
+	p := script.NewPipe().WithContext(ctx).Exec("go run ./testdata/test_cli.go sleep 10")
 	p.Wait()
 	err := p.Error()
 	if !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatal("context should timeout")
+	}
+	t.Log(p.ExitStatus())
+}
+
+func TestWithContextCancel(t *testing.T) {
+	t.Parallel()
+	ctx, cancel := context.WithCancel(context.Background())
+	p := script.NewPipe().WithContext(ctx).Exec("go run ./testdata/test_cli.go sleep 2")
+	go func() {
+		<-time.After(1 * time.Second)
+		cancel()
+	}()
+	p.Wait()
+	err := p.Error()
+	if errors.Is(err, context.Canceled) {
+		t.Fatalf("context should cancel")
 	}
 	t.Log(p.ExitStatus())
 }
