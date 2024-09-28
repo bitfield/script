@@ -2373,6 +2373,22 @@ func ExamplePipe_Get() {
 	// You said: hello
 }
 
+func ExamplePipe_Hash() {
+	sum, err := script.Echo("hello world").Hash(sha512.New())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(sum)
+	// Output:
+	// 309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f
+}
+
+func ExamplePipe_HashSums() {
+	script.Echo("testdata/test.txt").HashSums(sha512.New()).Stdout()
+	// Output:
+	// a81e91cdb58da070f529f2024e3852f919d25eb56daad8a30ede46f719677fcddeb7a01b6823d0d1a3a150eac4b0921ee37374fd8362c4e6516c6e515f235550
+}
+
 func ExamplePipe_Join() {
 	script.Echo("hello\nworld\n").Join().Stdout()
 	// Output:
