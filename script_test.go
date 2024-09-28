@@ -3,8 +3,11 @@ package script_test
 import (
 	"bufio"
 	"bytes"
+	"crypto/sha256"
+	"crypto/sha512"
 	"errors"
 	"fmt"
+	"hash"
 	"io"
 	"log"
 	"net/http"
@@ -2010,6 +2013,100 @@ func TestWithStdErr_IsConcurrencySafeAfterExec(t *testing.T) {
 	err := script.Exec("echo").WithStderr(nil).Wait()
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestHash_OutputsCorrectHash(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		name, input, want string
+		hasher            hash.Hash
+	}{
+		{
+			name:   "for no data",
+			input:  "",
+			hasher: sha256.New(),
+			want:   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		},
+		{
+			name:   "for short string with SHA 256 hasher",
+			input:  "hello, world",
+			hasher: sha256.New(),
+			want:   "09ca7e4eaa6e8ae9c7d261167129184883644d07dfba7cbfbc4c8a2e08360d5b",
+		},
+		{
+			name:   "for short string with SHA 512 hasher",
+			input:  "hello, world",
+			hasher: sha512.New(),
+			want:   "8710339dcb6814d0d9d2290ef422285c9322b7163951f9a0ca8f883d3305286f44139aa374848e4174f5aada663027e4548637b6d19894aec4fb6c46a139fbf9",
+		},
+		{
+			name:   "for string containing newline with SHA 256 hasher",
+			input:  "The tao that can be told\nis not the eternal Tao",
+			hasher: sha256.New(),
+			want:   "788542cb92d37f67e187992bdb402fdfb68228a1802947f74c6576e04790a688",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := script.Echo(tc.input).Hash(tc.hasher)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tc.want {
+				t.Errorf("want %q, got %q", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestHashSums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		testFileName string
+		hasher       hash.Hash
+		want         string
+	}{
+		// To get the checksum run: openssl dgst -sha256 <file_name>
+		{
+			testFileName: "testdata/sha256Sum.input.txt",
+			hasher:       sha256.New(),
+			want:         "1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e\n",
+		},
+		{
+			testFileName: "testdata/sha512Sum.input.txt",
+			hasher:       sha512.New(),
+			want:         "c95a099794a5ef71b75704a263bec3c1f6d5d5c21f8942b82e45897321c2afb5eaa564549503869d9246ee9c912f899f052a3911733a00432dd71a77e7bae7a0\n",
+		},
+		{
+			testFileName: "testdata/hello.txt",
+			hasher:       sha256.New(),
+			want:         "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9\n",
+		},
+		{
+			testFileName: "testdata/multiple_files",
+			hasher:       sha256.New(),
+			want:         "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n",
+		},
+	}
+	for _, tc := range tcs {
+		got, err := script.ListFiles(tc.testFileName).HashSums(tc.hasher).String()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.want {
+			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
+		}
+	}
+}
+
+func TestHash_ReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
+	t.Parallel()
+	brokenReader := iotest.ErrReader(errors.New("oh no"))
+	_, err := script.NewPipe().WithReader(brokenReader).Hash(sha256.New())
+	if err == nil {
+		t.Fatal(nil)
 	}
 }
 
