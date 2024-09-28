@@ -317,6 +317,7 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) | first N lines of input |
 | [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) | frequency count of unique input lines, most frequent first |
 | [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get) | response to HTTP GET on supplied URL |
+| [`HashSums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.HashSums) | hashes of each listed file |
 | [`Join`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Join) | replace all newlines with spaces |
 | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) | result of `jq` query |
 | [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) | last N lines of input|
@@ -340,6 +341,7 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 | ---- | ----------- | ------- |
 | [`AppendFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) | appended to file, creating if it doesn't exist | bytes written, error |
 | [`Bytes`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Bytes) | | data as `[]byte`, error
+| [`Hash`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Hash) | | hash, error  |
 | [`CountLines`](https://pkg.go.dev/github.com/bitfield/script#Pipe.CountLines) | |number of lines, error  |
 | [`Read`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Read) | given `[]byte` | bytes read, error  |
 | [`SHA256Sum`](https://pkg.go.dev/github.com/bitfield/script#Pipe.SHA256Sum) | | SHA-256 hash, error  |
