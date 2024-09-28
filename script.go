@@ -850,35 +850,14 @@ func (p *Pipe) SetError(err error) {
 // SHA256Sum returns the hex-encoded SHA-256 hash of the entire contents of the
 // pipe, or an error.
 func (p *Pipe) SHA256Sum() (string, error) {
-	if p.Error() != nil {
-		return "", p.Error()
-	}
-	hasher := sha256.New()
-	_, err := io.Copy(hasher, p)
-	if err != nil {
-		p.SetError(err)
-		return "", err
-	}
-	return hex.EncodeToString(hasher.Sum(nil)), p.Error()
+	return p.Hash(sha256.New())
 }
 
 // SHA256Sums reads paths from the pipe, one per line, and produces the
 // hex-encoded SHA-256 hash of each corresponding file, one per line. Any files
 // that cannot be opened or read will be ignored.
 func (p *Pipe) SHA256Sums() *Pipe {
-	return p.FilterScan(func(line string, w io.Writer) {
-		f, err := os.Open(line)
-		if err != nil {
-			return // skip unopenable files
-		}
-		defer f.Close()
-		h := sha256.New()
-		_, err = io.Copy(h, f)
-		if err != nil {
-			return // skip unreadable files
-		}
-		fmt.Fprintln(w, hex.EncodeToString(h.Sum(nil)))
-	})
+	return p.HashSums(sha256.New())
 }
 
 // Slice returns the pipe's contents as a slice of strings, one element per
