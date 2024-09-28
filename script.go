@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"hash"
 	"io"
 	"math"
 	"net/http"
@@ -648,6 +649,38 @@ func (p *Pipe) Get(url string) *Pipe {
 		return p.WithError(err)
 	}
 	return p.Do(req)
+}
+
+// Hash returns the hex-encoded hash of the entire contents of the
+// pipe based on the provided hasher, or an error.
+func (p *Pipe) Hash(hasher hash.Hash) (string, error) {
+	if p.Error() != nil {
+		return "", p.Error()
+	}
+	_, err := io.Copy(hasher, p)
+	if err != nil {
+		p.SetError(err)
+		return "", err
+	}
+	return hex.EncodeToString(hasher.Sum(nil)), p.Error()
+}
+
+// HashSums reads paths from the pipe, one per line, and produces the
+// hex-encoded hash of each corresponding file based on the provided hasher,
+// one per line. Any files that cannot be opened or read will be ignored.
+func (p *Pipe) HashSums(hasher hash.Hash) *Pipe {
+	return p.FilterScan(func(line string, w io.Writer) {
+		f, err := os.Open(line)
+		if err != nil {
+			return // skip unopenable files
+		}
+		defer f.Close()
+		_, err = io.Copy(hasher, f)
+		if err != nil {
+			return // skip unreadable files
+		}
+		fmt.Fprintln(w, hex.EncodeToString(hasher.Sum(nil)))
+	})
 }
 
 // Join joins all the lines in the pipe's contents into a single
