@@ -2100,6 +2100,17 @@ func TestHashSums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
 	}
 }
 
+func TestHashSums_OutputsEmptyLineForFileThatCannotBeHashed(t *testing.T) {
+	got, err := script.Echo("file_does_not_exist.txt").HashSums(sha256.New()).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "\n"
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
 func TestHash_ReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	t.Parallel()
 	brokenReader := iotest.ErrReader(errors.New("oh no"))
