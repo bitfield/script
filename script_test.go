@@ -1130,7 +1130,7 @@ func TestSHA256Sums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
 		want         string
 	}{
 		// To get the checksum run: openssl dgst -sha256 <file_name>
-		{"testdata/sha256Sum.input.txt", "1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e\n"},
+		{"testdata/hashSum.input.txt", "1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e\n"},
 		{"testdata/hello.txt", "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9\n"},
 		{"testdata/multiple_files", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"},
 	}
@@ -2070,14 +2070,14 @@ func TestHashSums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
 	}{
 		// To get the checksum run: openssl dgst -sha256 <file_name>
 		{
-			testFileName: "testdata/sha256Sum.input.txt",
+			testFileName: "testdata/hashSum.input.txt",
 			hasher:       sha256.New(),
 			want:         "1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e\n",
 		},
 		{
-			testFileName: "testdata/sha512Sum.input.txt",
+			testFileName: "testdata/hashSum.input.txt",
 			hasher:       sha512.New(),
-			want:         "c95a099794a5ef71b75704a263bec3c1f6d5d5c21f8942b82e45897321c2afb5eaa564549503869d9246ee9c912f899f052a3911733a00432dd71a77e7bae7a0\n",
+			want:         "3543bd0d68129e860598ccabcee1beb6bb90d91105cea74a8e555588634ec6f6d6d02033139972da2dc4929b1fb61bd24c91c8e82054e9ae865cf7f70909be8c\n",
 		},
 		{
 			testFileName: "testdata/hello.txt",
@@ -2384,9 +2384,11 @@ func ExamplePipe_Hash() {
 }
 
 func ExamplePipe_HashSums() {
-	script.Echo("testdata/test.txt").HashSums(sha512.New()).Stdout()
+	script.ListFiles("testdata/multiple_files").HashSums(sha256.New()).Stdout()
 	// Output:
-	// a81e91cdb58da070f529f2024e3852f919d25eb56daad8a30ede46f719677fcddeb7a01b6823d0d1a3a150eac4b0921ee37374fd8362c4e6516c6e515f235550
+	// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+	// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+	// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 }
 
 func ExamplePipe_Join() {

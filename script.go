@@ -662,7 +662,7 @@ func (p *Pipe) Hash(hasher hash.Hash) (string, error) {
 		p.SetError(err)
 		return "", err
 	}
-	return hex.EncodeToString(hasher.Sum(nil)), p.Error()
+	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
 // HashSums reads paths from the pipe, one per line, and produces the
