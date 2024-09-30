@@ -851,7 +851,7 @@ func (p *Pipe) SetError(err error) {
 
 // SHA256Sum returns the hex-encoded SHA-256 hash of the entire contents of the
 // pipe, or an error.
-// Deprecated: SHA256Sum has been deprecated by [Pipe.Hash]. To get the SHA 256
+// Deprecated: SHA256Sum has been deprecated by [Pipe.Hash]. To get the SHA-256
 // hash for the contents of the pipe, call `Hash(sha256.new())`
 func (p *Pipe) SHA256Sum() (string, error) {
 	return p.Hash(sha256.New())
@@ -860,8 +860,8 @@ func (p *Pipe) SHA256Sum() (string, error) {
 // SHA256Sums reads paths from the pipe, one per line, and produces the
 // hex-encoded SHA-256 hash of each corresponding file, one per line. Any files
 // that cannot be opened or read will be ignored.
-// Deprecated: SHA256Sums has been deprecated by [Pipe.HashSums]. To get the SHA 256
-// encoding for the paths in the pipe, call `HashSums(sha256.new())`
+// Deprecated: SHA256Sums has been deprecated by [Pipe.HashSums]. To get the SHA-256
+// hash for each file path in the pipe, call `HashSums(sha256.new())`
 func (p *Pipe) SHA256Sums() *Pipe {
 	return p.HashSums(sha256.New())
 }
