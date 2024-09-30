@@ -2047,7 +2047,6 @@ func TestHash_OutputsCorrectHash(t *testing.T) {
 			want:   "788542cb92d37f67e187992bdb402fdfb68228a1802947f74c6576e04790a688",
 		},
 	}
-
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := script.Echo(tc.input).Hash(tc.hasher)
