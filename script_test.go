@@ -2109,6 +2109,17 @@ func TestHash_ReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	}
 }
 
+func TestHashSums_OutputsEmptyStringForFileThatCannotBeHashed(t *testing.T) {
+	got, err := script.Echo("file_does_not_exist.txt").HashSums(sha256.New()).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := ""
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
 func ExampleArgs() {
 	script.Args().Stdout()
 	// prints command-line arguments
