@@ -3,8 +3,11 @@ package script_test
 import (
 	"bufio"
 	"bytes"
+	"crypto/sha256"
+	"crypto/sha512"
 	"errors"
 	"fmt"
+	"hash"
 	"io"
 	"log"
 	"net/http"
@@ -1127,7 +1130,7 @@ func TestSHA256Sums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
 		want         string
 	}{
 		// To get the checksum run: openssl dgst -sha256 <file_name>
-		{"testdata/sha256Sum.input.txt", "1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e\n"},
+		{"testdata/hashSum.input.txt", "1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e\n"},
 		{"testdata/hello.txt", "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9\n"},
 		{"testdata/multiple_files", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"},
 	}
@@ -2013,6 +2016,110 @@ func TestWithStdErr_IsConcurrencySafeAfterExec(t *testing.T) {
 	}
 }
 
+func TestHash_OutputsCorrectHash(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		name, input, want string
+		hasher            hash.Hash
+	}{
+		{
+			name:   "for no data",
+			input:  "",
+			hasher: sha256.New(),
+			want:   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		},
+		{
+			name:   "for short string with SHA 256 hasher",
+			input:  "hello, world",
+			hasher: sha256.New(),
+			want:   "09ca7e4eaa6e8ae9c7d261167129184883644d07dfba7cbfbc4c8a2e08360d5b",
+		},
+		{
+			name:   "for short string with SHA 512 hasher",
+			input:  "hello, world",
+			hasher: sha512.New(),
+			want:   "8710339dcb6814d0d9d2290ef422285c9322b7163951f9a0ca8f883d3305286f44139aa374848e4174f5aada663027e4548637b6d19894aec4fb6c46a139fbf9",
+		},
+		{
+			name:   "for string containing newline with SHA 256 hasher",
+			input:  "The tao that can be told\nis not the eternal Tao",
+			hasher: sha256.New(),
+			want:   "788542cb92d37f67e187992bdb402fdfb68228a1802947f74c6576e04790a688",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := script.Echo(tc.input).Hash(tc.hasher)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tc.want {
+				t.Errorf("want %q, got %q", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestHashSums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		testFileName string
+		hasher       hash.Hash
+		want         string
+	}{
+		// To get the checksum run: openssl dgst -sha256 <file_name>
+		{
+			testFileName: "testdata/hashSum.input.txt",
+			hasher:       sha256.New(),
+			want:         "1870478d23b0b4db37735d917f4f0ff9393dd3e52d8b0efa852ab85536ddad8e\n",
+		},
+		{
+			testFileName: "testdata/hashSum.input.txt",
+			hasher:       sha512.New(),
+			want:         "3543bd0d68129e860598ccabcee1beb6bb90d91105cea74a8e555588634ec6f6d6d02033139972da2dc4929b1fb61bd24c91c8e82054e9ae865cf7f70909be8c\n",
+		},
+		{
+			testFileName: "testdata/hello.txt",
+			hasher:       sha256.New(),
+			want:         "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9\n",
+		},
+		{
+			testFileName: "testdata/multiple_files",
+			hasher:       sha256.New(),
+			want:         "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n",
+		},
+	}
+	for _, tc := range tcs {
+		got, err := script.ListFiles(tc.testFileName).HashSums(tc.hasher).String()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.want {
+			t.Errorf("%q: want %q, got %q", tc.testFileName, tc.want, got)
+		}
+	}
+}
+
+func TestHash_ReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
+	t.Parallel()
+	brokenReader := iotest.ErrReader(errors.New("oh no"))
+	_, err := script.NewPipe().WithReader(brokenReader).Hash(sha256.New())
+	if err == nil {
+		t.Fatal(nil)
+	}
+}
+
+func TestHashSums_OutputsEmptyStringForFileThatCannotBeHashed(t *testing.T) {
+	got, err := script.Echo("file_does_not_exist.txt").HashSums(sha256.New()).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := ""
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
 func ExampleArgs() {
 	script.Args().Stdout()
 	// prints command-line arguments
@@ -2274,6 +2381,24 @@ func ExamplePipe_Get() {
 	script.Echo("hello").Get(ts.URL).Stdout()
 	// Output:
 	// You said: hello
+}
+
+func ExamplePipe_Hash() {
+	sum, err := script.Echo("hello world").Hash(sha512.New())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(sum)
+	// Output:
+	// 309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f
+}
+
+func ExamplePipe_HashSums() {
+	script.ListFiles("testdata/multiple_files").HashSums(sha256.New()).Stdout()
+	// Output:
+	// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+	// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+	// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 }
 
 func ExamplePipe_Join() {

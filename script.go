@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"hash"
 	"io"
 	"math"
 	"net/http"
@@ -650,6 +651,40 @@ func (p *Pipe) Get(url string) *Pipe {
 	return p.Do(req)
 }
 
+// Hash returns the hex-encoded hash of the entire contents of the
+// pipe based on the provided hasher, or an error.
+// To perform hashing on files, see [Pipe.HashSums].
+func (p *Pipe) Hash(hasher hash.Hash) (string, error) {
+	if p.Error() != nil {
+		return "", p.Error()
+	}
+	_, err := io.Copy(hasher, p)
+	if err != nil {
+		p.SetError(err)
+		return "", err
+	}
+	return hex.EncodeToString(hasher.Sum(nil)), nil
+}
+
+// HashSums reads paths from the pipe, one per line, and produces the
+// hex-encoded hash of each corresponding file based on the provided hasher,
+// one per line. Any files that cannot be opened or read will be ignored.
+// To perform hashing on the contents of the pipe, see [Pipe.Hash].
+func (p *Pipe) HashSums(hasher hash.Hash) *Pipe {
+	return p.FilterScan(func(line string, w io.Writer) {
+		f, err := os.Open(line)
+		if err != nil {
+			return // skip unopenable files
+		}
+		defer f.Close()
+		_, err = io.Copy(hasher, f)
+		if err != nil {
+			return // skip unreadable files
+		}
+		fmt.Fprintln(w, hex.EncodeToString(hasher.Sum(nil)))
+	})
+}
+
 // Join joins all the lines in the pipe's contents into a single
 // space-separated string, which will always end with a newline.
 func (p *Pipe) Join() *Pipe {
@@ -816,36 +851,19 @@ func (p *Pipe) SetError(err error) {
 
 // SHA256Sum returns the hex-encoded SHA-256 hash of the entire contents of the
 // pipe, or an error.
+// Deprecated: SHA256Sum has been deprecated by [Pipe.Hash]. To get the SHA-256
+// hash for the contents of the pipe, call `Hash(sha256.new())`
 func (p *Pipe) SHA256Sum() (string, error) {
-	if p.Error() != nil {
-		return "", p.Error()
-	}
-	hasher := sha256.New()
-	_, err := io.Copy(hasher, p)
-	if err != nil {
-		p.SetError(err)
-		return "", err
-	}
-	return hex.EncodeToString(hasher.Sum(nil)), p.Error()
+	return p.Hash(sha256.New())
 }
 
 // SHA256Sums reads paths from the pipe, one per line, and produces the
 // hex-encoded SHA-256 hash of each corresponding file, one per line. Any files
 // that cannot be opened or read will be ignored.
+// Deprecated: SHA256Sums has been deprecated by [Pipe.HashSums]. To get the SHA-256
+// hash for each file path in the pipe, call `HashSums(sha256.new())`
 func (p *Pipe) SHA256Sums() *Pipe {
-	return p.FilterScan(func(line string, w io.Writer) {
-		f, err := os.Open(line)
-		if err != nil {
-			return // skip unopenable files
-		}
-		defer f.Close()
-		h := sha256.New()
-		_, err = io.Copy(h, f)
-		if err != nil {
-			return // skip unreadable files
-		}
-		fmt.Fprintln(w, hex.EncodeToString(h.Sum(nil)))
-	})
+	return p.HashSums(sha256.New())
 }
 
 // Slice returns the pipe's contents as a slice of strings, one element per
