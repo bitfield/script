@@ -668,20 +668,20 @@ func (p *Pipe) Hash(hasher hash.Hash) (string, error) {
 
 // HashSums reads paths from the pipe, one per line, and produces the
 // hex-encoded hash of each corresponding file based on the provided hasher,
-// one per line. Any files that cannot be opened or read will print an empty line.
+// one per line. Any files that cannot be opened or read will be ignored.
 // To perform hashing on the contents of the pipe, see [Pipe.Hash].
 func (p *Pipe) HashSums(hasher hash.Hash) *Pipe {
-	return p.FilterLine(func(line string) string {
+	return p.FilterScan(func(line string, w io.Writer) {
 		f, err := os.Open(line)
 		if err != nil {
-			return "" // skip unopenable files
+			return // skip unopenable files
 		}
 		defer f.Close()
 		_, err = io.Copy(hasher, f)
 		if err != nil {
-			return "" // skip unreadable files
+			return // skip unreadable files
 		}
-		return hex.EncodeToString(hasher.Sum(nil))
+		fmt.Fprintln(w, hex.EncodeToString(hasher.Sum(nil)))
 	})
 }
 
