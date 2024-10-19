@@ -1375,15 +1375,34 @@ func TestReadAutoCloser_ReadsAllDataFromSourceAndClosesItAutomatically(t *testin
 	}
 }
 
-func TestSliceProducesElementsOfSpecifiedSliceOnePerLine(t *testing.T) {
+func TestSlice_(t *testing.T) {
 	t.Parallel()
-	want := "1\n2\n3\n"
-	got, err := script.Slice([]string{"1", "2", "3"}).String()
-	if err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		name  string
+		input []string
+		want  string
+	}{
+		{
+			name:  "produces elements of specified slice one per line",
+			input: []string{"1", "2", "3"},
+			want:  "1\n2\n3\n",
+		},
+		{
+			name:  "given empty slice produces empty pipe",
+			input: []string{},
+			want:  "",
+		},
 	}
-	if !cmp.Equal(want, got) {
-		t.Error(cmp.Diff(want, got))
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := script.Slice(test.input).String()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !cmp.Equal(test.want, got) {
+				t.Error(cmp.Diff(test.want, got))
+			}
+		})
 	}
 }
 
