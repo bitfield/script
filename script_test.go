@@ -1387,6 +1387,18 @@ func TestSliceProducesElementsOfSpecifiedSliceOnePerLine(t *testing.T) {
 	}
 }
 
+func TestSliceGivenEmptySliceProducesEmptyPipe(t *testing.T) {
+	t.Parallel()
+	want := ""
+	got, err := script.Slice([]string{}).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+}
+
 func TestStdoutReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	t.Parallel()
 	brokenReader := iotest.ErrReader(errors.New("oh no"))

@@ -180,8 +180,12 @@ func Post(url string) *Pipe {
 	return NewPipe().Post(url)
 }
 
-// Slice creates a pipe containing each element of s, one per line.
+// Slice creates a pipe containing each element of s, one per line. If s is
+// empty or nil, then the pipe is empty.
 func Slice(s []string) *Pipe {
+	if len(s) == 0 {
+		return NewPipe()
+	}
 	return Echo(strings.Join(s, "\n") + "\n")
 }
 
