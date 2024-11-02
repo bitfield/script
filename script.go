@@ -102,7 +102,7 @@ func FindFiles(dir string) *Pipe {
 		}
 		return nil
 	})
-	if err != nil {
+	if err != nil && len(paths) == 0 {
 		return NewPipe().WithError(err)
 	}
 	return Slice(paths)
