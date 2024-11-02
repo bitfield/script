@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	"io/fs"
 	"math"
 	"net/http"
 	"os"
@@ -92,12 +93,12 @@ func File(path string) *Pipe {
 //	test/2.txt
 func FindFiles(dir string) *Pipe {
 	var paths []string
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err := fs.WalkDir(os.DirFS(dir), ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() {
-			paths = append(paths, path)
+		if !d.IsDir() {
+			paths = append(paths, filepath.Join(dir, path))
 		}
 		return nil
 	})
