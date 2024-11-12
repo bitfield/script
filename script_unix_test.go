@@ -3,6 +3,8 @@
 package script_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/bitfield/script"
@@ -103,6 +105,38 @@ func TestExecPipesDataToExternalCommandAndGetsExpectedOutput(t *testing.T) {
 	}
 	if want != got {
 		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestFindFiles_DoesNotErrorWhenSubDirectoryIsNotReadable(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+	fileAPath := filepath.Join(tmpDir, "file_a.txt")
+	if err := os.WriteFile(fileAPath, []byte("hello world!"), os.ModePerm); err != nil {
+		t.Fatal(err)
+	}
+	restrictedDirPath := filepath.Join(tmpDir, "restricted_dir")
+	if err := os.Mkdir(restrictedDirPath, os.ModePerm); err != nil {
+		t.Fatal(err)
+	}
+	fileBPath := filepath.Join(restrictedDirPath, "file_b.txt")
+	if err := os.WriteFile(fileBPath, []byte("hello again!"), os.ModePerm); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(restrictedDirPath, 0o000); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.Chmod(restrictedDirPath, os.ModePerm) })
+	got, err := script.FindFiles(tmpDir).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := fileAPath + "\n"
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Fatal(cmp.Diff(want, got))
 	}
 }
 
