@@ -111,16 +111,16 @@ func TestExecPipesDataToExternalCommandAndGetsExpectedOutput(t *testing.T) {
 func TestFindFiles_DoesNotErrorWhenSubDirectoryIsNotReadable(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
-	fileAPath := filepath.Join(tmpDir, "file_a.txt")
-	if err := os.WriteFile(fileAPath, []byte("hello world!"), os.ModePerm); err != nil {
-		t.Fatal(err)
-	}
-	restrictedDirPath := filepath.Join(tmpDir, "restricted_dir")
+	restrictedDirPath := filepath.Join(tmpDir, "a_restricted_dir")
 	if err := os.Mkdir(restrictedDirPath, os.ModePerm); err != nil {
 		t.Fatal(err)
 	}
-	fileBPath := filepath.Join(restrictedDirPath, "file_b.txt")
-	if err := os.WriteFile(fileBPath, []byte("hello again!"), os.ModePerm); err != nil {
+	fileAPath := filepath.Join(restrictedDirPath, "file_a.txt")
+	if err := os.WriteFile(fileAPath, []byte("hello again!"), os.ModePerm); err != nil {
+		t.Fatal(err)
+	}
+	fileBPath := filepath.Join(tmpDir, "file_b.txt")
+	if err := os.WriteFile(fileBPath, []byte("hello world!"), os.ModePerm); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Chmod(restrictedDirPath, 0o000); err != nil {
@@ -131,7 +131,7 @@ func TestFindFiles_DoesNotErrorWhenSubDirectoryIsNotReadable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := fileAPath + "\n"
+	want := fileBPath + "\n"
 	if err != nil {
 		t.Fatal(err)
 	}

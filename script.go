@@ -95,6 +95,9 @@ func FindFiles(dir string) *Pipe {
 	var paths []string
 	err := fs.WalkDir(os.DirFS(dir), ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
+			if os.IsPermission(err) {
+				return fs.SkipDir
+			}
 			return err
 		}
 		if !d.IsDir() {
