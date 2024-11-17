@@ -93,20 +93,19 @@ func File(path string) *Pipe {
 //	test/2.txt
 func FindFiles(dir string) *Pipe {
 	var paths []string
-	err := fs.WalkDir(os.DirFS(dir), ".", func(path string, d fs.DirEntry, err error) error {
+	var innerErr error
+	fs.WalkDir(os.DirFS(dir), ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			if os.IsPermission(err) {
-				return fs.SkipDir
-			}
-			return err
+			innerErr = err
+			return fs.SkipDir
 		}
 		if !d.IsDir() {
 			paths = append(paths, filepath.Join(dir, path))
 		}
 		return nil
 	})
-	if err != nil && len(paths) == 0 {
-		return NewPipe().WithError(err)
+	if innerErr != nil && len(paths) == 0 {
+		return NewPipe().WithError(innerErr)
 	}
 	return Slice(paths)
 }
