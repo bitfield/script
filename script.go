@@ -78,11 +78,8 @@ func File(path string) *Pipe {
 
 // FindFiles creates a pipe listing all the files in the directory dir and its
 // subdirectories recursively, one per line, like Unix find(1).
-// If an error occurs while reading the directory, the behaviour is as follows:
-//   - If no files have been found (the directory is empty or inaccessible), the
-//     resulting Pipe will have its error status set to the encountered error.
-//   - If at least one file is found, the error is ignored, and the resulting Pipe will
-//     contain the successfully found file paths.
+// Errors are ignored unless no files are found (in which case the pipe's error
+// status will be set to the last error encountered).
 //
 // Each line of the output consists of a slash-separated path, starting with
 // the initial directory. For example, if the directory looks like this:
