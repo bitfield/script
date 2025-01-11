@@ -263,6 +263,17 @@ Let's try it out with some [sample data](testdata/access.log):
 
 See [pkg.go.dev](https://pkg.go.dev/github.com/bitfield/script) for the full documentation, or read on for a summary.
 
+[![The Power of Go: Tools cover image](img/tools.png)](https://bitfieldconsulting.com/golang/scripting)
+
+The `script` package originated as an exercise in my book [The Power of Go: Tools](https://bitfieldconsulting.com/books/tools):
+
+> *Not all software engineering is about writing applications. Developers also need tooling: programs and services to automate everyday tasks like configuring servers and containers, running builds and tests, deploying their applications, and so on. Why shouldn't we be able to use Go for that purpose, too?*
+>
+> *`script` is designed to make it easy to write Go programs that chain together operations into a pipeline, in the same way that shell scripts do, but with the robust type checking and error handling of a real programming language. You can use `script` to construct the sort of simple one‐off pipelines that would otherwise require the shell, or special‐purpose tools.*
+>
+> *So, when plain Go doesn’t provide a convenient way to solve a problem, you yourself can use it to implement a domain-specific “language” that does. In this case, we used Go to provide the language of Unix‐style pipelines. But we could have chosen any architecture we wanted to suit the problem. If Go doesn’t already provide the tool you need, use Go to build that tool, then use it.*\
+> —From the book
+
 ## Sources
 
 These are functions that create a pipe with a given contents:
