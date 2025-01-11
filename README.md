@@ -263,7 +263,7 @@ Let's try it out with some [sample data](testdata/access.log):
 
 See [pkg.go.dev](https://pkg.go.dev/github.com/bitfield/script) for the full documentation, or read on for a summary.
 
-[![The Power of Go: Tools cover image](img/tools.png)](https://bitfieldconsulting.com/golang/scripting)
+[![The Power of Go: Tools cover image](img/tools.png)](https://bitfieldconsulting.com/books/tools)
 
 The `script` package originated as an exercise in my book [The Power of Go: Tools](https://bitfieldconsulting.com/books/tools):
 
