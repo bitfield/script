@@ -259,6 +259,25 @@ Let's try it out with some [sample data](testdata/access.log):
  1 90.53.111.17
 ```
 
+# A `script` “interpreter”
+
+One of the nice things about shell scripts is that there's no build process: the script file itself is the “executable” (in fact, it's interpreted by the shell). Simon Willison (and GPT-4) contributed this elegant `script` interpreter, written in `bash`:
+
+* [`go-script`](https://til.simonwillison.net/bash/go-script)
+
+With `go-script`, you can run `script` one-liners directly:
+
+```sh
+cat file.txt | ./goscript.sh -c 'script.Stdin().Column(1).Freq().First(10).Stdout()'
+```
+
+or create `.goscript` files that you can run using a “shebang” line:
+
+```sh
+#!/tmp/goscript.sh
+script.Stdin().Column(1).Freq().First(10).Stdout()
+```
+
 # Documentation
 
 See [pkg.go.dev](https://pkg.go.dev/github.com/bitfield/script) for the full documentation, or read on for a summary.
