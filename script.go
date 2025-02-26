@@ -512,6 +512,20 @@ func (p *Pipe) FilterScan(filter func(string, io.Writer)) *Pipe {
 	})
 }
 
+// FilterScanTrackLine behaves the same way as FilterScan() but also returns the
+// line number of the processed input
+func (p *Pipe) FilterScanTrackLine(filter func(string, io.Writer, int)) *Pipe {
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		scanner := newScanner(r)
+		line := 1
+		for scanner.Scan() {
+			filter(scanner.Text(), w, line)
+			line++
+		}
+		return scanner.Err()
+	})
+}
+
 // First produces only the first n lines of the pipe's contents, or all the
 // lines if there are less than n. If n is zero or negative, there is no output
 // at all.
@@ -684,11 +698,31 @@ func (p *Pipe) Match(s string) *Pipe {
 	})
 }
 
+// MatchWithLineNumber behaves the same way as Match() but concatenates the
+// line number the pattern was found in (similar to `grep -n`)
+func (p *Pipe) MatchWithLineNumber(s string) *Pipe {
+	return p.FilterScanTrackLine(func(line string, w io.Writer, lineNumber int) {
+		if strings.Contains(line, s) {
+			fmt.Fprintln(w, fmt.Sprint(lineNumber)+":"+line)
+		}
+	})
+}
+
 // MatchRegexp produces only the input lines that match the compiled regexp re.
 func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
 	return p.FilterScan(func(line string, w io.Writer) {
 		if re.MatchString(line) {
 			fmt.Fprintln(w, line)
+		}
+	})
+}
+
+// MatchRegexpWithLineNumber behaves the same way as MatchRegexp but concatenates the
+// line number the pattern was found in (similar to `grep -n`)
+func (p *Pipe) MatchRegexpWithLineNumber(re *regexp.Regexp) *Pipe {
+	return p.FilterScanTrackLine(func(line string, w io.Writer, lineNumber int) {
+		if re.MatchString(line) {
+			fmt.Fprintln(w, fmt.Sprint(lineNumber)+":"+line)
 		}
 	})
 }
