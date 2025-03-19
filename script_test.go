@@ -804,12 +804,88 @@ func TestJQHandlesGithubJSONWithRealWorldExampleQuery(t *testing.T) {
 	}
 }
 
+func TestJQWithNewlineDelimitedInputAndFieldQueryProducesSelectedFields(t *testing.T) {
+	t.Parallel()
+	input := `{"timestamp": 1649264191, "iss_position": {"longitude": "52.8439", "latitude": "10.8107"}, "message": "success"}` + "\n"
+	input += input
+	want := `{"latitude":"10.8107","longitude":"52.8439"}` + "\n"
+	want += want
+	got, err := script.Echo(input).JQ(".iss_position").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(want, got)
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestJQWithNewlineDelimitedInputAndArrayInputAndElementQueryProducesSelectedElements(t *testing.T) {
+	t.Parallel()
+	input := `[1, 2, 3]` + "\n" + `[4, 5, 6]`
+	want := "1\n4\n"
+	got, err := script.Echo(input).JQ(".[0]").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(want, got)
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestJQWithNewlineDelimitedMixedAndPrettyPrintedInputValues(t *testing.T) {
+	t.Parallel()
+	input := `
+{
+  "key1": "val1",
+  "key2": "val2"
+}
+[
+  0,
+  1
+]
+`
+	want := `{"key1":"val1","key2":"val2"}` + "\n" + "[0,1]" + "\n"
+	got, err := script.Echo(input).JQ(".").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(want, got)
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestJQErrorsWithInvalidQuery(t *testing.T) {
 	t.Parallel()
 	input := `[1, 2, 3]`
 	_, err := script.Echo(input).JQ(".foo & .bar").String()
 	if err == nil {
 		t.Error("want error from invalid JQ query, got nil")
+	}
+}
+
+func TestJQErrorsWithInvalidInput(t *testing.T) {
+	t.Parallel()
+	input := "invalid JSON value"
+	_, err := script.Echo(input).JQ(".").String()
+	if err == nil {
+		t.Error("want error from invalid JSON input, got nil")
+	}
+}
+
+func TestJQWithNewlineDelimitedInputErrorsAfterFirstInvalidInput(t *testing.T) {
+	t.Parallel()
+	input := `[0]` + "\n" + `[1` + "\n" + `[2]` // missing `]` in second line
+	want := "0\n"
+	got, err := script.Echo(input).JQ(".[0]").String()
+	if err == nil {
+		t.Fatal("want error from invalid JSON, got nil")
+	}
+	if want != got {
+		t.Error(want, got)
+		t.Error(cmp.Diff(want, got))
 	}
 }
 
