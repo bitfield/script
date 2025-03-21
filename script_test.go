@@ -845,11 +845,11 @@ func TestJQErrorsWithInvalidInput(t *testing.T) {
 
 func TestJQProducesValidResultsUntilFirstError(t *testing.T) {
 	t.Parallel()
-	input := "[1]\ninvalid JSON value"
+	input := "[1]\ninvalid JSON value\n[2]"
 	want := "1\n"
 	got, err := script.Echo(input).JQ(".[0]").String()
 	if err == nil {
-		t.Fatal("want error from invalid JSON input, got nil")
+		t.Error("want error from invalid JSON input, got nil")
 	}
 	if want != got {
 		t.Error(cmp.Diff(want, got))
