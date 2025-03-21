@@ -743,7 +743,6 @@ func TestJQWithDotQueryPrettyPrintsInput(t *testing.T) {
 		t.Fatal(err)
 	}
 	if want != got {
-		t.Error(want, got)
 		t.Error(cmp.Diff(want, got))
 	}
 }
@@ -757,7 +756,6 @@ func TestJQWithFieldQueryProducesSelectedField(t *testing.T) {
 		t.Fatal(err)
 	}
 	if want != got {
-		t.Error(want, got)
 		t.Error(cmp.Diff(want, got))
 	}
 }
@@ -771,7 +769,6 @@ func TestJQWithArrayQueryProducesRequiredArray(t *testing.T) {
 		t.Fatal(err)
 	}
 	if want != got {
-		t.Error(want, got)
 		t.Error(cmp.Diff(want, got))
 	}
 }
@@ -785,7 +782,6 @@ func TestJQWithArrayInputAndElementQueryProducesSelectedElement(t *testing.T) {
 		t.Fatal(err)
 	}
 	if want != got {
-		t.Error(want, got)
 		t.Error(cmp.Diff(want, got))
 	}
 }
@@ -799,7 +795,6 @@ func TestJQHandlesGithubJSONWithRealWorldExampleQuery(t *testing.T) {
 		t.Fatal(err)
 	}
 	if want != got {
-		t.Error(want, got)
 		t.Error(cmp.Diff(want, got))
 	}
 }
