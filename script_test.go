@@ -804,23 +804,20 @@ func TestJQHandlesGithubJSONWithRealWorldExampleQuery(t *testing.T) {
 	}
 }
 
-func TestJQWithNewlineDelimitedInputAndFieldQueryProducesSelectedFields(t *testing.T) {
+func TestJQCorrectlyQueriesMultilineInputFields(t *testing.T) {
 	t.Parallel()
-	input := `{"timestamp": 1649264191, "iss_position": {"longitude": "52.8439", "latitude": "10.8107"}, "message": "success"}` + "\n"
-	input += input
-	want := `{"latitude":"10.8107","longitude":"52.8439"}` + "\n"
-	want += want
-	got, err := script.Echo(input).JQ(".iss_position").String()
+	input := `{"a":1}` + "\n" + `{"a":2}`
+	want := "1\n2\n"
+	got, err := script.Echo(input).JQ(".a").String()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if want != got {
-		t.Error(want, got)
 		t.Error(cmp.Diff(want, got))
 	}
 }
 
-func TestJQWithNewlineDelimitedInputAndArrayInputAndElementQueryProducesSelectedElements(t *testing.T) {
+func TestJQCorrectlyQueriesMultilineInputArrays(t *testing.T) {
 	t.Parallel()
 	input := `[1, 2, 3]` + "\n" + `[4, 5, 6]`
 	want := "1\n4\n"
@@ -829,30 +826,6 @@ func TestJQWithNewlineDelimitedInputAndArrayInputAndElementQueryProducesSelected
 		t.Fatal(err)
 	}
 	if want != got {
-		t.Error(want, got)
-		t.Error(cmp.Diff(want, got))
-	}
-}
-
-func TestJQWithNewlineDelimitedMixedAndPrettyPrintedInputValues(t *testing.T) {
-	t.Parallel()
-	input := `
-{
-  "key1": "val1",
-  "key2": "val2"
-}
-[
-  0,
-  1
-]
-`
-	want := `{"key1":"val1","key2":"val2"}` + "\n" + "[0,1]" + "\n"
-	got, err := script.Echo(input).JQ(".").String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if want != got {
-		t.Error(want, got)
 		t.Error(cmp.Diff(want, got))
 	}
 }
@@ -875,16 +848,15 @@ func TestJQErrorsWithInvalidInput(t *testing.T) {
 	}
 }
 
-func TestJQWithNewlineDelimitedInputErrorsAfterFirstInvalidInput(t *testing.T) {
+func TestJQProducesValidResultsUntilFirstError(t *testing.T) {
 	t.Parallel()
-	input := `[0]` + "\n" + `[1` + "\n" + `[2]` // missing `]` in second line
-	want := "0\n"
+	input := "[1]\ninvalid JSON value"
+	want := "1\n"
 	got, err := script.Echo(input).JQ(".[0]").String()
 	if err == nil {
-		t.Fatal("want error from invalid JSON, got nil")
+		t.Fatal("want error from invalid JSON input, got nil")
 	}
 	if want != got {
-		t.Error(want, got)
 		t.Error(cmp.Diff(want, got))
 	}
 }

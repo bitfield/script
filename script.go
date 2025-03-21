@@ -712,31 +712,34 @@ func (p *Pipe) Join() *Pipe {
 	})
 }
 
-// JQ executes query on the pipe's contents (presumed to be newline-delimited
-// JSON), applying the query to each input value and producing the results. An
-// invalid query or value will set the appropriate error on the pipe.
-
+// JQ executes query on the pipe's contents (presumed to be valid JSON or
+// [JSONLines] data), applying the query to each newline-delimited input value
+// and producing results until the first error is encountered. An invalid query
+// or value will set the appropriate error on the pipe.
+//
 // The exact dialect of JQ supported is that provided by
 // [github.com/itchyny/gojq], whose documentation explains the differences
 // between it and standard JQ.
+// 
+// [JSONLines]: https://jsonlines.org/
 func (p *Pipe) JQ(query string) *Pipe {
+	parsedQuery, err := gojq.Parse(query)
+	if err != nil {
+		return p.WithError(err)
+	}
+	code, err := gojq.Compile(parsedQuery)
+	if err != nil {
+		return p.WithError(err)
+	}
 	return p.Filter(func(r io.Reader, w io.Writer) error {
-		q, err := gojq.Parse(query)
-		if err != nil {
-			return err
-		}
-		c, err := gojq.Compile(q)
-		if err != nil {
-			return err
-		}
 		dec := json.NewDecoder(r)
 		for dec.More() {
-			var input interface{}
+			var input any
 			err := dec.Decode(&input)
 			if err != nil {
 				return err
 			}
-			iter := c.Run(input)
+			iter := code.Run(input)
 			for {
 				v, ok := iter.Next()
 				if !ok {
