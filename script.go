@@ -63,8 +63,8 @@ func Echo(s string) *Pipe {
 //
 // Use [Pipe.Exec] to send the contents of an existing pipe to the command's
 // standard input.
-func Exec(cmdLine string) *Pipe {
-	return NewPipe().Exec(cmdLine)
+func Exec(cmdLine string, args ...string) *Pipe {
+	return NewPipe().Exec(cmdLine, args...)
 }
 
 // File creates a pipe that reads from the file path.
@@ -426,9 +426,10 @@ func (p *Pipe) Error() error {
 // If the command writes to its standard error stream, this will also go to the
 // pipe, along with its standard output. However, the standard error text can
 // instead be redirected to a supplied writer, using [Pipe.WithStderr].
-func (p *Pipe) Exec(cmdLine string) *Pipe {
+func (p *Pipe) Exec(cmdLine string, args ...string) *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
-		args, err := shell.Fields(cmdLine, nil)
+		parsedArgs, err := shell.Fields(cmdLine, nil)
+		args = append(parsedArgs, args...)
 		if err != nil {
 			return err
 		}
