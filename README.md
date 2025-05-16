@@ -220,6 +220,28 @@ script.Echo("a\nb\nc").FilterScan(func(line string, w io.Writer) {
 // scanned line: "c"
 ```
 
+Alternatively, we can use a `Filter` function that returns a `string`. For example, let's fix typos we've made in the CSV files in our working directory:
+
+```go
+script.ListFiles("*.csv").FilterLine(func(file string) string {
+	search := "typ"
+	replace := "typo"
+	s, err := File(file).String()
+	if err != nil {
+		return fmt.Sprintf("%s %s", file, err)
+	}
+	count := strings.Count(s, search)
+	_, err = Echo(strings.ReplaceAll(s, search, replace)).WriteFile(file)
+	if err != nil {
+		return fmt.Sprintf("%s %s", file, err)
+	}
+	return fmt.Sprintf("%s %d", file, count)
+})
+// Output:
+// a.csv 3
+// b.csv 0
+```
+
 And there's more. Much more. [Read the docs](https://pkg.go.dev/github.com/bitfield/script) for full details, and more examples.
 
 # A realistic use case
