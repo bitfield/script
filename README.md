@@ -8,7 +8,9 @@
 import "github.com/bitfield/script"
 ```
 
-[![Magical gopher logo](img/magic.png)](https://bitfieldconsulting.com/golang/scripting)
+[![Magical gopher logo](img/magic.png)](https://bitfieldconsulting.com/subscribe)
+
+[Subscribe to learn Go with me!](https://bitfieldconsulting.com/subscribe)
 
 # What is `script`?
 
@@ -21,41 +23,11 @@ Shell scripts often compose a sequence of operations on a stream of data (a _pip
 > *This is one absolutely superb API design. Taking inspiration from shell pipes and turning it into a Go library with syntax this clean is really impressive.*\
 > —[Simon Willison](https://news.ycombinator.com/item?id=30649524)
 
-Read more: [Scripting with Go](https://bitfieldconsulting.com/golang/scripting)
+# Quick start
 
-# Quick start: Unix equivalents
+Read my tutorial: [Scripting with Go](https://bitfieldconsulting.com/golang/scripting)
 
-If you're already familiar with shell scripting and the Unix toolset, here is a rough guide to the equivalent `script` operation for each listed Unix command.
-
-| Unix / shell       | `script` equivalent |
-| ------------------ | ------------------- |
-| (any program name) | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) |
-| `[ -f FILE ]`      | [`IfExists`](https://pkg.go.dev/github.com/bitfield/script#IfExists) |
-| `>`                | [`WriteFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) |
-| `>>`               | [`AppendFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) |
-| `$*`               | [`Args`](https://pkg.go.dev/github.com/bitfield/script#Args) |
-| `base64`           | [`DecodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.DecodeBase64) / [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) |
-| `basename`         | [`Basename`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Basename) |
-| `cat`              | [`File`](https://pkg.go.dev/github.com/bitfield/script#File) / [`Concat`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) |
-| `curl`             | [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do) / [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get) / [`Post`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Post) |
-| `cut`              | [`Column`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) |
-| `dirname`          | [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) |
-| `echo`             | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) |
-| `find`             | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) |
-| `grep`             | [`Match`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) / [`MatchRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) |
-| `grep -v`          | [`Reject`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) / [`RejectRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) |
-| `head`             | [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) |
-| `jq`     | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) |
-| `ls`               | [`ListFiles`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) |
-| `sed`              | [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) / [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) |
-| `sha256sum`        | [`Hash`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Hash) / [`HashSums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.HashSums) |
-| `tail`             | [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) |
-| `tee`              | [`Tee`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Tee) |
-| `uniq -c`          | [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) |
-| `wc -l`            | [`CountLines`](https://pkg.go.dev/github.com/bitfield/script#Pipe.CountLines) |
-| `xargs`            | [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) |
-
-# Some examples
+# Examples
 
 Let's see some simple examples. Suppose you want to read the contents of a file as a string:
 
@@ -259,6 +231,38 @@ Let's try it out with some [sample data](testdata/access.log):
  1 90.53.111.17
 ```
 
+# Unix equivalents
+
+If you're already familiar with shell scripting and the Unix toolset, here is a rough guide to the equivalent `script` operation for each listed Unix command.
+
+| Unix / shell       | `script` equivalent |
+| ------------------ | ------------------- |
+| (any program name) | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) |
+| `[ -f FILE ]`      | [`IfExists`](https://pkg.go.dev/github.com/bitfield/script#IfExists) |
+| `>`                | [`WriteFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) |
+| `>>`               | [`AppendFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) |
+| `$*`               | [`Args`](https://pkg.go.dev/github.com/bitfield/script#Args) |
+| `base64`           | [`DecodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.DecodeBase64) / [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) |
+| `basename`         | [`Basename`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Basename) |
+| `cat`              | [`File`](https://pkg.go.dev/github.com/bitfield/script#File) / [`Concat`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) |
+| `curl`             | [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do) / [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get) / [`Post`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Post) |
+| `cut`              | [`Column`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) |
+| `dirname`          | [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) |
+| `echo`             | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) |
+| `find`             | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) |
+| `grep`             | [`Match`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) / [`MatchRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.MatchRegexp) |
+| `grep -v`          | [`Reject`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Reject) / [`RejectRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) |
+| `head`             | [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) |
+| `jq`     | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) |
+| `ls`               | [`ListFiles`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) |
+| `sed`              | [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) / [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) |
+| `sha256sum`        | [`Hash`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Hash) / [`HashSums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.HashSums) |
+| `tail`             | [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) |
+| `tee`              | [`Tee`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Tee) |
+| `uniq -c`          | [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) |
+| `wc -l`            | [`CountLines`](https://pkg.go.dev/github.com/bitfield/script#Pipe.CountLines) |
+| `xargs`            | [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) |
+
 # A `script` “interpreter”
 
 One of the nice things about shell scripts is that there's no build process: the script file itself is the “executable” (in fact, it's interpreted by the shell). Simon Willison (and GPT-4) contributed this elegant `script` interpreter, written in `bash`:
@@ -399,9 +403,9 @@ See the [contributor's guide](CONTRIBUTING.md) for some helpful tips if you'd li
 
 # Links
 
+- [Learn Go with me](https://bitfieldconsulting.com/subscribe)
 - [Scripting with Go](https://bitfieldconsulting.com/posts/scripting)
 - [Code Club: Script](https://www.youtube.com/watch?v=6S5EqzVwpEg)
-- [Bitfield Consulting](https://bitfieldconsulting.com/)
-- [Go books by John Arundel](https://bitfieldconsulting.com/books)
+- [Books by John Arundel](https://bitfieldconsulting.com/books)
 
 <small>Gopher image by [MariaLetta](https://github.com/MariaLetta/free-gophers-pack)</small>
