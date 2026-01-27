@@ -2,6 +2,10 @@ module github.com/bitfield/script
 
 go 1.18
 
+tool (
+	github.com/bitfield/script/cmd/goscript
+)
+
 require (
 	github.com/google/go-cmp v0.5.9
 	github.com/itchyny/gojq v0.12.13
