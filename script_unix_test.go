@@ -124,9 +124,6 @@ func TestFindFiles_DoesNotErrorWhenSubDirectoryIsNotReadable(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := fileAPath + "\n"
-	if err != nil {
-		t.Fatal(err)
-	}
 	if !cmp.Equal(want, got) {
 		t.Fatal(cmp.Diff(want, got))
 	}
