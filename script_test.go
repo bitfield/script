@@ -698,7 +698,7 @@ func TestGetUsesPipeContentsAsRequestBody(t *testing.T) {
 			t.Fatal("reading request body", err)
 		}
 		if !cmp.Equal(want, got) {
-			t.Fatalf(cmp.Diff(want, string(got)))
+			t.Fatalf("%s", cmp.Diff(want, string(got)))
 		}
 	}))
 	defer ts.Close()
