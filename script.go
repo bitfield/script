@@ -871,6 +871,7 @@ func (p *Pipe) SetError(err error) {
 
 // SHA256Sum returns the hex-encoded SHA-256 hash of the entire contents of the
 // pipe, or an error.
+//
 // Deprecated: SHA256Sum has been deprecated by [Pipe.Hash]. To get the SHA-256
 // hash for the contents of the pipe, call `Hash(sha256.new())`
 func (p *Pipe) SHA256Sum() (string, error) {
