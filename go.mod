@@ -1,6 +1,8 @@
 module github.com/bitfield/script
 
-go 1.26.4
+go 1.25.0
+
+toolchain go1.25.11
 
 require (
 	github.com/google/go-cmp v0.5.9
