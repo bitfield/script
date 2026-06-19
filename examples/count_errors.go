@@ -1,3 +1,5 @@
+//go:build ignore
+
 // This program reads a log file, filters only the lines containing "ERROR", and prints the count of those lines.
 // It uses the github.com/bitfield/script library to handle the file reading, matching, and counting.
 //
