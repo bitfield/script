@@ -1,0 +1,6 @@
+2026-06-19 12:00:00 [INFO] Starting application...
+2026-06-19 12:01:05 [WARN] Low memory warning
+2026-06-19 12:02:10 [ERROR] Database connection failed
+2026-06-19 12:03:15 [INFO] Retrying database connection...
+2026-06-19 12:04:20 [ERROR] Retries exhausted. Could not connect to database.
+2026-06-19 12:05:00 [INFO] Shutting down application.
