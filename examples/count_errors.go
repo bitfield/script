@@ -1,32 +1,26 @@
 //go:build ignore
 
-// This program reads a log file, filters only the lines containing "ERROR", and prints the count of those lines.
-// It uses the github.com/bitfield/script library to handle the file reading, matching, and counting.
+// Counts the lines containing "ERROR" in a log file.
+//
+// Run it from the repository root:
+//
+//	go run examples/count_errors.go
 //
 // Equivalent shell command:
-// grep ERROR app.log | wc -l
-
+//
+//	grep ERROR examples/app.log | wc -l
 package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/bitfield/script"
 )
 
 func main() {
-	// Check if examples/app.log exists, otherwise fallback to app.log.
-	logFile := "examples/app.log"
-	if _, err := os.Stat(logFile); os.IsNotExist(err) {
-		logFile = "app.log"
-	}
-
-	count, err := script.File(logFile).Match("ERROR").CountLines()
+	count, err := script.File("examples/app.log").Match("ERROR").CountLines()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading log file: %v\n", err)
-		os.Exit(1)
+		panic(err)
 	}
-
 	fmt.Printf("Number of ERROR lines: %d\n", count)
 }
