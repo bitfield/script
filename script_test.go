@@ -3,6 +3,7 @@ package script_test
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"crypto/sha512"
 	"errors"
@@ -18,6 +19,7 @@ import (
 	"strings"
 	"testing"
 	"testing/iotest"
+	"time"
 
 	"github.com/bitfield/script"
 	"github.com/google/go-cmp/cmp"
@@ -2172,6 +2174,106 @@ func TestHashSums_OutputsEmptyStringForFileThatCannotBeHashed(t *testing.T) {
 	want := ""
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestWithContext_CallTimeoutMidstream(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	err := script.WithContext(ctx).Exec("sleep 10").Wait()
+	if err == nil {
+		t.Fatal("expected error due to context cancellation, got nil")
+	}
+}
+
+func TestWithContext_CallCancelBeforeExec(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	cancel()
+	err := script.WithContext(ctx).Exec("echo Hello, World").Wait()
+	if err == nil {
+		t.Fatal("expected error due to context cancellation, got nil")
+	}
+}
+
+func TestWithContext_GetWithContextTimeout(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		name    string
+		timeout time.Duration
+		expErr  bool
+	}{
+		{
+			name:    "timeout less than server response time",
+			timeout: 500 * time.Millisecond,
+			expErr:  true,
+		},
+		{
+			name:    "timeout greater than server response time",
+			timeout: 2 * time.Second,
+			expErr:  false,
+		},
+	}
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(1 * time.Second)
+	}))
+	defer ts.Close()
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), tc.timeout)
+			defer cancel()
+			_, err := script.WithContext(ctx).Echo("request data").Get(ts.URL).String()
+			if tc.expErr {
+				if err == nil {
+					t.Fatalf("expected error due to context timeout, got nil")
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("expected no error, got %v", err)
+				}
+			}
+		})
+	}
+}
+
+func TestWithContext_PostWithContextTimeout(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		name    string
+		timeout time.Duration
+		expErr  bool
+	}{
+		{
+			name:    "timeout less than server response time",
+			timeout: 500 * time.Millisecond,
+			expErr:  true,
+		},
+		{
+			name:    "timeout greater than server response time",
+			timeout: 2 * time.Second,
+			expErr:  false,
+		},
+	}
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(1 * time.Second)
+	}))
+	defer ts.Close()
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), tc.timeout)
+			defer cancel()
+			_, err := script.WithContext(ctx).Echo("request data").Post(ts.URL).String()
+			if tc.expErr {
+				if err == nil {
+					t.Fatalf("expected error due to context timeout, got nil")
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("expected no error, got %v", err)
+				}
+			}
+		})
 	}
 }
 

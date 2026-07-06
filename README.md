@@ -328,6 +328,8 @@ These are methods on a pipe that change its configuration:
 | [`WithReader`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithReader) | pipe source |
 | [`WithStderr`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithStderr) | standard error output stream for command |
 | [`WithStdout`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithStdout) | standard output stream for pipe |
+| [`WithContext`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithContext) | context used in
+exec and http requests |
 
 ## Filters
 

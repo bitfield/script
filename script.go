@@ -3,6 +3,7 @@ package script
 import (
 	"bufio"
 	"container/ring"
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
@@ -38,6 +39,7 @@ type Pipe struct {
 	err    error
 	stderr io.Writer
 	env    []string
+	ctx    context.Context
 }
 
 // Args creates a pipe containing the program's command-line arguments from
@@ -174,6 +176,7 @@ func NewPipe() *Pipe {
 		stdout:     os.Stdout,
 		httpClient: http.DefaultClient,
 		env:        nil,
+		ctx:        context.Background(),
 	}
 }
 
@@ -432,7 +435,7 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		if err != nil {
 			return err
 		}
-		cmd := exec.Command(args[0], args[1:]...)
+		cmd := exec.CommandContext(p.ctx, args[0], args[1:]...)
 		cmd.Stdin = r
 		cmd.Stdout = w
 		cmd.Stderr = w
@@ -470,6 +473,9 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
 		scanner := newScanner(r)
 		for scanner.Scan() {
+			if p.ctx.Err() != nil {
+				return p.ctx.Err()
+			}
 			cmdLine := new(strings.Builder)
 			err := tpl.Execute(cmdLine, scanner.Text())
 			if err != nil {
@@ -479,7 +485,7 @@ func (p *Pipe) ExecForEach(cmdLine string) *Pipe {
 			if err != nil {
 				return err
 			}
-			cmd := exec.Command(args[0], args[1:]...)
+			cmd := exec.CommandContext(p.ctx, args[0], args[1:]...)
 			cmd.Stdout = w
 			cmd.Stderr = w
 			pipeStderr := p.stdErr()
@@ -652,7 +658,7 @@ func (p *Pipe) Freq() *Pipe {
 // the request body, and produces the server's response. See [Pipe.Do] for how
 // the HTTP response status is interpreted.
 func (p *Pipe) Get(url string) *Pipe {
-	req, err := http.NewRequest(http.MethodGet, url, p.Reader)
+	req, err := http.NewRequestWithContext(p.ctx, http.MethodGet, url, p.Reader)
 	if err != nil {
 		return p.WithError(err)
 	}
@@ -807,7 +813,7 @@ func (p *Pipe) MatchRegexp(re *regexp.Regexp) *Pipe {
 // the request body, and produces the server's response. See [Pipe.Do] for how
 // the HTTP response status is interpreted.
 func (p *Pipe) Post(url string) *Pipe {
-	req, err := http.NewRequest(http.MethodPost, url, p.Reader)
+	req, err := http.NewRequestWithContext(p.ctx, http.MethodPost, url, p.Reader)
 	if err != nil {
 		return p.WithError(err)
 	}
@@ -1012,6 +1018,16 @@ func (p *Pipe) WithStderr(w io.Writer) *Pipe {
 func (p *Pipe) WithStdout(w io.Writer) *Pipe {
 	p.stdout = w
 	return p
+}
+
+// WithContext sets the context for subsequent [Pipe.Exec], [Pipe.ExecForEach], [Pipe.Get] and [Pipe.Post] commands .
+func (p *Pipe) WithContext(ctx context.Context) *Pipe {
+	p.ctx = ctx
+	return p
+}
+
+func WithContext(ctx context.Context) *Pipe {
+	return NewPipe().WithContext(ctx)
 }
 
 // WriteFile writes the pipe's contents to the file path, truncating it if it
