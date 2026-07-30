@@ -1020,7 +1020,7 @@ func (p *Pipe) WithStdout(w io.Writer) *Pipe {
 	return p
 }
 
-// WithContext sets the context for subsequent [Pipe.Exec], [Pipe.ExecForEach], [Pipe.Get] and [Pipe.Post] commands .
+// WithContext sets the context for subsequent [Pipe.Exec], [Pipe.ExecForEach], [Pipe.Get] and [Pipe.Post] commands.
 func (p *Pipe) WithContext(ctx context.Context) *Pipe {
 	p.ctx = ctx
 	return p

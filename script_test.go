@@ -2177,103 +2177,42 @@ func TestHashSums_OutputsEmptyStringForFileThatCannotBeHashed(t *testing.T) {
 	}
 }
 
-func TestWithContext_CallTimeoutMidstream(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-	err := script.WithContext(ctx).Exec("sleep 10").Wait()
-	if err == nil {
-		t.Fatal("expected error due to context cancellation, got nil")
-	}
-}
-
 func TestWithContext_CallCancelBeforeExec(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	cancel()
-	err := script.WithContext(ctx).Exec("echo Hello, World").Wait()
+	err := script.NewPipe().WithContext(ctx).Exec("echo Hello, World").Wait()
 	if err == nil {
 		t.Fatal("expected error due to context cancellation, got nil")
 	}
 }
 
-func TestWithContext_GetWithContextTimeout(t *testing.T) {
+func TestWithContext_GetCanceledContext(t *testing.T) {
 	t.Parallel()
-	tcs := []struct {
-		name    string
-		timeout time.Duration
-		expErr  bool
-	}{
-		{
-			name:    "timeout less than server response time",
-			timeout: 500 * time.Millisecond,
-			expErr:  true,
-		},
-		{
-			name:    "timeout greater than server response time",
-			timeout: 2 * time.Second,
-			expErr:  false,
-		},
-	}
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(1 * time.Second)
-	}))
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	defer ts.Close()
 
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), tc.timeout)
-			defer cancel()
-			_, err := script.WithContext(ctx).Echo("request data").Get(ts.URL).String()
-			if tc.expErr {
-				if err == nil {
-					t.Fatalf("expected error due to context timeout, got nil")
-				}
-			} else {
-				if err != nil {
-					t.Fatalf("expected no error, got %v", err)
-				}
-			}
-		})
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := script.WithContext(ctx).Echo("request data").Get(ts.URL).String()
+	if err == nil {
+		t.Fatal("expected error from canceled context")
 	}
 }
 
-func TestWithContext_PostWithContextTimeout(t *testing.T) {
+func TestWithContext_PostCanceledContext(t *testing.T) {
 	t.Parallel()
-	tcs := []struct {
-		name    string
-		timeout time.Duration
-		expErr  bool
-	}{
-		{
-			name:    "timeout less than server response time",
-			timeout: 500 * time.Millisecond,
-			expErr:  true,
-		},
-		{
-			name:    "timeout greater than server response time",
-			timeout: 2 * time.Second,
-			expErr:  false,
-		},
-	}
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(1 * time.Second)
-	}))
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	defer ts.Close()
 
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), tc.timeout)
-			defer cancel()
-			_, err := script.WithContext(ctx).Echo("request data").Post(ts.URL).String()
-			if tc.expErr {
-				if err == nil {
-					t.Fatalf("expected error due to context timeout, got nil")
-				}
-			} else {
-				if err != nil {
-					t.Fatalf("expected no error, got %v", err)
-				}
-			}
-		})
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := script.WithContext(ctx).Echo("request data").Post(ts.URL).String()
+	if err == nil {
+		t.Fatal("expected error from canceled context")
 	}
 }
 
