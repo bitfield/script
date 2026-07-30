@@ -322,14 +322,13 @@ These are methods on a pipe that change its configuration:
 
 | Source | Modifies |
 | -------- | ------------- |
-| [`WithContext`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithContext) | context used in
+| [`WithContext`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithContext) | context used in commands or HTTP requests |
 | [`WithEnv`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithEnv) | environment for commands |
 | [`WithError`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithError) | pipe error status |
 | [`WithHTTPClient`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithHTTPClient) | client for HTTP requests |
 | [`WithReader`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithReader) | pipe source |
 | [`WithStderr`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithStderr) | standard error output stream for command |
 | [`WithStdout`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithStdout) | standard output stream for pipe |
-exec and http requests |
 
 ## Filters
 
