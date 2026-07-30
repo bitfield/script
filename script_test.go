@@ -3,6 +3,7 @@ package script_test
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"crypto/sha512"
 	"errors"
@@ -18,6 +19,7 @@ import (
 	"strings"
 	"testing"
 	"testing/iotest"
+	"time"
 
 	"github.com/bitfield/script"
 	"github.com/google/go-cmp/cmp"
@@ -2165,6 +2167,7 @@ func TestHash_ReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 }
 
 func TestHashSums_OutputsEmptyStringForFileThatCannotBeHashed(t *testing.T) {
+	t.Parallel()
 	got, err := script.Echo("file_does_not_exist.txt").HashSums(sha256.New()).String()
 	if err != nil {
 		t.Fatal(err)
@@ -2172,6 +2175,55 @@ func TestHashSums_OutputsEmptyStringForFileThatCannotBeHashed(t *testing.T) {
 	want := ""
 	if got != want {
 		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestWithContext_SkipsExecWithCancelledContext(t *testing.T) {
+	t.Parallel()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	cancel()
+	output, err := script.WithContext(ctx).Exec("echo Hello, World").String()
+	if err == nil {
+		t.Error("expected error due to context cancellation, got nil")
+	}
+	if strings.Contains(output, "Hello") {
+		t.Fatal("command ran even though context cancelled beforehand")
+	}
+}
+
+func TestWithContext_SkipsGETRequestWithCancelledContext(t *testing.T) {
+	t.Parallel()
+	handler_called := false
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler_called = true
+	}))
+	defer ts.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err := script.WithContext(ctx).Echo("request data").Get(ts.URL).String()
+	if err == nil {
+		t.Fatal("expected error from cancelled context")
+	}
+	if handler_called {
+		t.Fatal("request made even though context cancelled beforehand")
+	}
+}
+
+func TestWithContext_SkipsPOSTRequestWithCancelledContext(t *testing.T) {
+	t.Parallel()
+	handler_called := false
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler_called = true
+	}))
+	defer ts.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err := script.WithContext(ctx).Echo("request data").Post(ts.URL).String()
+	if err == nil {
+		t.Fatal("expected error from cancelled context")
+	}
+	if handler_called {
+		t.Fatal("request made even though context cancelled beforehand")
 	}
 }
 
@@ -2620,6 +2672,21 @@ func ExamplePipe_Tee_writers() {
 	// hello
 	// hello
 	// hello
+}
+
+func ExamplePipe_WithContext() {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(20 * time.Millisecond)
+	}))
+	defer ts.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+	_, err := script.NewPipe().WithContext(ctx).Get(ts.URL).String()
+	if err != nil {
+		fmt.Println("cancelled")
+	}
+	// Output:
+	// cancelled
 }
 
 func ExamplePipe_WithStderr() {
