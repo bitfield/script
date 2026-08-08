@@ -313,6 +313,7 @@ These are functions that create a pipe with a given contents:
 | [`IfExists`](https://pkg.go.dev/github.com/bitfield/script#IfExists) | do something only if some file exists |
 | [`ListFiles`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) | file listing (including wildcards) |
 | [`Post`](https://pkg.go.dev/github.com/bitfield/script#Post) | HTTP response |
+| [`Shell`](https://pkg.go.dev/github.com/bitfield/script#Shell) | command output, run via the system shell |
 | [`Slice`](https://pkg.go.dev/github.com/bitfield/script#Slice) | slice elements, one per line |
 | [`Stdin`](https://pkg.go.dev/github.com/bitfield/script#Stdin) | standard input |
 
@@ -363,6 +364,7 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`RejectRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) | lines not matching given regexp |
 | [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) | matching text replaced with given string |
 | [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) | matching text replaced with given string |
+| [`Shell`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Shell) | filtered through the system shell |
 | [`Tee`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Tee) | input copied to supplied writers |
 
 Note that filters run concurrently, rather than producing nothing until each stage has fully read its input. This is convenient for executing long-running commands, for example. If you do need to wait for the pipeline to complete, call [`Wait`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Wait).

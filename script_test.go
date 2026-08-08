@@ -1232,6 +1232,14 @@ func TestExecErrorsWhenTheSpecifiedCommandDoesNotExist(t *testing.T) {
 	}
 }
 
+func TestExec_SetsErrorImmediatelyOnInvalidCommandLineSyntax(t *testing.T) {
+	t.Parallel()
+	p := script.Exec("echo \"unterminated")
+	if p.Error() == nil {
+		t.Error("want error to be set immediately after Exec with invalid syntax, before reading the pipe")
+	}
+}
+
 func TestExecRunsGoWithNoArgsAndGetsUsageMessagePlusErrorExitStatus2(t *testing.T) {
 	t.Parallel()
 	// We can't make many cross-platform assumptions about what external

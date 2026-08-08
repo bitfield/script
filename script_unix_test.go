@@ -7,6 +7,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"bytes"
+	"errors"
+	"strings"
+
 	"github.com/bitfield/script"
 	"github.com/google/go-cmp/cmp"
 )
@@ -221,4 +225,111 @@ func ExamplePipe_ExecForEach() {
 	// a
 	// b
 	// c
+}
+
+func TestShellRunsShWithEchoHelloAndGetsOutputHello(t *testing.T) {
+	t.Parallel()
+	p := script.Shell("echo hello")
+	if p.Error() != nil {
+		t.Fatal(p.Error())
+	}
+	want := "hello\n"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestShell_ExpandsEnvironmentVariablesSetViaWithEnv(t *testing.T) {
+	t.Parallel()
+	env := []string{"ENV1=test1", "ENV2=test2"}
+	got, err := script.NewPipe().WithEnv(env).Shell("echo ENV1=$ENV1 ENV2=$ENV2").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "ENV1=test1 ENV2=test2\n"
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestShellExpandsHomeVariableWithoutWithEnv(t *testing.T) {
+	t.Parallel()
+	p := script.Shell("echo $HOME")
+	if p.Error() != nil {
+		t.Fatal(p.Error())
+	}
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.TrimSpace(got) == "" {
+		t.Error("want non-empty $HOME expansion, got empty string")
+	}
+}
+
+func TestShellPipesDataToExternalCommandAndGetsExpectedOutput(t *testing.T) {
+	t.Parallel()
+	p := script.File("testdata/hello.txt").Shell("cat")
+	want := "hello world"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestShellErrorsRunningCommandThatDoesNotExist(t *testing.T) {
+	t.Parallel()
+	p := script.Shell("doesntexist_command_xyz")
+	p.Wait()
+	if p.Error() == nil {
+		t.Error("want error running non-existent command")
+	}
+}
+
+func TestShellSendsStderrOutputToPipeStderr(t *testing.T) {
+	t.Parallel()
+	buf := new(bytes.Buffer)
+	out, err := script.NewPipe().WithStderr(buf).Shell("go").String()
+	if err == nil {
+		t.Fatal("want error when command returns a non-zero exit status")
+	}
+	if out != "" {
+		t.Fatalf("unexpected output: %q", out)
+	}
+	if !strings.Contains(buf.String(), "Usage") {
+		t.Errorf("want stderr output containing the word 'Usage', got %q", buf.String())
+	}
+}
+
+func TestShellOnEmptyPipeProducesNoOutputAndNoError(t *testing.T) {
+	t.Parallel()
+	got, err := script.NewPipe().Shell("cat").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "" {
+		t.Errorf("want empty output, got %q", got)
+	}
+}
+
+func TestShellOnPipeWithExistingErrorIsNoOp(t *testing.T) {
+	t.Parallel()
+	fakeErr := errors.New("existing error")
+	p := script.NewPipe().WithError(fakeErr).Shell("echo hello")
+	if p.Error() != fakeErr {
+		t.Errorf("want existing error %v preserved, got %v", fakeErr, p.Error())
+	}
+}
+
+func ExamplePipe_Shell() {
+	script.Echo("Hello, world!").Shell("tr a-z A-Z").Stdout()
+	// Output:
+	// HELLO, WORLD!
 }

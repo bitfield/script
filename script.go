@@ -18,6 +18,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -185,6 +186,12 @@ func NewPipe() *Pipe {
 // status is interpreted.
 func Post(url string) *Pipe {
 	return NewPipe().Post(url)
+}
+
+// Shell creates a pipe that runs cmdLine as a command via the system shell,
+// and produces its combined output. See [Pipe.Shell] for details.
+func Shell(cmdLine string) *Pipe {
+	return NewPipe().Shell(cmdLine)
 }
 
 // Slice creates a pipe containing each element of s, one per line. If s is
@@ -417,41 +424,41 @@ func (p *Pipe) Error() error {
 	return p.err
 }
 
-// Exec runs cmdLine as an external command, sending it the contents of the
-// pipe as input, and produces the command's standard output (see below for
-// error output). The effect of this is to filter the contents of the pipe
-// through the external command.
+// ExecCommand runs name as an external command with the supplied args,
+// sending it the contents of the pipe as input, and produces the
+// command's combined output (interleaving standard output and standard
+// error). Unlike [Pipe.Exec], ExecCommand performs no parsing of its
+// own: name and args are passed directly to the operating system,
+// exactly as supplied, with no shell involved.
 //
 // # Environment
 //
-// The command inherits the current process's environment, optionally modified
-// by [Pipe.WithEnv].
+// The command inherits the current process's environment, optionally
+// modified by [Pipe.WithEnv].
 //
 // # Context
 //
-// The command inherits the pipe's context (if any was set by [Pipe.WithContext]), and
-// will be cancelled if the context is cancelled or times out.
+// The command inherits the pipe's context (if any was set by
+// [Pipe.WithContext]), and will be cancelled if the context is
+// cancelled or times out.
 //
 // # Error handling
 //
-// If the command had a non-zero exit status, the pipe's error status will also
-// be set to the string “exit status X”, where X is the integer exit status.
-// Even in the event of a non-zero exit status, the command's output will still
-// be available in the pipe. This is often helpful for debugging. However,
-// because [Pipe.String] is a no-op if the pipe's error status is set, if you
-// want output you will need to reset the error status before calling
-// [Pipe.String].
+// If the command had a non-zero exit status, the pipe's error status
+// will also be set to the string "exit status X", where X is the
+// integer exit status. Even in the event of a non-zero exit status,
+// the command's output will still be available in the pipe. This is
+// often helpful for debugging. However, because [Pipe.String] is a
+// no-op if the pipe's error status is set, if you want output you
+// will need to reset the error status before calling [Pipe.String].
 //
-// If the command writes to its standard error stream, this will also go to the
-// pipe, along with its standard output. However, the standard error text can
-// instead be redirected to a supplied writer, using [Pipe.WithStderr].
-func (p *Pipe) Exec(cmdLine string) *Pipe {
+// If the command writes to its standard error stream, this will also
+// go to the pipe, along with its standard output. However, the
+// standard error text can instead be redirected to a supplied writer,
+// using [Pipe.WithStderr].
+func (p *Pipe) ExecCommand(name string, args ...string) *Pipe {
 	return p.Filter(func(r io.Reader, w io.Writer) error {
-		args, err := shell.Fields(cmdLine, nil)
-		if err != nil {
-			return err
-		}
-		cmd := exec.CommandContext(p.ctx, args[0], args[1:]...)
+		cmd := exec.CommandContext(p.ctx, name, args...)
 		cmd.Stdin = r
 		cmd.Stdout = w
 		cmd.Stderr = w
@@ -463,13 +470,29 @@ func (p *Pipe) Exec(cmdLine string) *Pipe {
 		if pipeEnv != nil {
 			cmd.Env = pipeEnv
 		}
-		err = cmd.Start()
+		err := cmd.Start()
 		if err != nil {
 			fmt.Fprintln(cmd.Stderr, err)
 			return err
 		}
 		return cmd.Wait()
 	})
+}
+
+// Exec runs cmdLine as an external command, sending it the contents of
+// the pipe as input, and produces the command's standard output (see
+// below for error output). The effect of this is to filter the
+// contents of the pipe through the external command. cmdLine is split
+// into a program name and arguments using shell.Fields-style parsing.
+//
+// See [Pipe.ExecCommand] for details on error handling, context, and
+// environment variables.
+func (p *Pipe) Exec(cmdLine string) *Pipe {
+	args, err := shell.Fields(cmdLine, nil)
+	if err != nil {
+		return p.WithError(err)
+	}
+	return p.ExecCommand(args[0], args[1:]...)
 }
 
 // ExecForEach renders cmdLine as a Go template for each line of input, running
@@ -929,6 +952,29 @@ func (p *Pipe) SHA256Sum() (string, error) {
 // hash for each file path in the pipe, call `HashSums(sha256.new())`
 func (p *Pipe) SHA256Sums() *Pipe {
 	return p.HashSums(sha256.New())
+}
+
+// Shell runs cmdLine as a command via the operating system's native
+// shell ("sh -c" on Unix-like systems, "cmd /C" on Windows), sending it
+// the contents of the pipe as input, and produces the command's
+// combined output. cmdLine is passed to the shell completely unmodified
+// as a single argument; unlike [Pipe.Exec], Shell performs no parsing
+// of cmdLine at all, so the shell alone is responsible for
+// interpreting quoting, variable expansion, and other syntax, exactly
+// as it would on an interactive command line.
+//
+// Note that variable syntax differs by platform: Unix shells expand
+// variables written as $VAR, while cmd.exe on Windows expands
+// variables written as %VAR%.
+//
+// See [Pipe.ExecCommand] for details on error handling, context, and
+// environment variables set via [Pipe.WithEnv].
+func (p *Pipe) Shell(cmdLine string) *Pipe {
+	shell, flag := "sh", "-c"
+	if runtime.GOOS == "windows" {
+		shell, flag = "cmd", "/C"
+	}
+	return p.ExecCommand(shell, flag, cmdLine)
 }
 
 // Slice returns the pipe's contents as a slice of strings, one element per

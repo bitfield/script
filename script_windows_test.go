@@ -91,3 +91,41 @@ func ExamplePipe_Dirname() {
 	// ./src
 	// C:\
 }
+
+func TestShellRunsCmdWithEchoHelloAndGetsOutputHello(t *testing.T) {
+	t.Parallel()
+	p := script.Shell("echo hello")
+	if p.Error() != nil {
+		t.Fatal(p.Error())
+	}
+	want := "hello\r\n"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestShell_ExpandsEnvironmentVariablesSetViaWithEnvOnWindows(t *testing.T) {
+	t.Parallel()
+	env := []string{"ENV1=test1"}
+	got, err := script.NewPipe().WithEnv(env).Shell("echo ENV1=%ENV1%").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "ENV1=test1\r\n"
+	if want != got {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestShellErrorsRunningCommandThatDoesNotExistOnWindows(t *testing.T) {
+	t.Parallel()
+	p := script.Shell("doesntexist_command_xyz")
+	p.Wait()
+	if p.Error() == nil {
+		t.Error("want error running non-existent command")
+	}
+}
