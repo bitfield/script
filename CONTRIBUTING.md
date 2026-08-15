@@ -16,7 +16,7 @@ I _don't_ recommend just making a pull request for some new feature—it probabl
 
 ## Write a use case
 
-This is probably the most important thing to bear in mind. A great design principle for software libraries is to start with a real-world use case, and try to implement it using the feature you have in mind. _No issues or PRs will be accepted into `script` without an accompanying use case_. And I hold myself to that rule just as much as anybody else.
+This is probably the most important part of your issue. A great design principle for software libraries is to start with a real-world use case, and try to implement it using the feature you have in mind. _No issues or PRs will be accepted into `script` without an accompanying use case_. And I hold myself to that rule just as much as anybody else.
 
 What do I mean by "use case"? I mean a real problem that you or someone else actually has, that could be solved using the feature. For example, you might think it's a very cool idea to add a `Frobnicate()` method to `script`. Maybe it is, but what's it for? Where would this be used in the real world? Can you give an example of a problem that could be solved by a `script` program using `Frobnicate()`? If so, what would the program look like?
 
@@ -26,13 +26,23 @@ A concrete use case also provides a helpful example program that can be included
 
 The final reason is that it's tempting to over-elaborate a design and add all sorts of bells and whistles that nobody actually wants. Simple APIs are best. If you think of an enhancement, but it's not needed for your use case, leave it out. Things can always be enhanced later if necessary.
 
+# Stop
+
+Stop here until you've raised the issue with a use case, we've discussed it and agreed a solution design, and I've given you the go-ahead to write a PR.
+
+Once those things have happened, you can get cracking.
+
+# AI policy
+
+Use of AI is fine. Disclose it if you like.
+
 # Coding standards
 
 A library is easier to use, and easier for contributors to work on, if it has a consistent, unified style, approach, and layout. Here are a few hints on how to make a `script` PR that will be accepted right away.
 
 ## Tests
 
-It goes without saying, but I'll say it anyway, that you must provide comprehensive tests for your feature. Code coverage doesn't need to be 100% (that's a waste of time and effort), but it does need to be very good. The [awesome-go](https://github.com/avelino/awesome-go) collection (which `script` is part of) mandates at least 80% coverage, and I'd rather it were 90% or better.
+It goes without saying, but I'll say it anyway, that you should provide comprehensive tests for your feature. Code coverage doesn't need to be 100% (that's a waste of time and effort), but it does need to be very good. The [awesome-go](https://github.com/avelino/awesome-go) collection (which `script` is part of) mandates at least 80% coverage, and I'd rather it were 90% or better.
 
 Test data should go in the `testdata` directory. If you create a file of data for input to your method, name it `method_name.input.txt`. If you create a 'golden' file (of correct output, to compare with the output from your method) name it `method_name.golden.txt`. This will help keep things organised.
 
@@ -50,13 +60,9 @@ Add lots of test cases; they're cheap. Don't just test the obvious happy-path ca
 
 Remember people are using `script` to write mission-critical system administration programs where their data, their privacy, and even their business could be at stake. Now, of course it's up to them to make sure that their programs are safe and correct; library maintainers bear no responsibility for that. But we can at least ensure that the code is as reliable and trustworthy as we can make it.
 
-### Add your method to `doMethodsOnPipe` for stress testing
+### Concurrency safety
 
-One final point: a common source of errors in Go programs is methods being called on zero or nil values. All `script` pipe methods should handle this situation, as well as being called on a valid pipe that just happens to have no contents (such as a newly-created pipe).
-
-To ensure this, we call every possible method on (in turn) a nil pipe, a zero pipe, and an empty pipe, using the `doMethodsOnPipe` helper function. If you add a new method to `script`, add a call to your method to this helper function, and it will automatically be stress tested.
-
-Methods on a nil, zero, or empty pipe should not necessarily do nothing; that depends on the method semantics. For example, `WriteFile()` on an empty pipe creates the required file, writes nothing to it, and closes it. This is correct behaviour.
+Because pipes are concurrent (they may be running multiple commands or filter functions concurrently, for example), we use a mutex to access fields on the `Pipe` struct rather than reading or writing them directly. For example, don't read `p.Env` directly: use `p.environment()` instead.
 
 ## Dealing with errors
 
@@ -126,7 +132,6 @@ Here's a handy checklist for making sure your PR will be accepted as quickly as 
 - [ ] Have you opened an issue to discuss the feature and agree its general design?
 - [ ] Do you have a use case and, ideally, an example program using the feature?
 - [ ] Do you have tests covering 90%+ of the feature code (and, of course passing)
-- [ ] Have you added your method to the `doMethodsOnPipe` stress tests?
 - [ ] Have you written complete and accurate doc comments?
 - [ ] Have you updated the README and its table of contents?
 - [ ] You rock. Thanks a lot.

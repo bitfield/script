@@ -10,8 +10,6 @@ import "github.com/bitfield/script"
 
 [![Magical gopher logo](img/magic.png)](https://bitfieldconsulting.com/subscribe)
 
-[Subscribe to learn Go with me!](https://bitfieldconsulting.com/subscribe)
-
 # What is `script`?
 
 `script` is a Go library for doing the kind of tasks that shell scripts are good at: reading files, executing subprocesses, counting lines, matching strings, and so on.
@@ -137,10 +135,10 @@ data, err := script.Do(req).JQ(".[0] | {message: .commit.message, name: .commit.
 We can also run external programs and get their output:
 
 ```go
-script.Exec("ping 127.0.0.1").Stdout()
+script.ExecCommand("ping", "127.0.0.1").Stdout()
 ```
 
-Note that `Exec` runs the command concurrently: it doesn't wait for the command to complete before returning any output. That's good, because this `ping` command will run forever (or until we get bored).
+Note that `ExecCommand` runs the command concurrently: it doesn't wait for the command to complete before returning any output. That's good, because this `ping` command will run forever (or until we get bored).
 
 Instead, when we read from the pipe using `Stdout`, we see each line of output as it's produced:
 
@@ -178,7 +176,7 @@ The `func` we supply to `Filter` takes just two parameters: a reader to read fro
 
 If our `func` returns some error, then, just as with the `Do` example, the pipe's error status is set, and subsequent stages become a no-op.
 
-Filters run concurrently, so the pipeline can start producing output before the input has been fully read, as it did in the `ping` example. In fact, most built-in pipe methods, including `Exec`, are implemented *using* `Filter`.
+Filters run concurrently, so the pipeline can start producing output before the input has been fully read, as it did in the `ping` example. In fact, most built-in pipe methods, including `ExecCommand`, are implemented *using* `Filter`.
 
 If we want to scan input line by line, we could do that with a `Filter` function that creates a `bufio.Scanner` on its input, but we don't need to:
 
@@ -237,7 +235,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 
 | Unix / shell       | `script` equivalent |
 | ------------------ | ------------------- |
-| (any program name) | [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) |
+| (any program name) | [`ExecCommand`](https://pkg.go.dev/github.com/bitfield/script#ExecCommand) |
 | `[ -f FILE ]`      | [`IfExists`](https://pkg.go.dev/github.com/bitfield/script#IfExists) |
 | `>`                | [`WriteFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WriteFile) |
 | `>>`               | [`AppendFile`](https://pkg.go.dev/github.com/bitfield/script#Pipe.AppendFile) |
@@ -256,6 +254,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `jq`     | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) |
 | `ls`               | [`ListFiles`](https://pkg.go.dev/github.com/bitfield/script#ListFiles) |
 | `sed`              | [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) / [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) |
+| `sh`               | [`Shell`](https://pkg.go.dev/github.com/bitfield/script#Shell) |
 | `sha256sum`        | [`Hash`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Hash) / [`HashSums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.HashSums) |
 | `tail`             | [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) |
 | `tee`              | [`Tee`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Tee) |
@@ -306,7 +305,7 @@ These are functions that create a pipe with a given contents:
 | [`Args`](https://pkg.go.dev/github.com/bitfield/script#Args) | command-line arguments |
 | [`Do`](https://pkg.go.dev/github.com/bitfield/script#Do) | HTTP response |
 | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Echo) | a string |
-| [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Exec) | command output |
+| [`ExecCommand`](https://pkg.go.dev/github.com/bitfield/script#ExecCommand) | command output |
 | [`File`](https://pkg.go.dev/github.com/bitfield/script#File) | file contents |
 | [`FindFiles`](https://pkg.go.dev/github.com/bitfield/script#FindFiles) | recursive file listing |
 | [`Get`](https://pkg.go.dev/github.com/bitfield/script#Get) | HTTP response |
@@ -345,7 +344,7 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do) | response to supplied HTTP request |
 | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Echo) | all input replaced by given string |
 | [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) | input encoded to base64 |
-| [`Exec`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Exec) | filtered through external command |
+| [`ExecCommand`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecCommand) | filtered through external command |
 | [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) | execute given command template for each line of input |
 | [`Filter`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Filter) | user-supplied function filtering a reader to a writer |
 | [`FilterLine`](https://pkg.go.dev/github.com/bitfield/script#Pipe.FilterLine) | user-supplied function filtering each line to a string|
@@ -390,6 +389,8 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 
 | Version | New |
 | ----------- | ------- |
+| 0.25.0  | [`ExecCommand`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecCommand) / [`Shell`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Shell) supersede `Exec` (thanks [Dhanalakshmi-D04](https://github.com/Dhanalakshmi-D04)) |
+|         | [`WithContext`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithContext) (thanks [billvamva](https://github.com/billvamva)) |
 | 0.24.1  | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) accepts JSONLines data |
 | 0.24.0  | [`Hash`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Hash) |
 |         | [`HashSums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.HashSums) |
