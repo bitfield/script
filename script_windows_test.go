@@ -91,3 +91,16 @@ func ExamplePipe_Dirname() {
 	// ./src
 	// C:\
 }
+
+func TestShell_ExpandsEnvironmentVariablesSetViaWithEnvOnWindows(t *testing.T) {
+	t.Parallel()
+	env := []string{"ENV1=test1"}
+	got, err := script.NewPipe().WithEnv(env).Shell("echo ENV1=%ENV1%").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "ENV1=test1\r\n"
+	if want != got {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}

@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"strings"
+
 	"github.com/bitfield/script"
 	"github.com/google/go-cmp/cmp"
 )
@@ -19,47 +21,6 @@ func TestExecForEach_HandlesLongLines(t *testing.T) {
 	}
 	if longLine != got {
 		t.Error(cmp.Diff(longLine, got))
-	}
-}
-
-func TestExecRunsShWithEchoHelloAndGetsOutputHello(t *testing.T) {
-	t.Parallel()
-	p := script.Exec("sh -c 'echo hello'")
-	if p.Error() != nil {
-		t.Fatal(p.Error())
-	}
-	want := "hello\n"
-	got, err := p.String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if want != got {
-		t.Error(cmp.Diff(want, got))
-	}
-}
-
-func TestExecRunsShWithinShWithEchoInceptionAndGetsOutputInception(t *testing.T) {
-	t.Parallel()
-	p := script.Exec("sh -c 'sh -c \"echo inception\"'")
-	if p.Error() != nil {
-		t.Fatal(p.Error())
-	}
-	want := "inception\n"
-	got, err := p.String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if want != got {
-		t.Error(cmp.Diff(want, got))
-	}
-}
-
-func TestExecErrorsRunningShellCommandWithUnterminatedStringArgument(t *testing.T) {
-	t.Parallel()
-	p := script.Exec("sh -c 'echo oh no")
-	p.Wait()
-	if p.Error() == nil {
-		t.Error("want error running 'sh' command line containing unterminated string")
 	}
 }
 
@@ -95,9 +56,9 @@ func TestExecForEach_CorrectlyEvaluatesTemplateContainingIfStatement(t *testing.
 	}
 }
 
-func TestExecPipesDataToExternalCommandAndGetsExpectedOutput(t *testing.T) {
+func TestExecCommandPipesDataToExternalCommandAndGetsExpectedOutput(t *testing.T) {
 	t.Parallel()
-	p := script.File("testdata/hello.txt").Exec("cat")
+	p := script.File("testdata/hello.txt").ExecCommand("cat")
 	want := "hello world"
 	got, err := p.String()
 	if err != nil {
@@ -129,8 +90,8 @@ func TestFindFiles_DoesNotErrorWhenSubDirectoryIsNotReadable(t *testing.T) {
 	}
 }
 
-func ExampleExec_ok() {
-	script.Exec("echo Hello, world!").Stdout()
+func ExampleExecCommand_ok() {
+	script.ExecCommand("echo", "Hello, world!").Stdout()
 	// Output:
 	// Hello, world!
 }
@@ -147,13 +108,13 @@ func ExampleFindFiles() {
 }
 
 func ExampleIfExists_exec() {
-	script.IfExists("./testdata/hello.txt").Exec("echo hello").Stdout()
+	script.IfExists("./testdata/hello.txt").ExecCommand("echo", "hello").Stdout()
 	// Output:
 	// hello
 }
 
 func ExampleIfExists_noExec() {
-	script.IfExists("doesntexist").Exec("echo hello").Stdout()
+	script.IfExists("doesntexist").ExecCommand("echo", "hello").Stdout()
 	// Output:
 	//
 }
@@ -209,8 +170,8 @@ func ExamplePipe_Dirname() {
 	// C:
 }
 
-func ExamplePipe_Exec() {
-	script.Echo("Hello, world!").Exec("tr a-z A-Z").Stdout()
+func ExamplePipe_ExecCommand() {
+	script.Echo("Hello, world!").ExecCommand("tr", "a-z", "A-Z").Stdout()
 	// Output:
 	// HELLO, WORLD!
 }
@@ -221,4 +182,96 @@ func ExamplePipe_ExecForEach() {
 	// a
 	// b
 	// c
+}
+
+func ExamplePipe_Shell() {
+	script.Echo("Hello, world!").Shell("tr a-z A-Z").Stdout()
+	// Output:
+	// HELLO, WORLD!
+}
+
+func TestShell_ExpandsEnvironmentVariablesSetViaWithEnv(t *testing.T) {
+	t.Parallel()
+	env := []string{"ENV1=test1", "ENV2=test2"}
+	got, err := script.NewPipe().WithEnv(env).Shell("echo ENV1=$ENV1 ENV2=$ENV2").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "ENV1=test1 ENV2=test2\n"
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestShellExpandsHomeVariableWithoutWithEnv(t *testing.T) {
+	t.Parallel()
+	p := script.Shell("echo $HOME")
+	if p.Error() != nil {
+		t.Fatal(p.Error())
+	}
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.TrimSpace(got) == "" {
+		t.Error("want non-empty $HOME expansion, got empty string")
+	}
+}
+
+func TestShellPipesDataToExternalCommandAndGetsExpectedOutput(t *testing.T) {
+	t.Parallel()
+	p := script.File("testdata/hello.txt").Shell("cat")
+	want := "hello world"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestShellOnEmptyPipeProducesNoOutputAndNoError(t *testing.T) {
+	t.Parallel()
+	got, err := script.NewPipe().Shell("cat").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "" {
+		t.Errorf("want empty output, got %q", got)
+	}
+}
+
+func TestWithEnv_SetsGivenVariablesForSubsequentExec(t *testing.T) {
+	t.Parallel()
+	env := []string{"ENV1=test1", "ENV2=test2"}
+	got, err := script.NewPipe().WithEnv(env).Shell("echo ENV1=$ENV1 ENV2=$ENV2").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "ENV1=test1 ENV2=test2\n"
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestWithEnv_UnsetsAllEnvVarsGivenEmptySlice(t *testing.T) {
+	t.Parallel()
+	p := script.NewPipe().WithEnv([]string{"ENV1=test1"}).Shell("echo ENV1=$ENV1")
+	want := "ENV1=test1\n"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+	got, err = p.Echo("").WithEnv([]string{}).Shell("echo ENV1=$ENV1").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want = "ENV1=\n"
+	if got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
 }

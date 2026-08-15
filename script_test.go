@@ -353,10 +353,10 @@ func TestExecForEach_SendsStderrOutputToPipeStderr(t *testing.T) {
 	}
 }
 
-func TestExecSendsStderrOutputToPipeStderr(t *testing.T) {
+func TestExecCommand_SendsStderrOutputToPipeStderr(t *testing.T) {
 	t.Parallel()
 	buf := new(bytes.Buffer)
-	out, err := script.NewPipe().WithStderr(buf).Exec("go").String()
+	out, err := script.NewPipe().WithStderr(buf).ExecCommand("go").String()
 	if err == nil {
 		t.Fatal("want error when command returns a non-zero exit status")
 	}
@@ -1190,6 +1190,54 @@ func TestSHA256Sums_OutputsCorrectHashForEachSpecifiedFile(t *testing.T) {
 	}
 }
 
+func TestShellErrorsRunningCommandThatDoesNotExist(t *testing.T) {
+	t.Parallel()
+	p := script.Shell("doesntexist_command_xyz")
+	p.Wait()
+	if p.Error() == nil {
+		t.Error("want error running non-existent command")
+	}
+}
+
+func TestShellIsNoOpOnPipeWithExistingError(t *testing.T) {
+	t.Parallel()
+	fakeErr := errors.New("existing error")
+	p := script.NewPipe().WithError(fakeErr).Shell("echo hello")
+	if p.Error() != fakeErr {
+		t.Errorf("want existing error %v preserved, got %v", fakeErr, p.Error())
+	}
+}
+
+func TestShellRunsShWithEchoHelloAndGetsOutputHello(t *testing.T) {
+	t.Parallel()
+	p := script.Shell("echo hello")
+	if p.Error() != nil {
+		t.Fatal(p.Error())
+	}
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(got, "hello") {
+		t.Error(got)
+	}
+}
+
+func TestShellSendsStderrOutputToPipeStderr(t *testing.T) {
+	t.Parallel()
+	buf := new(bytes.Buffer)
+	out, err := script.NewPipe().WithStderr(buf).Shell("go").String()
+	if err == nil {
+		t.Fatal("want error when command returns a non-zero exit status")
+	}
+	if out != "" {
+		t.Fatalf("unexpected output: %q", out)
+	}
+	if !strings.Contains(buf.String(), "Usage") {
+		t.Errorf("want stderr output containing the word 'Usage', got %q", buf.String())
+	}
+}
+
 func TestTeeUsesConfiguredStdoutAsDefault(t *testing.T) {
 	t.Parallel()
 	buf := new(bytes.Buffer)
@@ -1223,21 +1271,29 @@ func TestTeeWritesDataToSuppliedWritersAsWellAsToPipe(t *testing.T) {
 	}
 }
 
-func TestExecErrorsWhenTheSpecifiedCommandDoesNotExist(t *testing.T) {
+func TestExecCommand_ErrorsWhenTheSpecifiedCommandDoesNotExist(t *testing.T) {
 	t.Parallel()
-	p := script.Exec("doesntexist")
+	p := script.ExecCommand("doesntexist")
 	p.Wait()
 	if p.Error() == nil {
 		t.Error("want error running non-existent command")
 	}
 }
 
-func TestExecRunsGoWithNoArgsAndGetsUsageMessagePlusErrorExitStatus2(t *testing.T) {
+func TestExecSetsErrorImmediatelyOnInvalidCommandLineSyntax(t *testing.T) {
+	t.Parallel()
+	p := script.Exec("echo \"unterminated")
+	if p.Error() == nil {
+		t.Error("want error to be set immediately after Exec with invalid syntax, before reading the pipe")
+	}
+}
+
+func TestExecCommand_RunsGoWithNoArgsAndGetsUsageMessagePlusErrorExitStatus2(t *testing.T) {
 	t.Parallel()
 	// We can't make many cross-platform assumptions about what external
 	// commands will be available, but it seems logical that 'go' would be
 	// (though it may not be in the user's path)
-	p := script.Exec("go")
+	p := script.ExecCommand("go")
 	output, err := p.String()
 	if err == nil {
 		t.Fatal("want error when command returns a non-zero exit status")
@@ -1252,9 +1308,9 @@ func TestExecRunsGoWithNoArgsAndGetsUsageMessagePlusErrorExitStatus2(t *testing.
 	}
 }
 
-func TestExecRunsGoHelpAndGetsUsageMessage(t *testing.T) {
+func TestExecComnmand_RunsGoHelpAndGetsUsageMessage(t *testing.T) {
 	t.Parallel()
-	p := script.Exec("go help")
+	p := script.ExecCommand("go", "help")
 	if p.Error() != nil {
 		t.Fatal(p.Error())
 	}
@@ -1828,40 +1884,6 @@ func TestWithStdout_SetsSpecifiedWriterAsStdout(t *testing.T) {
 	}
 }
 
-func TestWithEnv_UnsetsAllEnvVarsGivenEmptySlice(t *testing.T) {
-	t.Parallel()
-	p := script.NewPipe().WithEnv([]string{"ENV1=test1"}).Exec("sh -c 'echo ENV1=$ENV1'")
-	want := "ENV1=test1\n"
-	got, err := p.String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got != want {
-		t.Fatalf("want %q, got %q", want, got)
-	}
-	got, err = p.Echo("").WithEnv([]string{}).Exec("sh -c 'echo ENV1=$ENV1'").String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	want = "ENV1=\n"
-	if got != want {
-		t.Errorf("want %q, got %q", want, got)
-	}
-}
-
-func TestWithEnv_SetsGivenVariablesForSubsequentExec(t *testing.T) {
-	t.Parallel()
-	env := []string{"ENV1=test1", "ENV2=test2"}
-	got, err := script.NewPipe().WithEnv(env).Exec("sh -c 'echo ENV1=$ENV1 ENV2=$ENV2'").String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := "ENV1=test1 ENV2=test2\n"
-	if got != want {
-		t.Errorf("want %q, got %q", want, got)
-	}
-}
-
 func TestErrorReturnsErrorSetByPreviousPipeStage(t *testing.T) {
 	t.Parallel()
 	p := script.File("testdata/nonexistent.txt")
@@ -2065,9 +2087,9 @@ func TestEncodeBase64_CorrectlyEncodesInputBytes(t *testing.T) {
 	}
 }
 
-func TestWithStdErr_IsConcurrencySafeAfterExec(t *testing.T) {
+func TestWithStdErr_IsConcurrencySafeAfterExecCommand(t *testing.T) {
 	t.Parallel()
-	err := script.Exec("echo").WithStderr(nil).Wait()
+	err := script.ExecCommand("echo").WithStderr(nil).Wait()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2178,11 +2200,11 @@ func TestHashSums_OutputsEmptyStringForFileThatCannotBeHashed(t *testing.T) {
 	}
 }
 
-func TestWithContext_SkipsExecWithCancelledContext(t *testing.T) {
+func TestWithContext_SkipsExecCommandWithCancelledContext(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	cancel()
-	output, err := script.WithContext(ctx).Exec("echo Hello, World").String()
+	output, err := script.WithContext(ctx).ExecCommand("echo", "Hello, World").String()
 	if err == nil {
 		t.Error("expected error due to context cancellation, got nil")
 	}
@@ -2253,16 +2275,16 @@ func ExampleEcho() {
 	// Hello, world!
 }
 
-func ExampleExec_exit_status_zero() {
-	p := script.Exec("echo")
+func ExampleExecCommand_exit_status_zero() {
+	p := script.ExecCommand("echo")
 	p.Wait()
 	fmt.Println(p.ExitStatus())
 	// Output:
 	// 0
 }
 
-func ExampleExec_exit_status_not_zero() {
-	p := script.Exec("false")
+func ExampleExecCommand_exit_status_not_zero() {
+	p := script.ExecCommand("false")
 	p.Wait()
 	fmt.Println(p.ExitStatus())
 	// Output:
@@ -2394,7 +2416,7 @@ func ExamplePipe_EncodeBase64() {
 }
 
 func ExamplePipe_ExitStatus() {
-	p := script.Exec("echo")
+	p := script.ExecCommand("echo")
 	fmt.Println(p.ExitStatus())
 	// Output:
 	// 0
@@ -2691,10 +2713,16 @@ func ExamplePipe_WithContext() {
 
 func ExamplePipe_WithStderr() {
 	buf := new(bytes.Buffer)
-	script.NewPipe().WithStderr(buf).Exec("go").Wait()
+	script.NewPipe().WithStderr(buf).ExecCommand("go").Wait()
 	fmt.Println(strings.Contains(buf.String(), "Usage"))
 	// Output:
 	// true
+}
+
+func ExampleShell() {
+	script.Shell("echo Hello, world!").Stdout()
+	// Output:
+	// Hello, world!
 }
 
 func ExampleSlice() {
