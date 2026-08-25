@@ -364,6 +364,7 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) | matching text replaced with given string |
 | [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) | matching text replaced with given string |
 | [`Shell`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Shell) | filtered through the system shell |
+| [`ShellForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ShellForEach) | execute given command template for each line of input, via the system shell |
 | [`Tee`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Tee) | input copied to supplied writers |
 
 Note that filters run concurrently, rather than producing nothing until each stage has fully read its input. This is convenient for executing long-running commands, for example. If you do need to wait for the pipeline to complete, call [`Wait`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Wait).
