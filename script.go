@@ -1011,6 +1011,79 @@ func (p *Pipe) Shell(cmdLine string) *Pipe {
 	return p.ExecCommand(shell, flag, cmdLine)
 }
 
+// ShellForEach runs cmdLine for each line of input, via the operating system's standard
+// shell.
+//
+// cmdLine is rendered as a Go template for each line of input, and the resulting command
+// is passed to the shell for expansion and execution ("sh -c" on Unix-like systems, "cmd
+// /C" on Windows). ShellForEach produces the combined output of all these commands in
+// sequence.
+//
+// This is like [Pipe.ExecForEach], but because the rendered command line goes through the
+// shell, you can quote template values so that arguments containing spaces or other shell
+// metacharacters are handled the way the shell would handle them. For example, to touch a
+// set of files whose names may contain spaces:
+//
+//	ListFiles("*").ShellForEach("touch '{{.}}'").Wait()
+//
+// Note that variable syntax differs by platform: Unix shells expand variables written as
+// $VAR, while cmd.exe on Windows expands variables written as %VAR%.
+//
+// # Environment
+//
+// Each command inherits the current process's environment, optionally modified by
+// [Pipe.WithEnv].
+//
+// # Context
+//
+// Each command inherits the pipe's context (if any was set by [Pipe.WithContext]), and
+// will be cancelled if the context is cancelled or times out.
+func (p *Pipe) ShellForEach(cmdLine string) *Pipe {
+	tpl, err := template.New("").Parse(cmdLine)
+	if err != nil {
+		return p.WithError(err)
+	}
+	shell, flag := "sh", "-c"
+	if runtime.GOOS == "windows" {
+		shell, flag = "cmd", "/C"
+	}
+	return p.Filter(func(r io.Reader, w io.Writer) error {
+		scanner := newScanner(r)
+		for scanner.Scan() {
+			if p.ctx.Err() != nil {
+				return p.ctx.Err()
+			}
+			cmdLine := new(strings.Builder)
+			err := tpl.Execute(cmdLine, scanner.Text())
+			if err != nil {
+				return err
+			}
+			cmd := exec.CommandContext(p.ctx, shell, flag, cmdLine.String())
+			cmd.Stdout = w
+			cmd.Stderr = w
+			pipeStderr := p.stdErr()
+			if pipeStderr != nil {
+				cmd.Stderr = pipeStderr
+			}
+			pipeEnv := p.environment()
+			if pipeEnv != nil {
+				cmd.Env = pipeEnv
+			}
+			err = cmd.Start()
+			if err != nil {
+				fmt.Fprintln(cmd.Stderr, err)
+				continue
+			}
+			err = cmd.Wait()
+			if err != nil {
+				fmt.Fprintln(cmd.Stderr, err)
+				continue
+			}
+		}
+		return scanner.Err()
+	})
+}
+
 // Slice returns the pipe's contents as a slice of strings, one element per
 // line, or an error.
 //

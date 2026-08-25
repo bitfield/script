@@ -56,6 +56,54 @@ func TestExecForEach_CorrectlyEvaluatesTemplateContainingIfStatement(t *testing.
 	}
 }
 
+func TestShellForEach_RunsEchoWithABCAndGetsOutputABC(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("a\nb\nc\n").ShellForEach("echo {{.}}")
+	if p.Error() != nil {
+		t.Fatal(p.Error())
+	}
+	want := "a\nb\nc\n"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestShellForEach_PreservesQuotedArgumentContainingSpaces(t *testing.T) {
+	t.Parallel()
+	// A quoted template value stays a single argument to the command, because the shell
+	// handles the quoting. The equivalent ExecForEach call would split "my file" into two
+	// separate arguments.
+	p := script.Echo("my file").ShellForEach("echo '{{.}}'")
+	if p.Error() != nil {
+		t.Fatal(p.Error())
+	}
+	want := "my file\n"
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestShellForEach_ExpandsEnvironmentVariablesSetViaWithEnv(t *testing.T) {
+	t.Parallel()
+	env := []string{"ENV1=test1", "ENV2=test2"}
+	got, err := script.Echo("x").WithEnv(env).ShellForEach("echo ENV1=$ENV1 ENV2=$ENV2").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "ENV1=test1 ENV2=test2\n"
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestExecCommandPipesDataToExternalCommandAndGetsExpectedOutput(t *testing.T) {
 	t.Parallel()
 	p := script.File("testdata/hello.txt").ExecCommand("cat")
@@ -188,6 +236,14 @@ func ExamplePipe_Shell() {
 	script.Echo("Hello, world!").Shell("tr a-z A-Z").Stdout()
 	// Output:
 	// HELLO, WORLD!
+}
+
+func ExamplePipe_ShellForEach() {
+	script.Echo("a\nb\nc\n").ShellForEach("echo {{.}}").Stdout()
+	// Output:
+	// a
+	// b
+	// c
 }
 
 func TestShell_ExpandsEnvironmentVariablesSetViaWithEnv(t *testing.T) {

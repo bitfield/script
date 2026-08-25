@@ -353,6 +353,39 @@ func TestExecForEach_SendsStderrOutputToPipeStderr(t *testing.T) {
 	}
 }
 
+func TestShellForEach_ErrorsOnInvalidTemplateSyntax(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("a\nb\nc\n").ShellForEach("{{invalid template syntax}}")
+	p.Wait()
+	if p.Error() == nil {
+		t.Error("want error with invalid template syntax")
+	}
+}
+
+func TestShellForEach_IsNoOpOnPipeWithExistingError(t *testing.T) {
+	t.Parallel()
+	fakeErr := errors.New("existing error")
+	p := script.NewPipe().WithError(fakeErr).ShellForEach("echo {{.}}")
+	if p.Error() != fakeErr {
+		t.Errorf("want existing error %v preserved, got %v", fakeErr, p.Error())
+	}
+}
+
+func TestShellForEach_SendsStderrOutputToPipeStderr(t *testing.T) {
+	t.Parallel()
+	buf := new(bytes.Buffer)
+	out, err := script.Echo("go").WithStderr(buf).ShellForEach("{{.}}").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out != "" {
+		t.Fatalf("unexpected output: %q", out)
+	}
+	if !strings.Contains(buf.String(), "Usage") {
+		t.Errorf("want stderr output containing the word 'Usage', got %q", buf.String())
+	}
+}
+
 func TestExecCommand_SendsStderrOutputToPipeStderr(t *testing.T) {
 	t.Parallel()
 	buf := new(bytes.Buffer)
