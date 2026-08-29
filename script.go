@@ -347,6 +347,28 @@ func (p *Pipe) Dirname() *Pipe {
 	})
 }
 
+// Unique returns a new pipe with consecutive duplicate lines suppressed.
+//
+// Unlike Freq(), which aggregates global counts across the entire stream,
+// Unique processes lines continuously in real time, keeping memory usage minimal
+// and preserving original chronological line order. Non-consecutive duplicates
+// (e.g. A, B, A) are retained.
+func (p *Pipe) Unique() *Pipe {
+	if p == nil || p.Error() != nil {
+		return p
+	}
+	var lastLine string
+	var seenAny bool
+
+	return p.FilterScan(func(line string, w io.Writer) {
+		if !seenAny || line != lastLine {
+			fmt.Fprintln(w, line)
+			seenAny = true
+			lastLine = line
+		}
+	})
+}
+
 // Do performs the HTTP request req using the pipe's configured HTTP client, as
 // set by [Pipe.WithHTTPClient], or [http.DefaultClient] otherwise. The
 // response body is streamed concurrently to the pipe's output. If the response

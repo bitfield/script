@@ -2738,3 +2738,55 @@ func ExampleSlice() {
 // methods that buffer input. We want to make sure they don't throw
 // "bufio.Scanner: token too long" errors.
 var longLine = strings.Repeat("super long line ", 4096) + "\nlast line\n"
+
+// TestUnique verifies that Pipe.Unique correctly collapses consecutive duplicate
+// lines while preserving line ordering and streaming behavior.
+//
+// Expected behavior:
+//   - Adjacent identical lines are reduced to a single line.
+//   - Non-adjacent duplicate lines (e.g. "a\nb\na\n") are preserved.
+//   - Unique streams and empty inputs pass through unmodified without errors.
+func TestUnique(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "collapses consecutive duplicates while keeping non-consecutive ones",
+			input:    "a\na\nb\na\n",
+			expected: "a\nb\na\n",
+		},
+		{
+			name:     "collapses multiple consecutive occurrences",
+			input:    "apple\napple\napple\n",
+			expected: "apple\n",
+		},
+		{
+			name:     "passes through unique streams unchanged",
+			input:    "one\ntwo\nthree\n",
+			expected: "one\ntwo\nthree\n",
+		},
+		{
+			name:     "handles empty input safely",
+			input:    "",
+			expected: "",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := script.Echo(tc.input).Unique().String()
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tc.expected {
+				t.Errorf("Unique() on %q: got %q, want %q", tc.input, got, tc.expected)
+			}
+		})
+	}
+}
