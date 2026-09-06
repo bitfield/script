@@ -187,6 +187,7 @@ func TestColumnSelects(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(fmt.Sprintf("column %d of input", tc.col), func(t *testing.T) {
+			t.Parallel()
 			got, err := script.Slice(input).Column(tc.col).Slice()
 			if err != nil {
 				t.Fatal(err)
@@ -1001,6 +1002,67 @@ func TestMatchRegexp_OutputsOnlyLinesMatchingRegexp(t *testing.T) {
 	}
 }
 
+func TestPostPostsToGivenURLUsingPipeAsRequestBody(t *testing.T) {
+	t.Parallel()
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Errorf("want HTTP method POST, got %q", r.Method)
+		}
+		want := []byte("request data")
+		got, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Fatal("reading request body", err)
+		}
+		if !cmp.Equal(want, got) {
+			t.Fatal(cmp.Diff(want, string(got)))
+		}
+		fmt.Fprintln(w, "response data")
+	}))
+	defer ts.Close()
+	want := "response data\n"
+	got, err := script.Echo("request data").Post(ts.URL).String()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestRejectRegexp_DropsMatchingLinesFromInput(t *testing.T) {
+	t.Parallel()
+	input := "hello world"
+	tcs := []struct {
+		regex, want string
+	}{
+		{
+			regex: `Hello|line`,
+			want:  "hello world\n",
+		},
+		{
+			regex: `hello|bogus`,
+			want:  "",
+		},
+		{
+			regex: `w.*d`,
+			want:  "",
+		},
+		{
+			regex: "wontmatch",
+			want:  "hello world\n",
+		},
+	}
+	for _, tc := range tcs {
+		got, err := script.Echo(input).RejectRegexp(regexp.MustCompile(tc.regex)).String()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if tc.want != got {
+			t.Error(cmp.Diff(tc.want, got))
+		}
+	}
+}
+
 func TestReplaceReplacesMatchesWithSpecifiedText(t *testing.T) {
 	t.Parallel()
 	input := "hello world"
@@ -1098,67 +1160,6 @@ func TestRejectDropsMatchingLinesFromInput(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		got, err := script.Echo(input).Reject(tc.reject).String()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if tc.want != got {
-			t.Error(cmp.Diff(tc.want, got))
-		}
-	}
-}
-
-func TestPostPostsToGivenURLUsingPipeAsRequestBody(t *testing.T) {
-	t.Parallel()
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			t.Errorf("want HTTP method POST, got %q", r.Method)
-		}
-		want := []byte("request data")
-		got, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Fatal("reading request body", err)
-		}
-		if !cmp.Equal(want, got) {
-			t.Fatal(cmp.Diff(want, string(got)))
-		}
-		fmt.Fprintln(w, "response data")
-	}))
-	defer ts.Close()
-	want := "response data\n"
-	got, err := script.Echo("request data").Post(ts.URL).String()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !cmp.Equal(want, got) {
-		t.Error(cmp.Diff(want, got))
-	}
-}
-
-func TestRejectRegexp_DropsMatchingLinesFromInput(t *testing.T) {
-	t.Parallel()
-	input := "hello world"
-	tcs := []struct {
-		regex, want string
-	}{
-		{
-			regex: `Hello|line`,
-			want:  "hello world\n",
-		},
-		{
-			regex: `hello|bogus`,
-			want:  "",
-		},
-		{
-			regex: `w.*d`,
-			want:  "",
-		},
-		{
-			regex: "wontmatch",
-			want:  "hello world\n",
-		},
-	}
-	for _, tc := range tcs {
-		got, err := script.Echo(input).RejectRegexp(regexp.MustCompile(tc.regex)).String()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1649,6 +1650,7 @@ func TestSHA256Sum_OutputsCorrectHash(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := script.Echo(tc.input).SHA256Sum()
 			if err != nil {
 				t.Fatal(err)
@@ -1680,7 +1682,7 @@ func TestSliceSink_ReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 
 func TestSliceSink_(t *testing.T) {
 	t.Parallel()
-	tests := []struct {
+	tcs := []struct {
 		name string
 		pipe *script.Pipe
 		want []string
@@ -1714,8 +1716,9 @@ func TestSliceSink_(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range tcs {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			p := tt.pipe
 			got, err := p.Slice()
 			if err != nil {
@@ -1746,6 +1749,58 @@ func TestStringReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	_, err := script.NewPipe().WithReader(brokenReader).String()
 	if err == nil {
 		t.Fatal(nil)
+	}
+}
+
+func TestUnique(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "collapses consecutive duplicates while keeping non-consecutive ones",
+			input: "a\na\nb\na\n",
+			want:  "a\nb\na\n",
+		},
+		{
+			name:  "collapses multiple consecutive occurrences",
+			input: "orange\napple\napple\napple\nbanana\n",
+			want:  "orange\napple\nbanana\n",
+		},
+		{
+			name:  "passes through unique streams unchanged",
+			input: "one\ntwo\nthree\n",
+			want:  "one\ntwo\nthree\n",
+		},
+		{
+			name:  "handles empty input safely",
+			input: "",
+			want:  "",
+		},
+		{
+			name:  "collapses consecutive leading empty lines",
+			input: "\n\n\napple\n",
+			want:  "\napple\n",
+		},
+		{
+			name:  "collapses consecutive non-leading empty lines",
+			input: "apple\n\n\n\nbanana\n",
+			want:  "apple\n\nbanana\n",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := script.Echo(tc.input).Unique().String()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tc.want {
+				t.Errorf("want %q, got %q", tc.want, got)
+			}
+		})
 	}
 }
 
@@ -1966,22 +2021,6 @@ func TestReadReturnsErrorGivenReadErrorOnPipe(t *testing.T) {
 	}
 }
 
-func TestWait_ReturnsErrorPresentOnPipe(t *testing.T) {
-	t.Parallel()
-	p := script.Echo("a\nb\nc\n").ExecForEach("{{invalid template syntax}}")
-	if p.Wait() == nil {
-		t.Error("want error, got nil")
-	}
-}
-
-func TestWait_DoesNotReturnErrorForValidExecution(t *testing.T) {
-	t.Parallel()
-	p := script.Echo("a\nb\nc\n").ExecForEach("echo \"{{.}}\"")
-	if err := p.Wait(); err != nil {
-		t.Fatal(err)
-	}
-}
-
 var base64Cases = []struct {
 	name    string
 	decoded string
@@ -2008,6 +2047,7 @@ func TestEncodeBase64_CorrectlyEncodes(t *testing.T) {
 	t.Parallel()
 	for _, tc := range base64Cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := script.Echo(tc.decoded).EncodeBase64().String()
 			if err != nil {
 				t.Fatal(err)
@@ -2024,6 +2064,7 @@ func TestDecodeBase64_CorrectlyDecodes(t *testing.T) {
 	t.Parallel()
 	for _, tc := range base64Cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := script.Echo(tc.encoded).DecodeBase64().String()
 			if err != nil {
 				t.Fatal(err)
@@ -2040,6 +2081,7 @@ func TestEncodeBase64_FollowedByDecodeRecoversOriginal(t *testing.T) {
 	t.Parallel()
 	for _, tc := range base64Cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			decoded, err := script.Echo(tc.decoded).EncodeBase64().DecodeBase64().String()
 			if err != nil {
 				t.Fatal(err)
@@ -2087,14 +2129,6 @@ func TestEncodeBase64_CorrectlyEncodesInputBytes(t *testing.T) {
 	}
 }
 
-func TestWithStdErr_IsConcurrencySafeAfterExecCommand(t *testing.T) {
-	t.Parallel()
-	err := script.ExecCommand("echo").WithStderr(nil).Wait()
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestHash_OutputsCorrectHash(t *testing.T) {
 	t.Parallel()
 	tcs := []struct {
@@ -2128,6 +2162,7 @@ func TestHash_OutputsCorrectHash(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := script.Echo(tc.input).Hash(tc.hasher)
 			if err != nil {
 				t.Fatal(err)
@@ -2200,6 +2235,22 @@ func TestHashSums_OutputsEmptyStringForFileThatCannotBeHashed(t *testing.T) {
 	}
 }
 
+func TestWait_DoesNotReturnErrorForValidExecution(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("a\nb\nc\n").ExecForEach("echo \"{{.}}\"")
+	if err := p.Wait(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestWait_ReturnsErrorPresentOnPipe(t *testing.T) {
+	t.Parallel()
+	p := script.Echo("a\nb\nc\n").ExecForEach("{{invalid template syntax}}")
+	if p.Wait() == nil {
+		t.Error("want error, got nil")
+	}
+}
+
 func TestWithContext_SkipsExecCommandWithCancelledContext(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -2246,6 +2297,14 @@ func TestWithContext_SkipsPOSTRequestWithCancelledContext(t *testing.T) {
 	}
 	if handler_called {
 		t.Fatal("request made even though context cancelled beforehand")
+	}
+}
+
+func TestWithStdErr_IsConcurrencySafeAfterExecCommand(t *testing.T) {
+	t.Parallel()
+	err := script.ExecCommand("echo").WithStderr(nil).Wait()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -2694,6 +2753,14 @@ func ExamplePipe_Tee_writers() {
 	// hello
 	// hello
 	// hello
+}
+
+func ExamplePipe_Unique() {
+	script.Echo("orange\napple\napple\napple\nbanana\n").Unique().Stdout()
+	// Output:
+	// orange
+	// apple
+	// banana
 }
 
 func ExamplePipe_WithContext() {

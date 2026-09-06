@@ -258,6 +258,7 @@ If you're already familiar with shell scripting and the Unix toolset, here is a 
 | `sha256sum`        | [`Hash`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Hash) / [`HashSums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.HashSums) |
 | `tail`             | [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) |
 | `tee`              | [`Tee`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Tee) |
+| `uniq`             | [`Unique`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Unique) |
 | `uniq -c`          | [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) |
 | `wc -l`            | [`CountLines`](https://pkg.go.dev/github.com/bitfield/script#Pipe.CountLines) |
 | `xargs`            | [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) |
@@ -336,24 +337,24 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 
 | Filter | Results |
 | -------- | ------------- |
-| [`Basename`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Basename) | removes leading path components from each line, leaving only the filename |
+| [`Basename`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Basename) | leading path components removed from each line, leaving only the filename |
 | [`Column`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Column) | Nth column of input |
 | [`Concat`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Concat) | contents of multiple files |
 | [`DecodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.DecodeBase64) | input decoded from base64 |
-| [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) | removes filename from each line, leaving only leading path components |
+| [`Dirname`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Dirname) | filename removed from each line, leaving only leading path components |
 | [`Do`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Do) | response to supplied HTTP request |
 | [`Echo`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Echo) | all input replaced by given string |
 | [`EncodeBase64`](https://pkg.go.dev/github.com/bitfield/script#Pipe.EncodeBase64) | input encoded to base64 |
 | [`ExecCommand`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecCommand) | filtered through external command |
-| [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) | execute given command template for each line of input |
-| [`Filter`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Filter) | user-supplied function filtering a reader to a writer |
-| [`FilterLine`](https://pkg.go.dev/github.com/bitfield/script#Pipe.FilterLine) | user-supplied function filtering each line to a string|
-| [`FilterScan`](https://pkg.go.dev/github.com/bitfield/script#Pipe.FilterScan) | user-supplied function filtering each line to a writer |
+| [`ExecForEach`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecForEach) | given command template executed for each line of input |
+| [`Filter`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Filter) | input filtered by user-supplied function |
+| [`FilterLine`](https://pkg.go.dev/github.com/bitfield/script#Pipe.FilterLine) | each line filtered by user-supplied function to output line |
+| [`FilterScan`](https://pkg.go.dev/github.com/bitfield/script#Pipe.FilterScan) | each line filtered by user-supplied function to output writer |
 | [`First`](https://pkg.go.dev/github.com/bitfield/script#Pipe.First) | first N lines of input |
 | [`Freq`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Freq) | frequency count of unique input lines, most frequent first |
 | [`Get`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Get) | response to HTTP GET on supplied URL |
 | [`HashSums`](https://pkg.go.dev/github.com/bitfield/script#Pipe.HashSums) | hashes of each listed file |
-| [`Join`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Join) | replace all newlines with spaces |
+| [`Join`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Join) | newlines replaced with spaces |
 | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) | result of `jq` query |
 | [`Last`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Last) | last N lines of input|
 | [`Match`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Match) | lines matching given string |
@@ -363,8 +364,9 @@ Filters are methods on an existing pipe that also return a pipe, allowing you to
 | [`RejectRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.RejectRegexp) | lines not matching given regexp |
 | [`Replace`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Replace) | matching text replaced with given string |
 | [`ReplaceRegexp`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ReplaceRegexp) | matching text replaced with given string |
-| [`Shell`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Shell) | filtered through the system shell |
+| [`Shell`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Shell) | each line executed as command by the system shell |
 | [`Tee`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Tee) | input copied to supplied writers |
+| [`Unique`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Unique) | consecutive duplicate lines suppressed |
 
 Note that filters run concurrently, rather than producing nothing until each stage has fully read its input. This is convenient for executing long-running commands, for example. If you do need to wait for the pipeline to complete, call [`Wait`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Wait).
 
@@ -389,6 +391,7 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 
 | Version | New |
 | ----------- | ------- |
+| 0.25.1  | [`Unique`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Unique) |
 | 0.25.0  | [`ExecCommand`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecCommand) / [`Shell`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Shell) supersede `Exec` (thanks [Dhanalakshmi-D04](https://github.com/Dhanalakshmi-D04)) |
 |         | [`WithContext`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithContext) (thanks [billvamva](https://github.com/billvamva)) |
 | 0.24.1  | [`JQ`](https://pkg.go.dev/github.com/bitfield/script#Pipe.JQ) accepts JSONLines data |
