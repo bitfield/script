@@ -347,23 +347,20 @@ func (p *Pipe) Dirname() *Pipe {
 	})
 }
 
-// Unique returns a new pipe with consecutive duplicate lines suppressed.
+// Unique suppresses consecutive duplicate lines.
 //
-// Unlike Freq(), which aggregates global counts across the entire stream,
-// Unique processes lines continuously in real time, keeping memory usage minimal
-// and preserving original chronological line order. Non-consecutive duplicates
-// (e.g. A, B, A) are retained.
+// Non-consecutive duplicates (for example A, B, A) are retained.
+//
+// See also [Pipe.Freq], which waits for the pipe to complete and then produces
+// frequency counts of unique lines.
 func (p *Pipe) Unique() *Pipe {
-	if p == nil || p.Error() != nil {
+	if p.Error() != nil {
 		return p
 	}
-	var lastLine string
-	var seenAny bool
-
+	lastLine := "\n"
 	return p.FilterScan(func(line string, w io.Writer) {
-		if !seenAny || line != lastLine {
+		if line != lastLine {
 			fmt.Fprintln(w, line)
-			seenAny = true
 			lastLine = line
 		}
 	})
@@ -704,9 +701,12 @@ func (p *Pipe) First(n int) *Pipe {
 	})
 }
 
-// Freq produces only the unique lines from the pipe's contents, each prefixed
-// with a frequency count, in descending numerical order (most frequent lines
-// first). Lines with equal frequency will be sorted alphabetically.
+// Freq produces a freqency count of unique lines.
+//
+// Freq waits for the pipe to complete and then produces only the unique lines from the
+// pipe's contents, each prefixed with a frequency count, in descending numerical order
+// (most frequent lines first). Lines with equal frequency will be sorted
+// alphabetically.
 //
 // For example, we could take a common shell pipeline like this:
 //
@@ -722,6 +722,9 @@ func (p *Pipe) First(n int) *Pipe {
 //
 // Like Unix uniq(1), Freq right-justifies its count values in a column for
 // readability, padding with spaces if necessary.
+//
+// See also [Pipe.Unique], which is concurrent, does not sort its input, and suppresses
+// only consecutive duplicate lines, without producing a frequency count.
 func (p *Pipe) Freq() *Pipe {
 	freq := map[string]int{}
 	type frequency struct {
