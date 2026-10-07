@@ -1203,6 +1203,18 @@ type ReadAutoCloser struct {
 	r io.ReadCloser
 }
 
+// onceCloser makes Close safe to call more than once.
+type onceCloser struct {
+	io.ReadCloser
+	once sync.Once
+	err  error
+}
+
+func (c *onceCloser) Close() error {
+	c.once.Do(func() { c.err = c.ReadCloser.Close() })
+	return c.err
+}
+
 // NewReadAutoCloser returns a [ReadAutoCloser] wrapping the reader r.
 func NewReadAutoCloser(r io.Reader) ReadAutoCloser {
 	if _, ok := r.(io.Closer); !ok {
@@ -1213,7 +1225,7 @@ func NewReadAutoCloser(r io.Reader) ReadAutoCloser {
 		// This can never happen, but just in case it does...
 		panic("internal error: type assertion to io.ReadCloser failed")
 	}
-	return ReadAutoCloser{rc}
+	return ReadAutoCloser{&onceCloser{ReadCloser: rc}}
 }
 
 // Close closes ra's reader, returning any resulting error.

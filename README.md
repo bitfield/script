@@ -391,6 +391,7 @@ Sinks are methods that return some data from a pipe, ending the pipeline and ext
 
 | Version | New |
 | ----------- | ------- |
+| 0.25.2  | Fixed bug where [`Post`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Post) would error on posting a file ([#250](https://github.com/bitfield/script/issues/250))|
 | 0.25.1  | [`Unique`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Unique) |
 | 0.25.0  | [`ExecCommand`](https://pkg.go.dev/github.com/bitfield/script#Pipe.ExecCommand) / [`Shell`](https://pkg.go.dev/github.com/bitfield/script#Pipe.Shell) supersede `Exec` (thanks [Dhanalakshmi-D04](https://github.com/Dhanalakshmi-D04)) |
 |         | [`WithContext`](https://pkg.go.dev/github.com/bitfield/script#Pipe.WithContext) (thanks [billvamva](https://github.com/billvamva)) |

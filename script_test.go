@@ -1029,6 +1029,18 @@ func TestPostPostsToGivenURLUsingPipeAsRequestBody(t *testing.T) {
 	}
 }
 
+func TestPostDoesNotErrorWhenFileAutoClosed(t *testing.T) {
+	t.Parallel()
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		io.Copy(w, r.Body)
+	}))
+	defer ts.Close()
+	_, err := script.File("testdata/hello.txt").Post(ts.URL).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestRejectRegexp_DropsMatchingLinesFromInput(t *testing.T) {
 	t.Parallel()
 	input := "hello world"
@@ -1475,6 +1487,27 @@ func TestReadAutoCloser_ReadsAllDataFromSourceAndClosesItAutomatically(t *testin
 	if err == nil {
 		t.Error("input not closed after reading")
 	}
+}
+
+type mockCloser struct {
+	io.Reader
+	closed bool
+	t      *testing.T
+}
+
+func (mc *mockCloser) Close() error {
+	if mc.closed {
+		mc.t.Fatal("source closed twice")
+	}
+	mc.closed = true
+	return nil
+}
+
+func TestReadAutoCloser_OnlyClosesSourceOnce(t *testing.T) {
+	t.Parallel()
+	acr := script.NewReadAutoCloser(&mockCloser{t: t})
+	acr.Close()
+	acr.Close()
 }
 
 func TestSliceProducesElementsOfSpecifiedSliceOnePerLine(t *testing.T) {
