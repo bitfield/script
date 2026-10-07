@@ -45,6 +45,8 @@ For something a bit more challenging, let's try counting the number of lines in 
 numErrors, err := script.File("test.txt").Match("Error").CountLines()
 ```
 
+You can find a complete, runnable version of this in [examples/count_errors.go](examples/count_errors.go), along with other examples in the [`examples/`](examples) directory.
+
 But what if, instead of reading a specific file, we want to simply pipe input into this program, and have it output only matching lines (like `grep`)?
 
 ```go
