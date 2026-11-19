@@ -218,6 +218,41 @@ func Example_listExecutables() {
 	// 1
 }
 
+func Example_countErrors() {
+	// Counts the lines containing "ERROR" in a log file.
+	//
+	// Equivalent shell command:
+	//
+	//	grep ERROR testdata/app.log | wc -l
+
+	count, err := script.File("testdata/app.log").Match("ERROR").CountLines()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Number of ERROR lines: %d\n", count)
+	// Output:
+	// Number of ERROR lines: 2
+}
+
+func Example_filterCSV() {
+	// Prints the names of servers whose status is "DOWN", read from a CSV file.
+	//
+	// Equivalent shell command:
+	//
+	//	grep DOWN testdata/servers.csv | cut -d, -f1
+
+	// Column splits on whitespace, so turn the comma into a space first,
+	// then take the first field (the server name).
+	_, err := script.File("testdata/servers.csv").Match("DOWN").Replace(",", " ").Column(1).Stdout()
+	if err != nil {
+		panic(err)
+	}
+	// Output:
+	// server2
+	// server3
+	// server5
+}
+
 func TestShell_ExpandsEnvironmentVariablesSetViaWithEnv(t *testing.T) {
 	t.Parallel()
 	env := []string{"ENV1=test1", "ENV2=test2"}
