@@ -3,7 +3,9 @@
 package script_test
 
 import (
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -188,6 +190,32 @@ func ExamplePipe_Shell() {
 	script.Echo("Hello, world!").Shell("tr a-z A-Z").Stdout()
 	// Output:
 	// HELLO, WORLD!
+}
+
+func Example_listExecutables() {
+	// Counts and prints executable files in a given directory.
+	//
+	// Equivalent shell command:
+	//
+	//	find testdata/executables -maxdepth 1 -type f -perm -u+x
+
+	paths, err := script.ListFiles("testdata/executables").Slice()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	var numExecutables int
+	for _, path := range paths {
+		if _, err := exec.LookPath(path); err == nil {
+			fmt.Println(path)
+			numExecutables++
+		}
+	}
+	fmt.Println(numExecutables)
+	// Output:
+	// testdata/executables/hello.sh
+	// 1
 }
 
 func TestShell_ExpandsEnvironmentVariablesSetViaWithEnv(t *testing.T) {
