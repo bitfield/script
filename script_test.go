@@ -1885,6 +1885,30 @@ func TestWriteFile_ReturnsBytesWrittenAndErrorGivenReadErrorOnPipe(t *testing.T)
 	}
 }
 
+func TestWriteFile_InPlaceFilteringPreservesInput(t *testing.T) {
+	t.Parallel()
+	path := t.TempDir() + "/" + t.Name()
+	input := "hello world\n"
+	if err := os.WriteFile(path, []byte(input), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	want := "HELLO world\n"
+	wrote, err := script.File(path).Replace("hello", "HELLO").WriteFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if int(wrote) != len(want) {
+		t.Fatalf("want %d bytes written, got %d", len(want), int(wrote))
+	}
+	got, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
 func TestWriteFile_TruncatesExistingFile(t *testing.T) {
 	t.Parallel()
 	want := "Hello, world"

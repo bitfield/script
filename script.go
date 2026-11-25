@@ -36,11 +36,12 @@ type Pipe struct {
 	stdout     io.Writer
 	httpClient *http.Client
 
-	mu     *sync.Mutex
-	err    error
-	stderr io.Writer
-	env    []string
-	ctx    context.Context
+	mu         *sync.Mutex
+	err        error
+	stderr     io.Writer
+	sourcePath string
+	env        []string
+	ctx        context.Context
 }
 
 // Args creates a pipe containing the program's command-line arguments from
@@ -84,7 +85,7 @@ func File(path string) *Pipe {
 	if err != nil {
 		return NewPipe().WithError(err)
 	}
-	return NewPipe().WithReader(f)
+	return NewPipe().WithReader(f).withSourcePath(path)
 }
 
 // FindFiles creates a pipe listing all the files in the directory dir and its
@@ -1184,6 +1185,17 @@ func (p *Pipe) writeOrAppendFile(path string, mode int) (int64, error) {
 	if p.Error() != nil {
 		return 0, p.Error()
 	}
+	if mode&os.O_TRUNC != 0 && p.sourcePath != "" && sameFile(p.sourcePath, path) {
+		// Read the complete pipeline before truncating its input file. This makes
+		// in-place filtering safe; streaming the write would race with reads from
+		// the same file and could leave it empty.
+		contents, err := io.ReadAll(p)
+		if err != nil {
+			p.SetError(err)
+			return 0, err
+		}
+		return p.writeFileContents(path, mode, contents)
+	}
 	out, err := os.OpenFile(path, mode, 0o666)
 	if err != nil {
 		p.SetError(err)
@@ -1195,6 +1207,31 @@ func (p *Pipe) writeOrAppendFile(path string, mode int) (int64, error) {
 		p.SetError(err)
 	}
 	return wrote, p.Error()
+}
+
+func (p *Pipe) withSourcePath(path string) *Pipe {
+	p.sourcePath = path
+	return p
+}
+
+func sameFile(a, b string) bool {
+	ainfo, aerr := os.Stat(a)
+	binfo, berr := os.Stat(b)
+	return aerr == nil && berr == nil && os.SameFile(ainfo, binfo)
+}
+
+func (p *Pipe) writeFileContents(path string, mode int, contents []byte) (int64, error) {
+	out, err := os.OpenFile(path, mode, 0o666)
+	if err != nil {
+		p.SetError(err)
+		return 0, err
+	}
+	defer out.Close()
+	wrote, err := out.Write(contents)
+	if err != nil {
+		p.SetError(err)
+	}
+	return int64(wrote), p.Error()
 }
 
 // ReadAutoCloser wraps an [io.ReadCloser] so that it will be automatically
