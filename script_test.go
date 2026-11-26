@@ -2869,6 +2869,29 @@ func Example_filterCSV() {
 	// server5
 }
 
+func Example_createWriteFile() {
+	// Creates a file named "testfile" and writes data to it.
+	//
+	// Equivalent shell command:
+	//
+	//  touch testdata/testfile && echo "testdata" > testdata/testfile
+
+	script.Echo("testdata").WriteFile("testdata/testfile")
+
+	// Removes the file.
+	//
+	// Equivalent shell command:
+	//
+	//  rm testdata
+
+	err := os.Remove("testdata/testfile")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	// Output:
+}
+
 // A string containing a line longer than bufio.MaxScanTokenSize, for testing
 // methods that buffer input. We want to make sure they don't throw
 // "bufio.Scanner: token too long" errors.
