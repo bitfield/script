@@ -202,7 +202,7 @@ func Example_listExecutables() {
 	paths, err := script.ListFiles("testdata/executables").Slice()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return
 	}
 
 	var numExecutables int

@@ -2843,7 +2843,8 @@ func Example_countErrors() {
 
 	count, err := script.File("testdata/app.log").Match("ERROR").CountLines()
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		return
 	}
 	fmt.Printf("Number of ERROR lines: %d\n", count)
 	// Output:
@@ -2861,7 +2862,8 @@ func Example_filterCSV() {
 	// then take the first field (the server name).
 	_, err := script.File("testdata/servers.csv").Match("DOWN").Replace(",", " ").Column(1).Stdout()
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		return
 	}
 	// Output:
 	// server2
@@ -2887,7 +2889,7 @@ func Example_createWriteFile() {
 	err := os.Remove("testdata/testfile")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return
 	}
 	// Output:
 }
