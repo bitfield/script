@@ -2834,6 +2834,66 @@ func ExampleSlice() {
 	// 3
 }
 
+func Example_countErrors() {
+	// Counts the lines containing "ERROR" in a log file.
+	//
+	// Equivalent shell command:
+	//
+	//	grep ERROR testdata/app.log | wc -l
+
+	count, err := script.File("testdata/app.log").Match("ERROR").CountLines()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+	fmt.Printf("Number of ERROR lines: %d\n", count)
+	// Output:
+	// Number of ERROR lines: 2
+}
+
+func Example_filterCSV() {
+	// Prints the names of servers whose status is "DOWN", read from a CSV file.
+	//
+	// Equivalent shell command:
+	//
+	//	grep DOWN testdata/servers.csv | cut -d, -f1
+
+	// Column splits on whitespace, so turn the comma into a space first,
+	// then take the first field (the server name).
+	_, err := script.File("testdata/servers.csv").Match("DOWN").Replace(",", " ").Column(1).Stdout()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+	// Output:
+	// server2
+	// server3
+	// server5
+}
+
+func Example_createWriteFile() {
+	// Creates a file named "testfile" and writes data to it.
+	//
+	// Equivalent shell command:
+	//
+	//  touch testdata/testfile && echo "testdata" > testdata/testfile
+
+	script.Echo("testdata").WriteFile("testdata/testfile")
+
+	// Removes the file.
+	//
+	// Equivalent shell command:
+	//
+	//  rm testdata
+
+	err := os.Remove("testdata/testfile")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+	// Output:
+}
+
 // A string containing a line longer than bufio.MaxScanTokenSize, for testing
 // methods that buffer input. We want to make sure they don't throw
 // "bufio.Scanner: token too long" errors.
